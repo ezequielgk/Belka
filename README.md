@@ -1,94 +1,66 @@
 # moss
 
-Gestor de tarballs (`.tar.gz`, `.tar.xz`, `.tar.bz2`, `.tar.zst`) escrito en
-**POSIX sh estricto**. Modo CLI completo + TUI con `fzf` (fallback a menu
-numerado). Sin bashismos: corre bajo `dash` y `busybox ash`.
+Gestor de paquetes y tarballs (`.tar.gz`, `.tar.xz`, `.tar.bz2`, `.tar.zst`) estrictamente **Headless y CLI** escrito en **POSIX sh puro**. 
+Diseñado con una filosofía similar a `brew` o `nix`, aislando las instalaciones y generando symlinks inteligentes. Sin bashismos: corre nativamente bajo `dash` y `busybox ash`, lo que lo hace perfecto para CI/CD y scripts de automatización.
 
 ## Dependencias
 
-Obligatorias: `tar`, `find`, `sort`, `awk`, `sed`, `grep`, `date`, `cp`,
-`sha256sum` (o `shasum -a 256`, u `openssl`), `curl` **o** `wget`.
-Opcionales: `fzf` (TUI), `gpg` (firmas), `mktemp` (hay fallback POSIX).
+Obligatorias: `tar`, `find`, `sort`, `awk`, `sed`, `grep`, `date`, `cp`, `sha256sum` (o `shasum -a 256`, u `openssl`), `curl` **o** `wget`, `jq` (para compilar el índice).
+Opcionales: `gpg` (verificación de firmas), `mktemp` (hay fallback POSIX).
 
-## Uso rapido
+## Arquitectura de Instalación y Sandboxing
 
-```sh
-moss sync                                   # descargar/actualizar el indice
-moss install foo                            # instalar (nombre del indice)
-moss install ./foo-1.0.0.tar.gz             # archivo local
-moss install https://example.org/foo.tar.gz # URL directa
-moss list / search / info / verify foo
-moss update foo | moss update --all
-moss rollback foo
-moss remove foo
-moss                                        # TUI (fzf o menu de texto)
-```
+A diferencia de gestores tradicionales que mezclan miles de archivos, `moss` emplea una estrategia de aislamiento estricto:
 
-## Sistema de indice
+- **MOSS_PREFIX**: Por defecto se instala en `~/.local/moss` (usuario) o `/usr/local/moss` (con flag `--system`).
+- **Paquetes Normales**: Se aíslan en la subcarpeta `pkg/<nombre_paquete>/`.
+- **Paquetes Masivos (>100 archivos)**: Se aíslan en la subcarpeta `opt/<nombre_paquete>/` para evitar cuellos de botella.
+- **Symlinks Inteligentes**: Sin importar el tamaño, el binario ejecutable se expone limpia y automáticamente mediante un enlace simbólico en `bin/`. 
 
-- Fuente: `MOSS_INDEX_URL` (default `https://raw.githubusercontent.com/<user>/moss/main/index/packages.tsv`),
-  `--index`, o `~/.config/moss/config`.
-- Resolucion de fuente en `install`: **1)** ruta local existente,
-  **2)** URL `http(s)://` o `file://` directa, **3)** nombre buscado en el indice
-  (desde ahi salen url, sha256 y firma).
-- El indice se cachea en `~/.cache/moss/index/packages.tsv` con TTL de
-  `MOSS_INDEX_TTL` horas (default 24; `0` = refrescar siempre). `moss sync`
-  fuerza la re-descarga. `--offline` usa el cache aunque este vencido.
-- Formato TSV: `nombre TAB version TAB url TAB sha256 TAB descripcion [TAB firma.asc]`.
-- Los tarballs **no se commitean**: se publican como assets de GitHub Releases
-  y el indice apunta a ellos. Ver `index/packages.tsv`.
+*Nota:* Asegúrate de agregar el path a tu terminal: `export PATH="$HOME/.local/moss/bin:$PATH"`
 
-## Configuracion
-
-`~/.config/moss/config` (`KEY=VALUE`, `#` comentarios):
-
-```
-MOSS_PREFIX=/opt/apps
-MOSS_STATE_DIR=/opt/apps/.moss-state
-MOSS_CACHE_DIR=/home/usuario/.cache/moss
-MOSS_INDEX_URL=https://raw.githubusercontent.com/<user>/moss/main/index/packages.tsv
-MOSS_INDEX_TTL=24
-```
-
-Precedencia: CLI > entorno > config > defectos (`~/.local`,
-`~/.local/share/moss`, `${XDG_CACHE_HOME:-~/.cache}/moss`).
-
-## Estado y seguridad
-
-Por paquete en `$MOSS_STATE_DIR/<nombre>/`: `manifest` (KEY=VALUE: name,
-version, url, sha256, prefix, tarball, installed_at), `files` (rutas
-instaladas), y `manifest.bak`/`files.bak` para `rollback` despues de `update`.
-
-Pipeline: descarga a cache (`<sha256>-<archivo>`) -> verificacion sha256 (y
-firma GPG si hay `gpg`) -> extraccion a staging temporal (`mktemp` + `trap`) ->
-deteccion de conflictos (con `--force` para sobrescribir) -> copia con
-**rollback automatico** si falla a mitad. `update` respalda el manifest
-anterior y revierte automaticamente si la actualizacion falla.
-
-Convencion de tarball: estructura de destino en la raiz (`bin/`, `share/`, ...);
-carpeta raiz unica normalizada automaticamente. Limitacion: los directorios
-vacios no se registran en `files`.
-
-## Codigos de salida
-
-`0` ok · `1` uso/no encontrado · `2` descarga (incluye indice sin cache) ·
-`3` verificacion · `4` instalacion · `5` conflicto · `6` dependencia faltante.
-
-## Tests
+## Uso Rápido
 
 ```sh
-sh tests/run_tests.sh     # 17 grupos: install, checksum, conflicto, rollback,
-                          # remove, update(+resumen), verify, dry-run,
-                          # list/search/info(JSON), fallback TUI, resolucion
-                          # de fuente, sync, TTL y offline
+moss update                                 # Sincronizar/actualizar el índice remoto
+moss install foo                            # Instalar paquete por nombre desde el índice
+moss install ./foo-1.0.0.tar.gz             # Instalar archivo local directamente
+moss update foo ./foo-2.0.0.tar.gz          # Actualización de paquete forzada vía archivo local
+moss list                                   # Listar paquetes instalados
+moss search foo                             # Buscar en el índice
+moss info foo                               # Mostrar información de estado
+moss verify foo                             # Verificar checksums del tarball local
+moss rollback foo                           # Volver a la versión previa del paquete
+moss remove foo                             # Desinstalar un paquete
 ```
 
-## Estructura
+## Ecosistema de Datos y GitHub Actions
 
-```
-bin/moss                 # script principal (POSIX sh)
-index/packages.tsv       # indice del repo (TSV)
-tests/run_tests.sh
-examples/make_demo_repo.sh
-README.md
+El repositorio de `moss` sigue un paradigma impulsado por datos (Data-Driven):
+
+1. **`meta/apps.list`**: La fuente de la verdad. Un simple listado TSV (Nombre, Repo, Patrón, Descripción).
+2. **`scripts/build-repo.sh`**: Script que consulta la API de GitHub Releases, extrae URLs de descarga dinámicas y precalcula los SHA256.
+3. **`.github/workflows/update.yml`**: Bot automático que corre todos los días a las 03:00 AM UTC. Si detecta nuevas versiones, re-construye silenciosamente el `packages.tsv` y hace `push` al índice.
+
+## Estado y Seguridad
+
+Por paquete en `$MOSS_STATE_DIR/<nombre>/` (ej: `~/.local/share/moss/`): `manifest` (KEY=VALUE: name, version, url, sha256, prefix, tarball, installed_at), `files` (rutas instaladas), y `manifest.bak`/`files.bak` para `rollback`.
+
+Pipeline: descarga a caché -> verificación sha256 -> extracción a staging temporal -> aislamiento en `pkg/` u `opt/` -> creación de Symlink -> copia con **rollback automático** si falla a mitad. 
+
+## Códigos de Salida (Automatización)
+
+`0` ok · `1` uso/no encontrado · `2` descarga (incluye índice sin caché) ·
+`3` verificación · `4` instalación · `5` conflicto · `6` dependencia faltante.
+
+## Estructura del Repositorio
+
+```text
+bin/moss                     # CLI de Moss (POSIX sh)
+meta/apps.list               # Semilla del repositorio de GitHub (TSV)
+scripts/build-repo.sh        # Generador del índice desde GitHub Releases
+index/packages.tsv           # Índice compilado automáticamente por el Bot
+.github/workflows/update.yml # CI/CD diario de automatización
+tests/run_tests.sh           # Batería de pruebas unitarias
+README.md                    # Este archivo
 ```
