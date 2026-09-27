@@ -29,7 +29,7 @@ PROG_NAME=moss
 MOSS_PREFIX=${MOSS_PREFIX:-}
 MOSS_STATE_DIR=${MOSS_STATE_DIR:-}
 MOSS_CACHE_DIR=${MOSS_CACHE_DIR:-}
-MOSS_INDEX_URL=${MOSS_INDEX_URL:-file://$HOME/Documentos/moss/moss/index/packages.tsv}
+MOSS_INDEX_URL=${MOSS_INDEX_URL:-https://raw.githubusercontent.com/ezequielgk/Moss/main/packages.tsv}
 MOSS_INDEX_TTL=${MOSS_INDEX_TTL:-24}
 
 # Flags globales / por subcomando.
