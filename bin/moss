@@ -28,6 +28,15 @@ MOSS_EX_DEP=6
 
 MOSS_TAB=$(printf '\t')
 
+# Imprime mensajes en la consola con diferentes niveles de severidad.
+#
+# Argumentos:
+#   $1 - Nivel de log (INFO, STEP, WARN, ERROR, SUCCESS, DEBUG)
+#   $2.. - Mensaje a imprimir
+# Globales:
+#   MOSS_LOG_LEVEL
+# Retorna:
+#   0 siempre
 moss_log() {
     _moss_l_level=$1
     shift
@@ -44,6 +53,15 @@ moss_log() {
     printf '%s %s\n' "$_moss_l_tag" "$*" >&2
 }
 
+# Termina la ejecucion del programa tras imprimir un mensaje de error.
+#
+# Argumentos:
+#   $1 - Codigo de salida
+#   $2.. - Mensaje de error
+# Globales:
+#   Ninguna
+# Retorna:
+#   Sale del script con el codigo indicado
 moss_die() {
     _moss_d_code=$1
     shift
@@ -51,6 +69,16 @@ moss_die() {
     exit "$_moss_d_code"
 }
 
+# Imprime y actualiza una barra de progreso estatica en linea.
+#
+# Argumentos:
+#   $1 - Valor actual
+#   $2 - Valor total
+#   $3 - Mensaje corto descriptivo
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 siempre
 moss_progress() {
     _moss_curr=$1
     _moss_tot=$2
@@ -82,12 +110,28 @@ moss_progress() {
     fi
 }
 
+# Limpia los archivos temporales generados durante la ejecucion.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   MOSS_TMPDIR
+# Retorna:
+#   0 siempre
 moss_cleanup() {
     if [ -n "${MOSS_TMPDIR:-}" ] && [ -d "$MOSS_TMPDIR" ]; then
         rm -rf "$MOSS_TMPDIR"
     fi
 }
 
+# Crea un directorio temporal de manera segura y compatible.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   TMPDIR
+# Retorna:
+#   0 si tiene exito, 1 si falla. Imprime la ruta al stdout.
 moss_mktempdir() {
     _moss_m_dir=$(mktemp -d "${TMPDIR:-/tmp}/tm.XXXXXX" 2>/dev/null) && {
         printf '%s\n' "$_moss_m_dir"
@@ -101,6 +145,14 @@ moss_mktempdir() {
     return 1
 }
 
+# Carga la configuracion global del usuario desde XDG_CONFIG_HOME.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   MOSS_INDEX_URL, MOSS_INDEX_TTL
+# Retorna:
+#   0 si el archivo existe y es leido, 1 si no.
 moss_load_config() {
     _moss_c_file=${MOSS_CONFIG:-$HOME/.config/moss/config}
     [ -f "$_moss_c_file" ] || return 0
@@ -121,12 +173,28 @@ moss_load_config() {
     done < "$_moss_c_file"
 }
 
+# Aplica valores por defecto a configuraciones criticas si estan vacias.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   MOSS_PREFIX, MOSS_STATE_DIR, MOSS_CACHE_DIR, HOME
+# Retorna:
+#   Ninguno
 moss_apply_defaults() {
     [ -z "$MOSS_PREFIX" ]    && MOSS_PREFIX="$HOME/.local/moss"
     [ -z "$MOSS_STATE_DIR" ] && MOSS_STATE_DIR="$HOME/.local/share/moss"
     [ -z "$MOSS_CACHE_DIR" ] && MOSS_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/moss"
 }
 
+# Reconfigura las rutas globales si se solicita el ambito del sistema.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   MOSS_SYSTEM, MOSS_PREFIX, MOSS_STATE_DIR
+# Retorna:
+#   0 siempre
 moss_apply_scope() {
     if [ "$MOSS_SYSTEM" -eq 1 ]; then
         MOSS_PREFIX=/usr/local/moss
@@ -134,6 +202,14 @@ moss_apply_scope() {
     fi
 }
 
+# Inicializa los directorios de estado, cache e indice locales.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   MOSS_PREFIX, MOSS_STATE_DIR, MOSS_CACHE_DIR
+# Retorna:
+#   0 si tiene exito creando directorios, exit >0 en error
 moss_state_init() {
     moss_apply_scope
     moss_apply_defaults
@@ -143,6 +219,14 @@ moss_state_init() {
     }
 }
 
+# Calcula el hash SHA256 de un archivo usando shasum, sha256sum u openssl.
+#
+# Argumentos:
+#   $1 - Ruta del archivo
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 e imprime el hash si tiene exito, 1 si falla
 moss_sha256() {
     if command -v sha256sum >/dev/null 2>&1; then
         sha256sum "$1" | awk '{print $1}'
@@ -155,6 +239,15 @@ moss_sha256() {
     fi
 }
 
+# Descarga un archivo desde una URL manejando fallback a wget.
+#
+# Argumentos:
+#   $1 - URL de origen
+#   $2 - Archivo de destino
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 si descarga exitosa, exit 2 si fallan curl y wget
 moss_download() {
     case $1 in
         http://*|https://*)
@@ -176,6 +269,15 @@ moss_download() {
     esac
 }
 
+# Compara dos versiones semanticas para determinar cual es mayor.
+#
+# Argumentos:
+#   $1 - Version A
+#   $2 - Version B
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 si A > B, 1 en caso contrario
 moss_version_gt() {
     awk -v a="$1" -v b="$2" 'BEGIN {
         na = split(a, xa, /[^0-9]+/)
@@ -190,6 +292,14 @@ moss_version_gt() {
     }'
 }
 
+# Escapa cadenas de texto para ser incrustadas de forma segura en JSON.
+#
+# Argumentos:
+#   $1 - Cadena de texto
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 e imprime el texto escapado en stdout
 moss_jesc() {
     printf '%s' "$1" | awk '
     {
@@ -201,10 +311,26 @@ moss_jesc() {
     }'
 }
 
+# Devuelve la ruta local cacheada del indice de paquetes.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   MOSS_CACHE_DIR
+# Retorna:
+#   Imprime la ruta al stdout
 moss_index_cache_file() {
     printf '%s\n' "$MOSS_CACHE_DIR/index/packages.tsv"
 }
 
+# Comprueba si la fuente del indice es una URL de red valida (http/https).
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   MOSS_INDEX_URL
+# Retorna:
+#   0 si es red, 1 si es archivo local
 moss_index_source_is_url() {
     case ${MOSS_INDEX_URL:-} in
         http://*|https://*|file://*) return 0 ;;
@@ -212,6 +338,14 @@ moss_index_source_is_url() {
     esac
 }
 
+# Evalua si el indice cacheado es fresco basandose en el TTL configurado.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   MOSS_INDEX_TTL
+# Retorna:
+#   0 si esta fresco, 1 si requiere renovacion
 moss_index_fresh() {
     _moss_f_file=$1
     [ -f "$_moss_f_file" ] || return 1
@@ -226,6 +360,14 @@ moss_index_fresh() {
     return 0
 }
 
+# Descarga y actualiza el indice TSV local desde el servidor remoto.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   MOSS_INDEX_URL, MOSS_TMPDIR
+# Retorna:
+#   0 en exito, 2 si falla la descarga
 moss_index_refresh() {
     _moss_r_cache=$(moss_index_cache_file)
     mkdir -p "$(dirname "$_moss_r_cache")"
@@ -237,6 +379,14 @@ moss_index_refresh() {
     return $MOSS_EX_DOWNLOAD
 }
 
+# Carga la base de datos de paquetes y actualiza si es necesario.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   MOSS_OFFLINE, MOSS_INDEX_URL
+# Retorna:
+#   0 si el indice esta disponible y formateado adecuadamente, 2 en fallo
 moss_index_load() {
     [ -n "${MOSS_INDEX_URL:-}" ] || {
         moss_log ERROR "no hay indice configurado (MOSS_INDEX_URL, --index o ~/.config/moss/config)"
@@ -302,6 +452,14 @@ moss_index_load() {
     return $MOSS_EX_DOWNLOAD
 }
 
+# Busca un paquete por nombre exacto en el indice global.
+#
+# Argumentos:
+#   $1 - Nombre del paquete
+# Globales:
+#   MOSS_L_NAME, MOSS_L_VERSION, MOSS_L_URL, MOSS_L_SHA, MOSS_L_DESC, MOSS_L_EXEC
+# Retorna:
+#   0 y puebla variables globales si lo encuentra, 1 si no
 moss_index_lookup() {
     _moss_l_line=$(awk -F "$MOSS_TAB" -v n="$1" \
         '$1 !~ /^#/ && $1 == n { print; exit }' "$_moss_index_file")
@@ -313,6 +471,14 @@ EOF
     return 0
 }
 
+# Lee el manifiesto de un paquete instalado y carga sus variables en el entorno.
+#
+# Argumentos:
+#   $1 - Ruta al archivo manifest
+# Globales:
+#   MOSS_M_NAME, MOSS_M_VERSION, MOSS_M_URL, MOSS_M_SHA, MOSS_M_PREFIX, MOSS_M_TARBALL, MOSS_M_DATE
+# Retorna:
+#   0 si es valido, 1 si no se puede leer
 moss_manifest_read() {
     MOSS_M_NAME='' MOSS_M_VERSION='' MOSS_M_URL='' MOSS_M_SHA='' MOSS_M_PREFIX=''
     MOSS_M_TARBALL='' MOSS_M_DATE=''
@@ -330,6 +496,14 @@ moss_manifest_read() {
     done < "$1"
 }
 
+# Escribe las propiedades del paquete en un archivo manifest seguro.
+#
+# Argumentos:
+#   $1 - Ruta de destino
+# Globales:
+#   MOSS_P_NAME, MOSS_P_VERSION, MOSS_P_URL, MOSS_P_SHA, MOSS_P_PREFIX, MOSS_P_TARBALL
+# Retorna:
+#   0 si tiene exito, 1 si no
 moss_write_manifest() {
     {
         printf 'name=%s\n' "$2"
@@ -342,6 +516,15 @@ moss_write_manifest() {
     } > "$1"
 }
 
+# Extrae los contenidos de un archivo tarball temporalmente al staging.
+#
+# Argumentos:
+#   $1 - Ruta del archivo tarball
+#   $2 - Directorio destino
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 en exito, 1 en fallo
 moss_extract() {
     if tar -xf "$1" -C "$2" 2>/dev/null; then
         return 0
@@ -354,6 +537,14 @@ moss_extract() {
     esac
 }
 
+# Normaliza el directorio de staging eliminando envolturas innecesarias.
+#
+# Argumentos:
+#   $1 - Directorio de staging
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 siempre
 moss_normalize_staging() {
     _moss_n_entries=$(ls -A "$1" 2>/dev/null | sed '/^$/d')
     _moss_n_count=$(printf '%s\n' "$_moss_n_entries" | wc -l | tr -dc '0-9')
@@ -364,11 +555,28 @@ moss_normalize_staging() {
     fi
 }
 
+# Genera una lista de rutas relativas de los archivos en staging.
+#
+# Argumentos:
+#   $1 - Directorio base
+# Globales:
+#   Ninguna
+# Retorna:
+#   0, imprime lista en stdout
 moss_build_filelist() {
     ( cd "$1" && find . \( -type f -o -type l \) -print ) |
         sed 's|^\./||' | LC_ALL=C sort > "$2"
 }
 
+# Verifica si los archivos a instalar ya existen y previene colisiones.
+#
+# Argumentos:
+#   $1 - Ruta a la lista de archivos
+#   $2 - Directorio de destino base
+# Globales:
+#   MOSS_FORCE
+# Retorna:
+#   0 si no hay conflicto, 5 si detecta solapamiento
 moss_check_conflicts() {
     _moss_k_n=0
     _moss_k_any=0
@@ -385,6 +593,15 @@ moss_check_conflicts() {
     return "$_moss_k_any"
 }
 
+# Elimina un directorio y todos sus padres recursivamente si quedan vacios.
+#
+# Argumentos:
+#   $1 - Ruta del directorio base
+#   $2 - Directorio raiz a no superar
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 siempre
 moss_rmdir_chain() {
     _moss_rc_d=$(dirname "$1")
     while [ "$_moss_rc_d" != "." ] && [ "$MOSS_PREFIX/$_moss_rc_d" != "$MOSS_PREFIX" ]; do
@@ -393,6 +610,17 @@ moss_rmdir_chain() {
     done
 }
 
+# Copia fisicamente los archivos del paquete al sistema de destino definitivo.
+#
+# Argumentos:
+#   $1 - Directorio fuente (staging)
+#   $2 - Directorio destino (prefix)
+#   $3 - Nombre del paquete
+#   $4 - Archivo temporal de lista
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 si tiene exito copiado completo
 moss_install_files() {
     _moss_if_installed=$MOSS_TMPDIR/installed.$$
     
@@ -411,6 +639,14 @@ moss_install_files() {
     return 0
 }
 
+# Elimina todos los archivos y metadatos asociados a un paquete instalado.
+#
+# Argumentos:
+#   $1 - ID exacto del paquete
+# Globales:
+#   MOSS_STATE_DIR, MOSS_PREFIX
+# Retorna:
+#   0 en exito, 1 si no esta instalado, u otro codigo en fallo de operacion
 moss_remove_pkg() {
     _moss_rm_d=$MOSS_STATE_DIR/$1
     _moss_rm_prefix=$MOSS_PREFIX
@@ -455,6 +691,14 @@ moss_remove_pkg() {
     rm -rf "$_moss_rm_d"
 }
 
+# Orquesta de principio a fin el flujo completo de instalacion de un tarball.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   MOSS_P_NAME, MOSS_P_VERSION, MOSS_P_URL, MOSS_P_SHA, MOSS_P_LOCAL, MOSS_P_SIG, MOSS_P_EXEC
+# Retorna:
+#   0 en exito total de instalacion, exit >0 en cualquier falla critica
 moss_perform_install() {
     _moss_p_name=$1
     _moss_p_version=$2
@@ -720,6 +964,14 @@ EOF
     return 0
 }
 
+# Interpreta el argumento de usuario resolviendolo como URL, local o indice.
+#
+# Argumentos:
+#   $1 - Cadena provista por el usuario
+# Globales:
+#   MOSS_R_NAME, MOSS_R_VERSION, MOSS_R_URL, MOSS_R_SHA, MOSS_R_LOCAL, MOSS_R_SIG, MOSS_R_EXEC
+# Retorna:
+#   0 en resolucion valida, exit 1 si el origen es inviable o no existe
 moss_resolve_pkg() {
     if [ -f "$1" ]; then
         _moss_res_base=$(basename "$1")
@@ -766,6 +1018,14 @@ moss_resolve_pkg() {
     return 0
 }
 
+# Comando principal 'install': procesa las banderas y orquesta instalaciones.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   MOSS_DRY_RUN, MOSS_FORCE, MOSS_SYSTEM, MOSS_LOG_LEVEL, MOSS_OPT_EXEC
+# Retorna:
+#   0 o aborta el script en errores
 moss_cmd_install() {
     moss_normargs "$@"
     _moss_an_saveifs=$IFS
@@ -804,6 +1064,14 @@ moss_cmd_install() {
     exit $?
 }
 
+# Comando principal 'remove': resuelve nombres de paquete/binario e invoca borrado.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   MOSS_FORCE, MOSS_STATE_DIR, MOSS_PREFIX
+# Retorna:
+#   0 si el paquete fue borrado o no existia, aborta en error general
 moss_cmd_remove() {
     moss_normargs "$@"
     _moss_an_saveifs=$IFS
@@ -857,6 +1125,14 @@ moss_cmd_remove() {
     moss_die $MOSS_EX_INSTALL "no se pudo eliminar $_moss_rm_name"
 }
 
+# Compara y ejecuta la actualizacion individual para un solo paquete.
+#
+# Argumentos:
+#   $1 - Nombre del paquete
+# Globales:
+#   MOSS_STATE_DIR, MOSS_U_RESULT
+# Retorna:
+#   0 en exito/sin cambios, 1 en fallo
 moss_update_one() {
     MOSS_U_RESULT=uptodate
     _moss_u_state=$MOSS_STATE_DIR/$1
@@ -931,6 +1207,14 @@ moss_update_one() {
     return "$_moss_u_rc"
 }
 
+# Comando principal 'update': fuerza la actualizacion manual de uno o mas paquetes.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   MOSS_JSON
+# Retorna:
+#   0
 moss_cmd_update() {
     moss_state_init || return 1
     if [ "$#" -eq 2 ] && [ -f "$2" ]; then
@@ -975,6 +1259,14 @@ moss_cmd_update() {
     return 1
 }
 
+# Comando principal 'upgrade': itera e intenta actualizar todos los paquetes.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   MOSS_STATE_DIR
+# Retorna:
+#   0 en exito
 moss_cmd_upgrade() {
     moss_state_init || return 1
     moss_index_load || return 1
@@ -1023,6 +1315,14 @@ moss_cmd_upgrade() {
     moss_log INFO "Actualizacion de $_moss_up_tot paquetes completada exitosamente."
 }
 
+# Comando principal 'rollback': restaura la configuracion previa tras fallo o pedido.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   MOSS_STATE_DIR, MOSS_PREFIX
+# Retorna:
+#   0 si logra restaurar, aborta si no
 moss_cmd_rollback() {
     moss_normargs "$@"
     _moss_an_saveifs=$IFS
@@ -1101,6 +1401,14 @@ moss_cmd_rollback() {
     exit $MOSS_EX_OK
 }
 
+# Comando principal 'sync': fuerza la descarga de los datos remotos frescos.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 en exito, aborta en fallo
 moss_cmd_sync() {
     moss_normargs "$@"
     _moss_an_saveifs=$IFS
@@ -1137,6 +1445,14 @@ moss_cmd_sync() {
     moss_die $MOSS_EX_DOWNLOAD "fallo la sincronizacion del indice: $MOSS_INDEX_URL"
 }
 
+# Lista unicamente los ID de los paquetes que se encuentran instalados.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   MOSS_STATE_DIR
+# Retorna:
+#   0 e imprime nombres en stdout
 moss_installed_names() {
     for _moss_li_d in "$MOSS_STATE_DIR"/*/; do
         [ -f "$_moss_li_d/manifest" ] || continue
@@ -1145,6 +1461,14 @@ moss_installed_names() {
     done
 }
 
+# Comando principal 'list': imprime la tabla o JSON de todos los instalados.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   MOSS_STATE_DIR, MOSS_JSON, MOSS_PREFIX
+# Retorna:
+#   0 siempre
 moss_cmd_list() {
     moss_normargs "$@"
     _moss_an_saveifs=$IFS
@@ -1242,6 +1566,14 @@ moss_cmd_list() {
     exit $MOSS_EX_OK
 }
 
+# Comando principal 'search': busca y filtra paquetes remotos disponibles.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   MOSS_JSON
+# Retorna:
+#   0 siempre
 moss_cmd_search() {
     moss_normargs "$@"
     _moss_an_saveifs=$IFS
@@ -1296,6 +1628,14 @@ moss_cmd_search() {
     exit $MOSS_EX_OK
 }
 
+# Comando principal 'info': reporta la situacion remota y el estado local.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   MOSS_STATE_DIR, MOSS_JSON
+# Retorna:
+#   0 siempre
 moss_cmd_info() {
     moss_normargs "$@"
     _moss_an_saveifs=$IFS
@@ -1366,6 +1706,14 @@ moss_cmd_info() {
     exit $MOSS_EX_OK
 }
 
+# Comando principal 'verify': verifica checksums de tarballs locales en cache.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   MOSS_STATE_DIR, MOSS_CACHE_DIR
+# Retorna:
+#   0 siempre
 moss_cmd_verify() {
     moss_normargs "$@"
     _moss_an_saveifs=$IFS
@@ -1426,6 +1774,15 @@ moss_cmd_verify() {
 }
 
 MOSS_NORMED=''
+
+# Normaliza los argumentos dividiendo combinaciones cortas en opciones discretas.
+#
+# Argumentos:
+#   $@ - Array crudo
+# Globales:
+#   MOSS_NORMED
+# Retorna:
+#   0 siempre
 moss_normargs() {
     MOSS_NORMED=''
     for _moss_na_arg do
@@ -1450,6 +1807,14 @@ $_moss_na_arg"
     done
 }
 
+# Imprime de forma tabular y limpia la informacion y menu de ayuda de uso global.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   PROG_NAME, MOSS_VERSION
+# Retorna:
+#   0, via stdout
 moss_usage() {
     cat <<EOF
 $PROG_NAME $MOSS_VERSION — Gestor de tarballs en POSIX sh
@@ -1491,6 +1856,14 @@ ENTORNO Y RUTAS:
 EOF
 }
 
+# Bucle principal del CLI: inicializa el entorno, parsea opciones y delega al subcomando.
+#
+# Argumentos:
+#   $@ - Todo argumento pasado a bin/moss
+# Globales:
+#   Multiples variables globales configuradas a partir del entorno
+# Retorna:
+#   Despacha exit code del subcomando llamado
 moss_main() {
     _moss_env_prefix=$MOSS_PREFIX
     _moss_env_state=$MOSS_STATE_DIR
