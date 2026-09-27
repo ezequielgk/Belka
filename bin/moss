@@ -1,0 +1,1478 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+#
+# moss — gestor de tarballs (.tar.gz/.tar.xz/.tar.bz2/.tar.zst) en POSIX sh.
+#
+# Requisitos: tar, find, sort, awk, sed, grep, date, dirname, basename, cp, rm,
+#             sha256sum (o shasum u openssl), curl o wget.
+# Opcionales: fzf (TUI), gpg (verificacion de firmas), mktemp (recomendado).
+#
+# Codigos de salida:
+#   0  ok
+#   1  uso incorrecto / paquete no encontrado / no instalado
+#   2  fallo de descarga
+#   3  fallo de verificacion (checksum / firma / archivos faltantes)
+#   4  fallo de instalacion (con rollback ejecutado)
+#   5  conflicto de archivos existentes
+#   6  dependencia faltante / entorno no soportado
+#
+# Este archivo no debe tener bashismos: pasa "shellcheck -s sh" y corre bajo
+# dash y busybox ash.
+
+# Configuracion (precedencia: CLI > variables de entorno > archivo de config >
+# valores por defecto).
+
+MOSS_VERSION=1.1.0
+PROG_NAME=moss
+
+# Capturadas del entorno (pueden quedar vacias).
+MOSS_PREFIX=${MOSS_PREFIX:-}
+MOSS_STATE_DIR=${MOSS_STATE_DIR:-}
+MOSS_CACHE_DIR=${MOSS_CACHE_DIR:-}
+MOSS_INDEX_URL=${MOSS_INDEX_URL:-file://$HOME/Documentos/moss/moss/index/packages.tsv}
+MOSS_INDEX_TTL=${MOSS_INDEX_TTL:-24}
+
+# Flags globales / por subcomando.
+MOSS_SYSTEM=${MOSS_SYSTEM:-0}
+MOSS_DRY_RUN=0
+MOSS_FORCE=0
+MOSS_JSON=0
+MOSS_ASSUME_YES=0
+MOSS_OFFLINE=0
+MOSS_SYNC_FORCE=0
+MOSS_LOG_LEVEL=2          # 0=error 1=+aviso 2=+info (defecto) 3=+depuracion
+
+MOSS_EX_OK=0
+MOSS_EX_USAGE=1
+MOSS_EX_DOWNLOAD=2
+MOSS_EX_VERIFY=3
+MOSS_EX_INSTALL=4
+MOSS_EX_CONFLICT=5
+MOSS_EX_DEP=6
+
+MOSS_TAB=$(printf '\t')
+
+# Utilidades basicas
+
+# moss_log NIVEL mensaje...  (todo va a stderr; los datos van a stdout)
+moss_log() {
+    _moss_l_level=$1
+    shift
+    case $_moss_l_level in
+        ERROR) _moss_l_num=0 _moss_l_tag=error ;;
+        WARN)  _moss_l_num=1 _moss_l_tag=aviso ;;
+        INFO)  _moss_l_num=2 _moss_l_tag=info  ;;
+        DEBUG) _moss_l_num=3 _moss_l_tag=depur ;;
+        *) return 0 ;;
+    esac
+    [ "$_moss_l_num" -le "$MOSS_LOG_LEVEL" ] || return 0
+    if [ "$_moss_l_num" -le 1 ]; then
+        printf '%s: %s\n' "$_moss_l_tag" "$*" >&2
+    else
+        printf '%s: %s\n' "$_moss_l_tag" "$*" >&2
+    fi
+}
+
+moss_die() {
+    _moss_d_code=$1
+    shift
+    moss_log ERROR "$*"
+    exit "$_moss_d_code"
+}
+
+moss_cleanup() {
+    if [ -n "${MOSS_TMPDIR:-}" ] && [ -d "$MOSS_TMPDIR" ]; then
+        rm -rf "$MOSS_TMPDIR"
+    fi
+}
+
+moss_mktempdir() {
+    _moss_m_dir=$(mktemp -d "${TMPDIR:-/tmp}/tm.XXXXXX" 2>/dev/null) && {
+        printf '%s\n' "$_moss_m_dir"
+        return 0
+    }
+    _moss_m_dir="${TMPDIR:-/tmp}/tm.$$"
+    (umask 077 && mkdir "$_moss_m_dir" 2>/dev/null) && {
+        printf '%s\n' "$_moss_m_dir"
+        return 0
+    }
+    return 1
+}
+
+# Formato: KEY=VALUE por linea, '#' comentarios. Solo se aceptan claves
+# conocidas; no se usa eval.
+moss_load_config() {
+    _moss_c_file=${MOSS_CONFIG:-$HOME/.config/moss/config}
+    [ -f "$_moss_c_file" ] || return 0
+    while IFS= read -r _moss_c_line; do
+        case $_moss_c_line in
+            ''|\#*) continue ;;
+        esac
+        _moss_c_key=${_moss_c_line%%=*}
+        _moss_c_val=${_moss_c_line#*=}
+        [ "$_moss_c_key" = "$_moss_c_line" ] && continue
+        case $_moss_c_key in
+            MOSS_PREFIX)     MOSS_PREFIX=$_moss_c_val ;;
+            MOSS_STATE_DIR)  MOSS_STATE_DIR=$_moss_c_val ;;
+            MOSS_CACHE_DIR)  MOSS_CACHE_DIR=$_moss_c_val ;;
+            MOSS_INDEX_URL)  MOSS_INDEX_URL=$_moss_c_val ;;
+            MOSS_INDEX_TTL)  MOSS_INDEX_TTL=$_moss_c_val ;;
+        esac
+    done < "$_moss_c_file"
+}
+
+moss_apply_defaults() {
+    [ -z "$MOSS_PREFIX" ]    && MOSS_PREFIX="$HOME/.local/moss"
+    [ -z "$MOSS_STATE_DIR" ] && MOSS_STATE_DIR="$HOME/.local/share/moss"
+    [ -z "$MOSS_CACHE_DIR" ] && MOSS_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/moss"
+}
+
+# --system: instala a /usr/local/moss y registra en /var/lib/moss.
+moss_apply_scope() {
+    if [ "$MOSS_SYSTEM" -eq 1 ]; then
+        MOSS_PREFIX=/usr/local/moss
+        MOSS_STATE_DIR=/var/lib/moss
+    fi
+}
+
+moss_state_init() {
+    moss_apply_scope
+    moss_apply_defaults
+    mkdir -p "$MOSS_STATE_DIR" "$MOSS_CACHE_DIR" 2>/dev/null || {
+        moss_log ERROR "no se pudo crear $MOSS_STATE_DIR o $MOSS_CACHE_DIR (permisos?)"
+        return 1
+    }
+}
+
+moss_sha256() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$1" | awk '{print $1}'
+    elif command -v shasum >/dev/null 2>&1; then
+        shasum -a 256 "$1" | awk '{print $1}'
+    elif command -v openssl >/dev/null 2>&1; then
+        openssl dgst -sha256 "$1" | awk '{print $NF}'
+    else
+        return 1
+    fi
+}
+
+# moss_download URL DEST
+moss_download() {
+    case $1 in
+        http://*|https://*)
+            if command -v curl >/dev/null 2>&1; then
+                curl -fsSL -o "$2" "$1"
+            elif command -v wget >/dev/null 2>&1; then
+                wget -q -O "$2" "$1"
+            else
+                moss_log ERROR "se necesita curl o wget para descargar $1"
+                return $MOSS_EX_DEP
+            fi
+            ;;
+        file://*)
+            cp "${1#file://}" "$2"
+            ;;
+        *)
+            cp "$1" "$2"
+            ;;
+    esac
+}
+
+# moss_version_gt A B -> imprime "1" si A > B (comparacion numerica por
+# componentes, ignora prefijos tipo "v").
+moss_version_gt() {
+    awk -v a="$1" -v b="$2" 'BEGIN {
+        na = split(a, xa, /[^0-9]+/)
+        nb = split(b, xb, /[^0-9]+/)
+        for (i = 1; i <= na || i <= nb; i++) {
+            va = (i <= na) ? xa[i] + 0 : 0
+            vb = (i <= nb) ? xb[i] + 0 : 0
+            if (va > vb) { print 1; exit }
+            if (va < vb) { print 0; exit }
+        }
+        print 0
+    }'
+}
+
+# Escapado JSON robusto (backslash, comillas, tabs, saltos de linea).
+moss_jesc() {
+    printf '%s' "$1" | awk '
+    {
+        gsub(/\\/, "\\\\")
+        gsub(/"/, "\\\"")
+        gsub(/\t/, "\\t")
+        if (NR > 1) printf "\\n"
+        printf "%s", $0
+    }'
+}
+
+# Indice (TSV): nombre TAB version TAB url TAB sha256 TAB descripcion [TAB sig]
+
+moss_index_cache_file() {
+    printf '%s\n' "$MOSS_CACHE_DIR/index/packages.tsv"
+}
+
+moss_index_source_is_url() {
+    case ${MOSS_INDEX_URL:-} in
+        http://*|https://*|file://*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# 0 = cache fresco; 1 = vencido o inexistente.
+moss_index_fresh() {
+    _moss_f_file=$1
+    [ -f "$_moss_f_file" ] || return 1
+    case ${MOSS_INDEX_TTL:-24} in
+        ''|*[!0-9]*) MOSS_INDEX_TTL=24 ;;
+    esac
+    [ "$MOSS_INDEX_TTL" -eq 0 ] && return 1
+    _moss_f_min=$((MOSS_INDEX_TTL * 60))
+    if [ -n "$(find "$_moss_f_file" -mmin "+$_moss_f_min" 2>/dev/null)" ]; then
+        return 1
+    fi
+    return 0
+}
+
+# descarga el indice al cache (atomico: tmp + mv). 0 ok, 2 fallo.
+moss_index_refresh() {
+    _moss_r_cache=$(moss_index_cache_file)
+    mkdir -p "$(dirname "$_moss_r_cache")"
+    if moss_download "$MOSS_INDEX_URL" "$_moss_r_cache.tmp"; then
+        mv "$_moss_r_cache.tmp" "$_moss_r_cache"
+        return 0
+    fi
+    rm -f "$_moss_r_cache.tmp"
+    return $MOSS_EX_DOWNLOAD
+}
+
+# garantiza un indice disponible en $_moss_index_file.
+# salidas: 0 listo | 1 no configurado / no encontrado | 2 descarga fallida
+moss_index_load() {
+    [ -n "${MOSS_INDEX_URL:-}" ] || {
+        moss_log ERROR "no hay indice configurado (MOSS_INDEX_URL, --index o ~/.config/moss/config)"
+        return $MOSS_EX_USAGE
+    }
+    case $MOSS_INDEX_URL in
+        *'<user>'*)
+            # Asistente OOBE interactivo
+            printf "MOSS_INDEX_URL no configurado.\n" >&2
+            printf "Introduce la URL o ruta de tu indice: " >&2
+            read -r _moss_new_url < /dev/tty || return $MOSS_EX_USAGE
+            MOSS_INDEX_URL="$_moss_new_url"
+            
+            _moss_cfg_dir="${XDG_CONFIG_HOME:-$HOME/.config}/moss"
+            mkdir -p "$_moss_cfg_dir"
+            if [ -f "$_moss_cfg_dir/config" ]; then
+                _moss_tmp_cfg="$_moss_cfg_dir/config.$$"
+                grep -v "^MOSS_INDEX_URL=" "$_moss_cfg_dir/config" > "$_moss_tmp_cfg" 2>/dev/null || :
+                printf "MOSS_INDEX_URL='%s'\n" "$_moss_new_url" >> "$_moss_tmp_cfg"
+                mv "$_moss_tmp_cfg" "$_moss_cfg_dir/config"
+            else
+                printf "MOSS_INDEX_URL='%s'\n" "$_moss_new_url" > "$_moss_cfg_dir/config"
+            fi
+            moss_log INFO "Configuracion guardada en $_moss_cfg_dir/config"
+            ;;
+    esac
+    if ! moss_index_source_is_url; then
+        [ -f "$MOSS_INDEX_URL" ] || {
+            moss_log ERROR "indice no encontrado: $MOSS_INDEX_URL"
+            return $MOSS_EX_USAGE
+        }
+        _moss_index_file=$MOSS_INDEX_URL
+        return 0
+    fi
+    _moss_il_cache=$(moss_index_cache_file)
+    if [ "$MOSS_SYNC_FORCE" -eq 1 ]; then
+        moss_index_refresh || return $MOSS_EX_DOWNLOAD
+        _moss_index_file=$_moss_il_cache
+        return 0
+    fi
+    if moss_index_fresh "$_moss_il_cache"; then
+        _moss_index_file=$_moss_il_cache
+        return 0
+    fi
+    if [ "$MOSS_OFFLINE" -eq 1 ]; then
+        if [ -f "$_moss_il_cache" ]; then
+            moss_log WARN "offline: se usa el cache del indice aunque este vencido"
+            _moss_index_file=$_moss_il_cache
+            return 0
+        fi
+        moss_log ERROR "modo offline y no hay cache del indice"
+        return $MOSS_EX_DOWNLOAD
+    fi
+    if moss_index_refresh; then
+        _moss_index_file=$_moss_il_cache
+        return 0
+    fi
+    if [ -f "$_moss_il_cache" ]; then
+        moss_log WARN "no se pudo refrescar el indice; se usa el cache disponible"
+        _moss_index_file=$_moss_il_cache
+        return 0
+    fi
+    moss_log ERROR "no se pudo descargar el indice y no hay cache"
+    return $MOSS_EX_DOWNLOAD
+}
+
+# moss_index_lookup NOMBRE -> MOSS_L_VERSION/URL/SHA/DESC/SIG o return 1.
+moss_index_lookup() {
+    _moss_l_line=$(awk -F "$MOSS_TAB" -v n="$1" \
+        '$1 !~ /^#/ && $1 == n { print; exit }' "$_moss_index_file")
+    [ -n "$_moss_l_line" ] || return 1
+    MOSS_L_VERSION='' MOSS_L_URL='' MOSS_L_SHA='' MOSS_L_DESC='' MOSS_L_SIG=''
+    IFS=$MOSS_TAB read -r _moss_l_name MOSS_L_VERSION MOSS_L_URL MOSS_L_SHA MOSS_L_DESC MOSS_L_SIG << EOF
+$_moss_l_line
+EOF
+    return 0
+}
+
+# Manifest (formato KEY=VALUE, una clave por linea)
+
+# moss_manifest_read ARCHIVO -> MOSS_M_*
+moss_manifest_read() {
+    MOSS_M_NAME='' MOSS_M_VERSION='' MOSS_M_URL='' MOSS_M_SHA='' MOSS_M_PREFIX=''
+    MOSS_M_TARBALL='' MOSS_M_DATE=''
+    [ -f "$1" ] || return 1
+    while IFS='=' read -r _moss_r_key _moss_r_val; do
+        case $_moss_r_key in
+            name)         MOSS_M_NAME=$_moss_r_val ;;
+            version)      MOSS_M_VERSION=$_moss_r_val ;;
+            url)          MOSS_M_URL=$_moss_r_val ;;
+            sha256)       MOSS_M_SHA=$_moss_r_val ;;
+            prefix)       MOSS_M_PREFIX=$_moss_r_val ;;
+            tarball)      MOSS_M_TARBALL=$_moss_r_val ;;
+            installed_at) MOSS_M_DATE=$_moss_r_val ;;
+        esac
+    done < "$1"
+}
+
+# moss_write_manifest ARCHIVO NOMBRE VERSION URL SHA PREFIX TARBALL
+moss_write_manifest() {
+    {
+        printf 'name=%s\n' "$2"
+        printf 'version=%s\n' "$3"
+        printf 'url=%s\n' "$4"
+        printf 'sha256=%s\n' "$5"
+        printf 'prefix=%s\n' "$6"
+        printf 'tarball=%s\n' "$7"
+        printf 'installed_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    } > "$1"
+}
+
+# Extraccion / normalizacion / listas de archivos
+
+# moss_extract TARBALL DESTDIR
+moss_extract() {
+    if tar -xf "$1" -C "$2" 2>/dev/null; then
+        return 0
+    fi
+    case $1 in
+        *.tar.gz|*.tgz)   tar -xzf "$1" -C "$2" ;;
+        *.tar.xz|*.txz)   tar -xJf "$1" -C "$2" ;;
+        *.tar.bz2|*.tbz2) tar -xjf "$1" -C "$2" ;;
+        *) return 1 ;;
+    esac
+}
+
+# Si el tarball tiene una unica carpeta raiz, se aplana un nivel.
+moss_normalize_staging() {
+    _moss_n_entries=$(ls -A "$1" 2>/dev/null | sed '/^$/d')
+    _moss_n_count=$(printf '%s\n' "$_moss_n_entries" | wc -l | tr -dc '0-9')
+    if [ "$_moss_n_count" -eq 1 ] && [ -d "$1/$_moss_n_entries" ]; then
+        mv "$1" "$1.orig" &&
+        mv "$1.orig/$_moss_n_entries" "$1" &&
+        rm -rf "$1.orig"
+    fi
+}
+
+# moss_build_filelist STAGING OUTFILE
+moss_build_filelist() {
+    ( cd "$1" && find . \( -type f -o -type l \) -print ) |
+        sed 's|^\./||' | LC_ALL=C sort > "$2"
+}
+
+# Instalacion / desinstalacion de archivos (con rollback)
+
+# moss_check_conflicts LISTFILE -> 0 si no hay conflictos.
+moss_check_conflicts() {
+    _moss_k_n=0
+    _moss_k_any=0
+    while IFS= read -r _moss_k_f; do
+        if [ -e "$MOSS_PREFIX/$_moss_k_f" ]; then
+            _moss_k_any=1
+            if [ "$_moss_k_n" -lt 20 ]; then
+                moss_log WARN "existe: $MOSS_PREFIX/$_moss_k_f"
+                _moss_k_n=$((_moss_k_n + 1))
+            fi
+        fi
+    done < "$1"
+    [ "$_moss_k_n" -ge 20 ] && moss_log WARN "(mas conflictos omitidos...)"
+    return "$_moss_k_any"
+}
+
+# moss_rmdir_chain RUTA_RELATIVA — elimina directorios vacios hacia arriba.
+moss_rmdir_chain() {
+    _moss_rc_d=$(dirname "$1")
+    while [ "$_moss_rc_d" != "." ] && [ "$MOSS_PREFIX/$_moss_rc_d" != "$MOSS_PREFIX" ]; do
+        rmdir "$MOSS_PREFIX/$_moss_rc_d" 2>/dev/null || break
+        _moss_rc_d=$(dirname "$_moss_rc_d")
+    done
+}
+
+# moss_install_files STAGING LISTFILE OUTLIST
+moss_install_files() {
+    _moss_if_installed=$MOSS_TMPDIR/installed.$$
+    
+    if ! ( cd "$1" && tar cf - . ) | ( cd "$MOSS_PREFIX" && tar xf - 2>/dev/null ); then
+        moss_log ERROR "fallo en la copia masiva; revirtiendo cambios parciales"
+        ( cd "$1" && find . -type f 2>/dev/null ) | sed 's|^\./||' | while IFS= read -r _moss_if_g; do
+            [ -n "$_moss_if_g" ] || continue
+            rm -f "$MOSS_PREFIX/$_moss_if_g"
+            moss_rmdir_chain "$_moss_if_g"
+        done
+        return 1
+    fi
+
+    ( cd "$1" && find . ! -type d 2>/dev/null ) | sed 's|^\./||' > "$_moss_if_installed"
+    mv "$_moss_if_installed" "$3"
+    return 0
+}
+
+# moss_remove_pkg NOMBRE (usa el prefix registrado en el manifest).
+moss_remove_pkg() {
+    _moss_rm_d=$MOSS_STATE_DIR/$1
+    _moss_rm_prefix=$MOSS_PREFIX
+    if [ -f "$_moss_rm_d/manifest" ]; then
+        while IFS='=' read -r _moss_rm_k _moss_rm_v; do
+            [ "$_moss_rm_k" = prefix ] && _moss_rm_prefix=$_moss_rm_v
+        done < "$_moss_rm_d/manifest"
+    fi
+    if [ -f "$_moss_rm_d/files" ]; then
+        LC_ALL=C sort -r "$_moss_rm_d/files" | while IFS= read -r _moss_rm_f; do
+            case "$_moss_rm_f" in
+                /*) _moss_rm_tgt="$_moss_rm_f" ;;
+                *)  _moss_rm_tgt="$_moss_rm_prefix/$_moss_rm_f" ;;
+            esac
+            rm -f "$_moss_rm_tgt"
+            
+            case "$_moss_rm_f" in
+                /*) ;;
+                *)
+                    _moss_rm_save=$MOSS_PREFIX
+                    MOSS_PREFIX=$_moss_rm_prefix
+                    moss_rmdir_chain "$_moss_rm_f"
+                    MOSS_PREFIX=$_moss_rm_save
+                    ;;
+            esac
+        done
+    fi
+    rm -rf "$_moss_rm_d"
+}
+
+# Pipeline compartido de instalacion (usado por install, update y rollback)
+
+# moss_perform_install NOMBRE VERSION URL SHA SIG ARCHIVO_LOCAL
+# Devuelve: 0 ok | 2 descarga | 3 verificacion | 4 instalacion | 5 conflicto
+moss_perform_install() {
+    _moss_p_name=$1
+    _moss_p_version=$2
+    _moss_p_url=$3
+    _moss_p_sha=$4
+    _moss_p_sig=$5
+    _moss_p_local=$6
+
+    # --- obtener tarball (cache o descarga) ---
+    if [ -n "$_moss_p_local" ]; then
+        _moss_p_src=$_moss_p_local
+    else
+        _moss_p_base=$(basename "$_moss_p_url")
+        if [ -n "$_moss_p_sha" ]; then
+            _moss_p_cache=$MOSS_CACHE_DIR/$_moss_p_sha-$_moss_p_base
+        else
+            _moss_p_cache=$MOSS_CACHE_DIR/$_moss_p_base
+        fi
+        if [ ! -f "$_moss_p_cache" ]; then
+            moss_log INFO "descargando $_moss_p_url"
+            if ! moss_download "$_moss_p_url" "$_moss_p_cache"; then
+                rm -f "$_moss_p_cache"
+                moss_log ERROR "fallo la descarga de $_moss_p_url"
+                return $MOSS_EX_DOWNLOAD
+            fi
+        fi
+        _moss_p_src=$_moss_p_cache
+    fi
+
+    # --- verificacion de integridad ---
+    if [ -n "$_moss_p_sha" ]; then
+        _moss_p_got=$(moss_sha256 "$_moss_p_src") || {
+            moss_log ERROR "no hay herramienta de sha256 (sha256sum/shasum/openssl)"
+            return $MOSS_EX_DEP
+        }
+        if [ "$_moss_p_got" != "$_moss_p_sha" ]; then
+            moss_log ERROR "checksum sha256 invalido para $_moss_p_name"
+            moss_log ERROR "esperado: $_moss_p_sha"
+            moss_log ERROR "obtenido: $_moss_p_got"
+            return $MOSS_EX_VERIFY
+        fi
+        moss_log DEBUG "checksum ok: $_moss_p_got"
+    else
+        moss_log WARN "$_moss_p_name: sin checksum en el indice; no se verifica integridad"
+    fi
+
+    # --- firma GPG (opcional) ---
+    if [ -n "$_moss_p_sig" ] && [ "$_moss_p_sig" != "-" ]; then
+        if command -v gpg >/dev/null 2>&1; then
+            _moss_p_sigfile=$MOSS_TMPDIR/pkg.$$.sig
+            if ! moss_download "$_moss_p_sig" "$_moss_p_sigfile"; then
+                moss_log ERROR "no se pudo descargar la firma $_moss_p_sig"
+                return $MOSS_EX_DOWNLOAD
+            fi
+            if ! gpg --verify "$_moss_p_sigfile" "$_moss_p_src" >/dev/null 2>&1; then
+                moss_log ERROR "firma GPG invalida para $_moss_p_name"
+                return $MOSS_EX_VERIFY
+            fi
+            moss_log DEBUG "firma gpg ok"
+        else
+            moss_log WARN "hay firma GPG en el indice pero gpg no esta instalado; se omite"
+        fi
+    fi
+
+    # --- extraccion a staging ---
+    _moss_p_staging=$MOSS_TMPDIR/staging.$$
+    rm -rf "$_moss_p_staging"
+    mkdir -p "$_moss_p_staging" || return $MOSS_EX_INSTALL
+    if ! moss_extract "$_moss_p_src" "$_moss_p_staging"; then
+        moss_log ERROR "no se pudo extraer $_moss_p_src"
+        return $MOSS_EX_INSTALL
+    fi
+    moss_normalize_staging "$_moss_p_staging"
+
+    _moss_p_list=$MOSS_TMPDIR/files.$$
+    moss_build_filelist "$_moss_p_staging" "$_moss_p_list"
+    if [ ! -s "$_moss_p_list" ]; then
+        moss_log WARN "$_moss_p_name: el tarball no contiene archivos regulares"
+    fi
+
+    # --- Aislamiento de paquetes (Sandboxing) ---
+    _moss_p_filecount=$(wc -l < "$_moss_p_list" | tr -dc '0-9')
+    _moss_p_opt_staging="$MOSS_TMPDIR/sandbox.$$"
+    
+    if [ "$_moss_p_filecount" -gt 100 ]; then
+        moss_log INFO "paquete masivo detectado ($_moss_p_filecount archivos), activando sandbox en opt/$_moss_p_name"
+        mkdir -p "$_moss_p_opt_staging/opt/$_moss_p_name"
+        
+        # shellcheck disable=SC2013,SC2043,SC2086
+        for _moss_sb_f in "$_moss_p_staging"/* "$_moss_p_staging"/.[!.]*; do
+            [ -e "$_moss_sb_f" ] || continue
+            mv "$_moss_sb_f" "$_moss_p_opt_staging/opt/$_moss_p_name/"
+        done
+    else
+        moss_log INFO "paquete normal detectado ($_moss_p_filecount archivos), instalando en pkg/$_moss_p_name"
+        mkdir -p "$_moss_p_opt_staging/pkg/$_moss_p_name"
+        
+        # shellcheck disable=SC2013,SC2043,SC2086
+        for _moss_sb_f in "$_moss_p_staging"/* "$_moss_p_staging"/.[!.]*; do
+            [ -e "$_moss_sb_f" ] || continue
+            mv "$_moss_sb_f" "$_moss_p_opt_staging/pkg/$_moss_p_name/"
+        done
+    fi
+    
+    rm -rf "$_moss_p_staging"
+    mv "$_moss_p_opt_staging" "$_moss_p_staging"
+    
+    # Reconstruir la lista de archivos
+    moss_build_filelist "$_moss_p_staging" "$_moss_p_list"
+
+    # --- plan en modo dry-run ---
+    if [ "$MOSS_DRY_RUN" -eq 1 ]; then
+        _moss_p_count=$(wc -l < "$_moss_p_list" | tr -dc '0-9')
+        moss_log INFO "[dry-run] se instalaria $_moss_p_name $_moss_p_version"
+        moss_log INFO "[dry-run] destino: $MOSS_PREFIX (archivos: $_moss_p_count)"
+        while IFS= read -r _moss_p_f; do
+            moss_log INFO "[dry-run]   + $MOSS_PREFIX/$_moss_p_f"
+        done < "$_moss_p_list"
+        return 0
+    fi
+
+    # --- reinstalacion de paquete ya gestionado ---
+    _moss_p_state=$MOSS_STATE_DIR/$_moss_p_name
+    if [ -f "$_moss_p_state/manifest" ]; then
+        if [ "$MOSS_FORCE" -eq 1 ]; then
+            moss_log INFO "$_moss_p_name ya esta gestionado; se reemplaza (--force)"
+            [ -f "$_moss_p_state/manifest.bak" ] &&
+                mv "$_moss_p_state/manifest.bak" "$MOSS_TMPDIR/keep-manifest.$$"
+            [ -f "$_moss_p_state/files.bak" ] &&
+                mv "$_moss_p_state/files.bak" "$MOSS_TMPDIR/keep-files.$$"
+            moss_remove_pkg "$_moss_p_name" || {
+                [ -f "$MOSS_TMPDIR/keep-manifest.$$" ] &&
+                    mv "$MOSS_TMPDIR/keep-manifest.$$" "$_moss_p_state/manifest.bak"
+                [ -f "$MOSS_TMPDIR/keep-files.$$" ] &&
+                    mv "$MOSS_TMPDIR/keep-files.$$" "$_moss_p_state/files.bak"
+                return $MOSS_EX_INSTALL
+            }
+            mkdir -p "$_moss_p_state"
+            [ -f "$MOSS_TMPDIR/keep-manifest.$$" ] &&
+                mv "$MOSS_TMPDIR/keep-manifest.$$" "$_moss_p_state/manifest.bak"
+            [ -f "$MOSS_TMPDIR/keep-files.$$" ] &&
+                mv "$MOSS_TMPDIR/keep-files.$$" "$_moss_p_state/files.bak"
+        else
+            moss_log ERROR "$_moss_p_name ya esta instalado (usa --force para reinstalar)"
+            return $MOSS_EX_CONFLICT
+        fi
+    fi
+
+    # --- conflictos con archivos ajenos ---
+    if ! moss_check_conflicts "$_moss_p_list"; then
+        if [ "$MOSS_FORCE" -eq 1 ]; then
+            moss_log WARN "conflictos con archivos existentes; se sobrescriben (--force)"
+        else
+            moss_log ERROR "conflictos con archivos existentes; abortando (usa --force)"
+            return $MOSS_EX_CONFLICT
+        fi
+    fi
+
+    # --- copia con rollback automatico ---
+    mkdir -p "$_moss_p_state"
+    if ! moss_install_files "$_moss_p_staging" "$_moss_p_list" "$_moss_p_state/files"; then
+        rmdir "$_moss_p_state" 2>/dev/null
+        return $MOSS_EX_INSTALL
+    fi
+
+    moss_write_manifest "$_moss_p_state/manifest" "$_moss_p_name" "$_moss_p_version" \
+        "$_moss_p_url" "$_moss_p_sha" "$MOSS_PREFIX" "$(basename "$_moss_p_src")"
+    
+    # --- INICIO MODIFICACION: Generar .desktop automatico ---
+    _moss_desk_dir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+    [ "$MOSS_SYSTEM" -eq 1 ] && _moss_desk_dir="/usr/share/applications"
+    
+    # Busca si hay un ejecutable con el mismo nombre del paquete en bin/ o en la raiz
+    _moss_candidates=""
+    _moss_cand_count=0
+    while IFS= read -r _moss_raw_file; do
+        _moss_file=${_moss_raw_file#./}
+        
+        # Filtrar extensiones y carpetas inútiles
+        case "$_moss_file" in
+            *.so | *.so.* | *.pak | *.dat | *.bin | *.html | *.txt | *.json | */node_modules/*)
+                continue
+                ;;
+        esac
+        
+        _moss_cand="$MOSS_PREFIX/$_moss_file"
+        if [ -e "$_moss_cand" ] && [ ! -d "$_moss_cand" ] && [ -x "$_moss_cand" ]; then
+            if [ -z "$_moss_candidates" ]; then
+                _moss_candidates="$_moss_cand"
+            else
+                # Anexar con salto de línea (estrictamente POSIX)
+                _moss_candidates="$_moss_candidates
+$_moss_cand"
+            fi
+            _moss_cand_count=$((_moss_cand_count + 1))
+        fi
+    done < "$_moss_p_state/files"
+
+    _moss_exec_path=""
+    if [ "$_moss_cand_count" -eq 0 ]; then
+        moss_log WARN "no se encontraron ejecutables validos para generar .desktop"
+    elif [ "$_moss_cand_count" -eq 1 ]; then
+        _moss_exec_path="$_moss_candidates"
+    else
+        moss_log WARN "Multiples ejecutables encontrados, seleccionando el primero automaticamente"
+        _moss_exec_path=$(printf '%s\n' "$_moss_candidates" | awk 'NR==1 {print $0}')
+    fi
+
+    if [ -n "$_moss_exec_path" ]; then
+        mkdir -p "$_moss_desk_dir" 2>/dev/null
+        _moss_desk_file="$_moss_desk_dir/moss-$_moss_p_name.desktop"
+        cat <<EOF > "$_moss_desk_file"
+[Desktop Entry]
+Version=1.0
+Name=${MOSS_P_APP_NAME:-$_moss_p_name}
+Comment=Instalado via moss
+Exec="$_moss_exec_path" %U
+Icon=
+Terminal=false
+Type=Application
+Categories=Application;
+EOF
+        # Registrar el archivo .desktop en la lista de archivos para que se borre al desinstalar
+        printf '%s\n' "$_moss_desk_file" >> "$_moss_p_state/files"
+        moss_log INFO "acceso directo creado: $_moss_desk_file"
+        
+        command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$_moss_desk_dir"
+        
+        # --- Nuevo symlink inteligente (Sandboxing) ---
+        mkdir -p "$MOSS_PREFIX/bin"
+        _moss_rel_target="../${_moss_exec_path#"$MOSS_PREFIX/"}"
+        _moss_symlink="$MOSS_PREFIX/bin/$MOSS_R_NAME"
+        ln -sf "$_moss_rel_target" "$_moss_symlink"
+        printf 'bin/%s\n' "$MOSS_R_NAME" >> "$_moss_p_state/files"
+        moss_log INFO "enlace symlink creado: bin/$MOSS_R_NAME -> $_moss_rel_target"
+    fi
+    # --- FIN MODIFICACION ---
+
+    moss_log INFO "instalado: $_moss_p_name $_moss_p_version -> $MOSS_PREFIX"
+    return 0
+}
+
+# Resolucion de paquetes (indice o archivo local)
+
+# moss_resolve_pkg ARG -> MOSS_R_* (name/version/url/sha/sig/localfile)
+moss_resolve_pkg() {
+    if [ -f "$1" ]; then
+        _moss_res_base=$(basename "$1")
+        MOSS_R_NAME=$(printf '%s' "$_moss_res_base" | sed \
+            's/\.tar\.gz$//; s/\.tar\.xz$//; s/\.tar\.bz2$//; s/\.tar\.zst$//;
+             s/\.tgz$//; s/\.txz$//; s/\.tbz2$//')
+        [ -n "$MOSS_R_NAME" ] || MOSS_R_NAME=$_moss_res_base
+        MOSS_R_VERSION=local
+        MOSS_R_URL=$1
+        MOSS_R_SHA=$(moss_sha256 "$1" 2>/dev/null || printf '')
+        MOSS_R_SIG=''
+        MOSS_R_LOCAL=$1
+        return 0
+    fi
+    case $1 in
+        http://*|https://*|file://*)
+            _moss_res_base=$(basename "$1")
+            MOSS_R_NAME=$(printf '%s' "$_moss_res_base" | sed \
+                's/\.tar\.gz$//; s/\.tar\.xz$//; s/\.tar\.bz2$//; s/\.tar\.zst$//;
+                 s/\.tgz$//; s/\.txz$//; s/\.tbz2$//')
+            [ -n "$MOSS_R_NAME" ] || MOSS_R_NAME=$_moss_res_base
+            MOSS_R_VERSION=direct
+            MOSS_R_URL=$1
+            MOSS_R_SHA=''
+            MOSS_R_SIG=''
+            MOSS_R_LOCAL=''
+            return 0
+            ;;
+    esac
+    moss_index_load || return $?
+    if ! moss_index_lookup "$1"; then
+        moss_log ERROR "paquete no encontrado en el indice: $1"
+        return $MOSS_EX_USAGE
+    fi
+    MOSS_R_NAME=$1
+    MOSS_R_VERSION=$MOSS_L_VERSION
+    MOSS_R_URL=$MOSS_L_URL
+    MOSS_R_SHA=$MOSS_L_SHA
+    MOSS_R_SIG=$MOSS_L_SIG
+    MOSS_R_LOCAL=''
+    return 0
+}
+
+# Subcomandos
+
+moss_cmd_install() {
+    moss_normargs "$@"
+    _moss_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $MOSS_NORMED
+    set +f
+    IFS=$_moss_an_saveifs
+    OPTIND=1
+    while getopts ':hnfsqjv' _moss_opt; do
+        case $_moss_opt in
+            h) moss_usage; return 0 ;;
+            n) MOSS_DRY_RUN=1 ;;
+            f) MOSS_FORCE=1 ;;
+            s) MOSS_SYSTEM=1 ;;
+            q) MOSS_LOG_LEVEL=1 ;;
+            v) MOSS_LOG_LEVEL=3 ;;
+            j) MOSS_JSON=1 ;;
+            :) moss_die $MOSS_EX_USAGE "falta argumento para -$OPTARG" ;;
+            *) moss_die $MOSS_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+    [ $# -eq 1 ] || { moss_usage >&2; exit $MOSS_EX_USAGE; }
+    moss_state_init || exit $MOSS_EX_DEP
+
+    moss_resolve_pkg "$1"
+    _moss_i_rc=$?
+    [ "$_moss_i_rc" -ne 0 ] && exit "$_moss_i_rc"
+
+
+
+    moss_perform_install "$MOSS_R_NAME" "$MOSS_R_VERSION" "$MOSS_R_URL" \
+        "$MOSS_R_SHA" "$MOSS_R_SIG" "$MOSS_R_LOCAL"
+    exit $?
+}
+
+moss_cmd_remove() {
+    moss_normargs "$@"
+    _moss_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $MOSS_NORMED
+    set +f
+    IFS=$_moss_an_saveifs
+    OPTIND=1
+    while getopts ':hfsyqjv' _moss_opt; do
+        case $_moss_opt in
+            h) moss_usage; return 0 ;;
+            f) MOSS_FORCE=1 ;;
+            s) MOSS_SYSTEM=1 ;;
+            y) MOSS_ASSUME_YES=1 ;;
+            q) MOSS_LOG_LEVEL=1 ;;
+            v) MOSS_LOG_LEVEL=3 ;;
+            j) MOSS_JSON=1 ;;
+            :) moss_die $MOSS_EX_USAGE "falta argumento para -$OPTARG" ;;
+            *) moss_die $MOSS_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+    [ $# -eq 1 ] || { moss_usage >&2; exit $MOSS_EX_USAGE; }
+    moss_state_init || exit $MOSS_EX_DEP
+    _moss_rm_name=$1
+
+    if [ ! -f "$MOSS_STATE_DIR/$_moss_rm_name/manifest" ]; then
+        moss_die $MOSS_EX_USAGE "no esta instalado: $_moss_rm_name"
+    fi
+
+
+
+    if moss_remove_pkg "$_moss_rm_name"; then
+        moss_log INFO "eliminado: $_moss_rm_name"
+        exit $MOSS_EX_OK
+    fi
+    moss_die $MOSS_EX_INSTALL "no se pudo eliminar $_moss_rm_name"
+}
+
+# moss_update_one NOMBRE -> MOSS_U_RESULT=updated|uptodate|skipped|failed
+moss_update_one() {
+    MOSS_U_RESULT=uptodate
+    _moss_u_state=$MOSS_STATE_DIR/$1
+    if ! moss_manifest_read "$_moss_u_state/manifest"; then
+        moss_log ERROR "no esta instalado: $1"
+        MOSS_U_RESULT=failed
+        return 1
+    fi
+    if ! moss_index_load; then
+        moss_log ERROR "indice no disponible"
+        MOSS_U_RESULT=failed
+        return 1
+    fi
+    if ! moss_index_lookup "$1"; then
+        moss_log WARN "$1 no esta en el indice; se omite"
+        MOSS_U_RESULT=skipped
+        return 0
+    fi
+    if [ "$(moss_version_gt "$MOSS_L_VERSION" "$MOSS_M_VERSION")" != 1 ]; then
+        moss_log INFO "$1 ya esta al dia ($MOSS_M_VERSION)"
+        return 0
+    fi
+    if [ "$MOSS_DRY_RUN" -eq 1 ]; then
+        moss_log INFO "[dry-run] $1: $MOSS_M_VERSION -> $MOSS_L_VERSION"
+        MOSS_U_RESULT=updated
+        return 0
+    fi
+    moss_log INFO "actualizando $1: $MOSS_M_VERSION -> $MOSS_L_VERSION"
+
+    cp "$_moss_u_state/manifest" "$_moss_u_state/manifest.bak"
+    [ -f "$_moss_u_state/files" ] && cp "$_moss_u_state/files" "$_moss_u_state/files.bak"
+
+    _moss_u_force=$MOSS_FORCE
+    MOSS_FORCE=1
+    moss_perform_install "$1" "$MOSS_L_VERSION" "$MOSS_L_URL" "$MOSS_L_SHA" "$MOSS_L_SIG" ''
+    _moss_u_rc=$?
+    if [ "$_moss_u_rc" -eq 0 ]; then
+        MOSS_FORCE=$_moss_u_force
+        MOSS_U_RESULT=updated
+        return 0
+    fi
+    moss_log ERROR "fallo la actualizacion de $1 (rc=$_moss_u_rc)"
+
+    _moss_u_src=''
+    _moss_u_cache=$MOSS_CACHE_DIR/$MOSS_M_TARBALL
+    if [ -f "$_moss_u_cache" ] && [ -n "$MOSS_M_SHA" ] &&
+       [ "$(moss_sha256 "$_moss_u_cache" 2>/dev/null)" = "$MOSS_M_SHA" ]; then
+        _moss_u_src=$_moss_u_cache
+    else
+        _moss_u_dl=$MOSS_TMPDIR/update-old.$$
+        if moss_download "$MOSS_M_URL" "$_moss_u_dl" 2>/dev/null; then
+            _moss_u_got=$(moss_sha256 "$_moss_u_dl" 2>/dev/null || printf '')
+            if [ -z "$MOSS_M_SHA" ] || [ "$_moss_u_got" = "$MOSS_M_SHA" ]; then
+                _moss_u_src=$_moss_u_dl
+                cp "$_moss_u_dl" "$_moss_u_cache" 2>/dev/null || :
+            fi
+        fi
+    fi
+    if [ -n "$_moss_u_src" ] &&
+       moss_perform_install "$1" "$MOSS_M_VERSION" "$MOSS_M_URL" "$MOSS_M_SHA" '' "$_moss_u_src"; then
+        moss_log INFO "se revirtio automaticamente a $1 $MOSS_M_VERSION"
+        moss_write_manifest "$_moss_u_state/manifest.bak" "$1" "$MOSS_L_VERSION" \
+            "$MOSS_L_URL" "$MOSS_L_SHA" "$MOSS_PREFIX" \
+            "$MOSS_L_SHA-$(basename "$MOSS_L_URL")"
+    else
+        mv "$_moss_u_state/manifest.bak" "$_moss_u_state/manifest"
+        [ -f "$_moss_u_state/files.bak" ] && mv "$_moss_u_state/files.bak" "$_moss_u_state/files"
+        moss_log WARN "no fue posible revertir automaticamente; ejecuta 'moss rollback $1'"
+    fi
+    MOSS_FORCE=$_moss_u_force
+    MOSS_U_RESULT=failed
+    return "$_moss_u_rc"
+}
+
+moss_cmd_update() {
+    moss_state_init || return 1
+    # Caso 1: Actualización de un paquete local
+    if [ "$#" -eq 2 ] && [ -f "$2" ]; then
+        if [ ! -d "$MOSS_STATE_DIR/$1" ]; then
+            moss_log ERROR "paquete no instalado: $1"
+            return 1
+        fi
+        
+        _moss_desk_dir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+        [ "$MOSS_SYSTEM" -eq 1 ] && _moss_desk_dir="/usr/share/applications"
+        _moss_desk_file="$_moss_desk_dir/moss-$1.desktop"
+        
+        _moss_prev_name=""
+        if [ -f "$_moss_desk_file" ]; then
+            _moss_prev_name=$(sed -n 's/^Name=//p' "$_moss_desk_file" | head -n 1)
+        fi
+        
+        export MOSS_R_NAME="$1"
+        export MOSS_P_APP_NAME="${_moss_prev_name:-$1}"
+        export MOSS_IS_LOCAL_UPDATE=1
+        MOSS_FORCE=1
+        
+        moss_cmd_install "$2"
+        return $?
+    fi
+
+    # Caso 2: Sincronización del repositorio (Descarga de índice)
+    if [ "$#" -eq 0 ]; then
+        _moss_cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/moss/index"
+        mkdir -p "$_moss_cache_dir"
+        
+        moss_log INFO "Sincronizando repositorios..."
+        if curl -sL "$MOSS_INDEX_URL" -o "$_moss_cache_dir/packages.tsv"; then
+            moss_log INFO "Repositorio actualizado"
+            return 0
+        else
+            moss_log ERROR "Error al sincronizar el repositorio"
+            return 1
+        fi
+    fi
+
+    # Manejo de error si los argumentos son incorrectos
+    moss_log ERROR "Uso incorrecto. Argumentos esperados: 0 (sincronizar) o 2 (actualizacion local)."
+    return 1
+}
+
+moss_cmd_rollback() {
+    moss_normargs "$@"
+    _moss_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $MOSS_NORMED
+    set +f
+    IFS=$_moss_an_saveifs
+    OPTIND=1
+    while getopts ':hfsqjv' _moss_opt; do
+        case $_moss_opt in
+            h) moss_usage; return 0 ;;
+            f) MOSS_FORCE=1 ;;
+            s) MOSS_SYSTEM=1 ;;
+            q) MOSS_LOG_LEVEL=1 ;;
+            v) MOSS_LOG_LEVEL=3 ;;
+            j) MOSS_JSON=1 ;;
+            :) moss_die $MOSS_EX_USAGE "falta argumento para -$OPTARG" ;;
+            *) moss_die $MOSS_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+    [ $# -eq 1 ] || { moss_usage >&2; exit $MOSS_EX_USAGE; }
+    moss_state_init || exit $MOSS_EX_DEP
+    _moss_rb_name=$1
+    _moss_rb_state=$MOSS_STATE_DIR/$_moss_rb_name
+
+    [ -f "$_moss_rb_state/manifest.bak" ] ||
+        moss_die $MOSS_EX_USAGE "no hay respaldo para revertir: $_moss_rb_name"
+    moss_manifest_read "$_moss_rb_state/manifest.bak"
+    _moss_rb_version=$MOSS_M_VERSION
+    _moss_rb_url=$MOSS_M_URL
+    _moss_rb_sha=$MOSS_M_SHA
+    _moss_rb_tarball=$MOSS_M_TARBALL
+
+    _moss_rb_cache=$MOSS_CACHE_DIR/$_moss_rb_tarball
+    if [ -f "$_moss_rb_cache" ] && [ -n "$_moss_rb_sha" ] &&
+       [ "$(moss_sha256 "$_moss_rb_cache" 2>/dev/null)" = "$_moss_rb_sha" ]; then
+        _moss_rb_src=$_moss_rb_cache
+    else
+        _moss_rb_src=$MOSS_TMPDIR/rollback.$$
+        if ! moss_download "$_moss_rb_url" "$_moss_rb_src"; then
+            moss_die $MOSS_EX_DOWNLOAD "no se pudo recuperar la version anterior de $_moss_rb_url"
+        fi
+        _moss_rb_got=$(moss_sha256 "$_moss_rb_src" 2>/dev/null || printf '')
+        if [ -n "$_moss_rb_sha" ] && [ "$_moss_rb_got" != "$_moss_rb_sha" ]; then
+            moss_die $MOSS_EX_VERIFY "el origen ya no contiene la version anterior (checksum distinto); rollback imposible"
+        fi
+        cp "$_moss_rb_src" "$_moss_rb_cache" 2>/dev/null || :
+    fi
+
+    mv "$_moss_rb_state/manifest" "$MOSS_TMPDIR/manifest.prev.$$"
+    [ -f "$_moss_rb_state/files" ] && mv "$_moss_rb_state/files" "$MOSS_TMPDIR/files.prev.$$"
+
+    _moss_rb_force=$MOSS_FORCE
+    _moss_rb_dry=$MOSS_DRY_RUN
+    MOSS_FORCE=1
+    MOSS_DRY_RUN=0
+    moss_perform_install "$_moss_rb_name" "$_moss_rb_version" "$_moss_rb_url" \
+        "$_moss_rb_sha" '' "$_moss_rb_src"
+    _moss_rb_rc=$?
+    MOSS_FORCE=$_moss_rb_force
+    MOSS_DRY_RUN=$_moss_rb_dry
+
+    if [ "$_moss_rb_rc" -ne 0 ]; then
+        mv "$MOSS_TMPDIR/manifest.prev.$$" "$_moss_rb_state/manifest"
+        [ -f "$MOSS_TMPDIR/files.prev.$$" ] &&
+            mv "$MOSS_TMPDIR/files.prev.$$" "$_moss_rb_state/files"
+        moss_die $_moss_rb_rc "rollback fallido (rc=$_moss_rb_rc); estado restaurado"
+    fi
+    mv "$MOSS_TMPDIR/manifest.prev.$$" "$_moss_rb_state/manifest.bak"
+    [ -f "$MOSS_TMPDIR/files.prev.$$" ] &&
+        mv "$MOSS_TMPDIR/files.prev.$$" "$_moss_rb_state/files.bak"
+    moss_log INFO "rollback completado: $_moss_rb_name -> $_moss_rb_version"
+    exit $MOSS_EX_OK
+}
+
+moss_cmd_sync() {
+    moss_normargs "$@"
+    _moss_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $MOSS_NORMED
+    set +f
+    IFS=$_moss_an_saveifs
+    OPTIND=1
+    while getopts ':hqv' _moss_opt; do
+        case $_moss_opt in
+            h) moss_usage; return 0 ;;
+            q) MOSS_LOG_LEVEL=1 ;;
+            v) MOSS_LOG_LEVEL=3 ;;
+            :) moss_die $MOSS_EX_USAGE "falta argumento para -$OPTARG" ;;
+            *) moss_die $MOSS_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    moss_state_init || exit $MOSS_EX_DEP
+    case ${MOSS_INDEX_URL:-} in
+        ''|*'<user>'*)
+            moss_die $MOSS_EX_USAGE "indice no configurado: define MOSS_INDEX_URL en ~/.config/moss/config"
+            ;;
+    esac
+    if ! moss_index_source_is_url; then
+        moss_log INFO "fuente de indice local; nada que sincronizar"
+        exit $MOSS_EX_OK
+    fi
+    if moss_index_refresh; then
+        moss_log INFO "indice sincronizado -> $(moss_index_cache_file)"
+        exit $MOSS_EX_OK
+    fi
+    moss_die $MOSS_EX_DOWNLOAD "fallo la sincronizacion del indice: $MOSS_INDEX_URL"
+}
+
+moss_installed_names() {
+    for _moss_li_d in "$MOSS_STATE_DIR"/*/; do
+        [ -f "$_moss_li_d/manifest" ] || continue
+        moss_manifest_read "$_moss_li_d/manifest"
+        [ -n "$MOSS_M_NAME" ] && printf '%s\n' "$MOSS_M_NAME"
+    done
+}
+
+moss_cmd_list() {
+    moss_normargs "$@"
+    _moss_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $MOSS_NORMED
+    set +f
+    IFS=$_moss_an_saveifs
+    OPTIND=1
+    while getopts ':hqjv' _moss_opt; do
+        case $_moss_opt in
+            h) moss_usage; return 0 ;;
+            q) MOSS_LOG_LEVEL=1 ;;
+            v) MOSS_LOG_LEVEL=3 ;;
+            j) MOSS_JSON=1 ;;
+            *) moss_die $MOSS_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    moss_state_init || exit $MOSS_EX_DEP
+
+    _moss_ls_idx=0
+    if moss_index_load >/dev/null 2>&1; then
+        _moss_ls_idx=1
+    fi
+
+    if [ "$MOSS_JSON" -eq 1 ]; then
+        printf '{"installed":['
+        _moss_ls_first=1
+        for _moss_ls_d in "$MOSS_STATE_DIR"/*/; do
+            [ -f "$_moss_ls_d/manifest" ] || continue
+            moss_manifest_read "$_moss_ls_d/manifest"
+            [ "$_moss_ls_first" -eq 0 ] && printf ','
+            _moss_ls_first=0
+            _moss_ls_avail=''
+            if [ "$_moss_ls_idx" -eq 1 ] && moss_index_lookup "$MOSS_M_NAME" 2>/dev/null; then
+                _moss_ls_avail=$(printf ',"available_version":"%s"' "$(moss_jesc "$MOSS_L_VERSION")")
+            fi
+            printf '{"name":"%s","version":"%s","installed_at":"%s","prefix":"%s"%s}' \
+                "$(moss_jesc "$MOSS_M_NAME")" "$(moss_jesc "$MOSS_M_VERSION")" \
+                "$(moss_jesc "$MOSS_M_DATE")" "$(moss_jesc "$MOSS_M_PREFIX")" "$_moss_ls_avail"
+        done
+        printf ']}\n'
+        exit $MOSS_EX_OK
+    fi
+
+    _moss_ls_any=0
+    for _moss_ls_d in "$MOSS_STATE_DIR"/*/; do
+        [ -f "$_moss_ls_d/manifest" ] || continue
+        moss_manifest_read "$_moss_ls_d/manifest"
+        _moss_ls_any=1
+        _moss_ls_avail='-'
+        if [ "$_moss_ls_idx" -eq 1 ] && moss_index_lookup "$MOSS_M_NAME" 2>/dev/null; then
+            _moss_ls_avail=$MOSS_L_VERSION
+        fi
+        printf '%-24s %-14s %-14s %s\n' "$MOSS_M_NAME" "$MOSS_M_VERSION" "$_moss_ls_avail" "$MOSS_M_DATE"
+    done
+    [ "$_moss_ls_any" -eq 1 ] || moss_log INFO "ningun paquete instalado"
+    exit $MOSS_EX_OK
+}
+
+moss_cmd_search() {
+    moss_normargs "$@"
+    _moss_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $MOSS_NORMED
+    set +f
+    IFS=$_moss_an_saveifs
+    OPTIND=1
+    while getopts ':hqjv' _moss_opt; do
+        case $_moss_opt in
+            h) moss_usage; return 0 ;;
+            q) MOSS_LOG_LEVEL=1 ;;
+            v) MOSS_LOG_LEVEL=3 ;;
+            j) MOSS_JSON=1 ;;
+            *) moss_die $MOSS_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+    [ $# -eq 1 ] || { moss_usage >&2; exit $MOSS_EX_USAGE; }
+    moss_state_init || exit $MOSS_EX_DEP
+    moss_index_load || exit $?
+    _moss_s_pat=$1
+
+    if [ "$MOSS_JSON" -eq 1 ]; then
+        printf '{"results":['
+        _moss_s_first=1
+        awk -F "$MOSS_TAB" -v p="$_moss_s_pat" '
+            BEGIN { pl = tolower(p) }
+            $1 ~ /^#/ || NF < 4 { next }
+            {
+                line = tolower($0)
+                if (index(line, pl) > 0) {
+                    d = $5; gsub(/"/, "\\\"", d)
+                    printf "%s{\"name\":\"%s\",\"version\":\"%s\",\"description\":\"%s\"}",
+                        (f++ ? "," : ""), $1, $2, d
+                }
+            }' "$_moss_index_file"
+        printf ']}\n'
+        exit $MOSS_EX_OK
+    fi
+
+    awk -F "$MOSS_TAB" -v p="$_moss_s_pat" '
+        BEGIN { pl = tolower(p) }
+        $1 ~ /^#/ || NF < 4 { next }
+        {
+            line = tolower($0)
+            if (index(line, pl) > 0)
+                printf "%-24s %-14s %s\n", $1, $2, $5
+        }' "$_moss_index_file"
+    exit $MOSS_EX_OK
+}
+
+moss_cmd_info() {
+    moss_normargs "$@"
+    _moss_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $MOSS_NORMED
+    set +f
+    IFS=$_moss_an_saveifs
+    OPTIND=1
+    while getopts ':hqjv' _moss_opt; do
+        case $_moss_opt in
+            h) moss_usage; return 0 ;;
+            q) MOSS_LOG_LEVEL=1 ;;
+            v) MOSS_LOG_LEVEL=3 ;;
+            j) MOSS_JSON=1 ;;
+            *) moss_die $MOSS_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+    [ $# -eq 1 ] || { moss_usage >&2; exit $MOSS_EX_USAGE; }
+    moss_state_init || exit $MOSS_EX_DEP
+    _moss_in_name=$1
+
+    _moss_in_inst=0
+    if moss_manifest_read "$MOSS_STATE_DIR/$_moss_in_name/manifest"; then
+        _moss_in_inst=1
+    fi
+    _moss_in_idx=0
+    if moss_index_load && moss_index_lookup "$_moss_in_name"; then
+        _moss_in_idx=1
+    fi
+    if [ "$_moss_in_inst" -eq 0 ] && [ "$_moss_in_idx" -eq 0 ]; then
+        moss_die $MOSS_EX_USAGE "paquete desconocido: $_moss_in_name"
+    fi
+
+    if [ "$MOSS_JSON" -eq 1 ]; then
+        printf '{"name":"%s","installed":%s' "$(moss_jesc "$_moss_in_name")" \
+            "$([ "$_moss_in_inst" -eq 1 ] && printf true || printf false)"
+        if [ "$_moss_in_inst" -eq 1 ]; then
+            printf ',"installed_version":"%s","installed_at":"%s","prefix":"%s"' \
+                "$(moss_jesc "$MOSS_M_VERSION")" "$(moss_jesc "$MOSS_M_DATE")" \
+                "$(moss_jesc "$MOSS_M_PREFIX")"
+        fi
+        if [ "$_moss_in_idx" -eq 1 ]; then
+            printf ',"available_version":"%s","url":"%s","sha256":"%s","description":"%s"' \
+                "$(moss_jesc "$MOSS_L_VERSION")" "$(moss_jesc "$MOSS_L_URL")" \
+                "$(moss_jesc "$MOSS_L_SHA")" "$(moss_jesc "$MOSS_L_DESC")"
+        fi
+        printf '}\n'
+        exit $MOSS_EX_OK
+    fi
+
+    if [ "$_moss_in_idx" -eq 1 ]; then
+        printf 'nombre:       %s\n' "$_moss_in_name"
+        printf 'version:      %s\n' "$MOSS_L_VERSION"
+        printf 'url:          %s\n' "$MOSS_L_URL"
+        printf 'sha256:       %s\n' "$MOSS_L_SHA"
+        printf 'descripcion:  %s\n' "$MOSS_L_DESC"
+    fi
+    if [ "$_moss_in_inst" -eq 1 ]; then
+        printf 'instalado:    %s (%s)\n' "$MOSS_M_VERSION" "$MOSS_M_DATE"
+        printf 'prefijo:      %s\n' "$MOSS_M_PREFIX"
+        printf 'checksum:     %s\n' "$MOSS_M_SHA"
+    else
+        printf 'instalado:    no\n'
+    fi
+    exit $MOSS_EX_OK
+}
+
+moss_cmd_verify() {
+    moss_normargs "$@"
+    _moss_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $MOSS_NORMED
+    set +f
+    IFS=$_moss_an_saveifs
+    OPTIND=1
+    while getopts ':hqjv' _moss_opt; do
+        case $_moss_opt in
+            h) moss_usage; return 0 ;;
+            q) MOSS_LOG_LEVEL=1 ;;
+            v) MOSS_LOG_LEVEL=3 ;;
+            j) MOSS_JSON=1 ;;
+            *) moss_die $MOSS_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+    [ $# -eq 1 ] || { moss_usage >&2; exit $MOSS_EX_USAGE; }
+    moss_state_init || exit $MOSS_EX_DEP
+    _moss_v_name=$1
+    _moss_v_state=$MOSS_STATE_DIR/$_moss_v_name
+
+    moss_manifest_read "$_moss_v_state/manifest" ||
+        moss_die $MOSS_EX_USAGE "no esta instalado: $_moss_v_name"
+
+    _moss_v_cache=$MOSS_CACHE_DIR/$MOSS_M_TARBALL
+    if [ -f "$_moss_v_cache" ]; then
+        _moss_v_src=$_moss_v_cache
+    else
+        _moss_v_src=$MOSS_TMPDIR/verify.$$
+        moss_download "$MOSS_M_URL" "$_moss_v_src" ||
+            moss_die $MOSS_EX_DOWNLOAD "no se pudo obtener el tarball de $MOSS_M_URL"
+    fi
+
+    if [ -n "$MOSS_M_SHA" ]; then
+        _moss_v_got=$(moss_sha256 "$_moss_v_src" 2>/dev/null || printf '')
+        [ "$_moss_v_got" = "$MOSS_M_SHA" ] ||
+            moss_die $MOSS_EX_VERIFY "checksum del tarball no coincide"
+    fi
+
+    if [ -f "$_moss_v_state/files" ]; then
+        while IFS= read -r _moss_v_f; do
+            [ -e "$MOSS_M_PREFIX/$_moss_v_f" ] ||
+                moss_die $MOSS_EX_VERIFY "falta archivo instalado: $MOSS_M_PREFIX/$_moss_v_f"
+        done < "$_moss_v_state/files"
+    fi
+
+    if [ "$MOSS_JSON" -eq 1 ]; then
+        printf '{"name":"%s","version":"%s","ok":true}\n' \
+            "$(moss_jesc "$MOSS_M_NAME")" "$(moss_jesc "$MOSS_M_VERSION")"
+    else
+        moss_log INFO "verificacion correcta: $_moss_v_name $MOSS_M_VERSION"
+    fi
+    exit $MOSS_EX_OK
+}
+
+# Parsing de argumentos
+
+MOSS_NORMED=''
+# Convierte opciones largas conocidas en cortas (getopts es POSIX y no
+# entiende opciones largas). Los argumentos se unen con \n y se
+# re-separan con IFS=nueva-linea (preserva espacios en nombres).
+moss_normargs() {
+    MOSS_NORMED=''
+    for _moss_na_arg do
+        case $_moss_na_arg in
+            --dry-run)  _moss_na_arg=-n ;;
+            --force)    _moss_na_arg=-f ;;
+            --all)      _moss_na_arg=-a ;;
+            --quiet)    _moss_na_arg=-q ;;
+            --verbose)  _moss_na_arg=-v ;;
+            --json)     _moss_na_arg=-j ;;
+            --system)   _moss_na_arg=-s ;;
+            --yes)      _moss_na_arg=-y ;;
+            --help)     _moss_na_arg=-h ;;
+        esac
+        if [ -z "$MOSS_NORMED" ]; then
+            MOSS_NORMED=$_moss_na_arg
+        else
+            MOSS_NORMED="$MOSS_NORMED
+$_moss_na_arg"
+        fi
+    done
+}
+
+moss_usage() {
+    cat <<EOF
+$PROG_NAME $MOSS_VERSION — gestor de tarballs en POSIX sh
+
+Uso: $PROG_NAME [opciones-globales] <subcomando> [opciones] [args]
+
+Opciones globales (antes del subcomando):
+  -q, --quiet        solo errores y avisos
+  -v, --verbose      salida detallada
+  -j, --json         salida JSON (list, search, info, update)
+  -s, --system       ambito sistema (/usr/local, /var/lib/moss)
+      --offline      no tocar la red: usa el cache del indice aunque este vencido
+      --index URL    indice TSV local, file:// o http(s) (tambien MOSS_INDEX_URL
+                     o ~/.config/moss/config)
+  -h, --help         esta ayuda
+  -V, --version      version
+
+Subcomandos:
+  install <nombre|URL|archivo.tar.*>   instalar. Resolucion de fuente:
+      1) ruta local existente   2) URL http(s)/file directa
+      3) nombre buscado en el indice (url + sha256 + firma desde ahi)
+      -n, --dry-run            simular sin tocar el sistema
+      -f, --force              sobrescribir conflictos / reinstalar
+  remove <nombre>              desinstalar (usa -f para no confirmar)
+  update [nombre...]           actualizar (compara version con el indice)
+      -a, --all                actualizar todo lo instalado
+      -n, --dry-run
+  rollback <nombre>            volver a la version anterior (ver update)
+  sync                         forzar la re-descarga del indice al cache
+  list                         listar instalados (con version disponible en
+                               el indice como columna/marcador)
+  search <patron>              buscar en el indice (name/description)
+  info <nombre>                informacion de indice + estado local
+  verify <nombre>              verificar checksum del tarball y archivos
+
+Indice de paquetes:
+  Fuente: MOSS_INDEX_URL (default https://raw.githubusercontent.com/<user>/moss/main/index/packages.tsv),
+  ~/.config/moss/config o --index. Se cachea en ~/.cache/moss/index/packages.tsv
+  con TTL de MOSS_INDEX_TTL horas (default 24; 0 = siempre refrescar).
+  Formato TSV: nombre TAB version TAB url TAB sha256 TAB descripcion [TAB firma.asc]
+  Los tarballs no se commitean: se publican como assets de GitHub Releases.
+
+Sin subcomando, se imprime la ayuda.
+
+Codigos de salida: 0 ok | 1 uso/no encontrado | 2 descarga (incluye indice
+  sin cache) | 3 verificacion | 4 instalacion | 5 conflicto | 6 dependencia.
+EOF
+}
+
+# 1) precedencia: defectos < config < entorno < CLI
+moss_main() {
+    _moss_env_prefix=$MOSS_PREFIX
+    _moss_env_state=$MOSS_STATE_DIR
+    _moss_env_cache=$MOSS_CACHE_DIR
+    _moss_env_index=$MOSS_INDEX_URL
+    _moss_env_ttl=$MOSS_INDEX_TTL
+    moss_load_config
+    [ -n "$_moss_env_prefix" ] && MOSS_PREFIX=$_moss_env_prefix
+    [ -n "$_moss_env_state" ] && MOSS_STATE_DIR=$_moss_env_state
+    [ -n "$_moss_env_cache" ] && MOSS_CACHE_DIR=$_moss_env_cache
+    [ -n "$_moss_env_index" ] && MOSS_INDEX_URL=$_moss_env_index
+    [ -n "$_moss_env_ttl" ] && MOSS_INDEX_TTL=$_moss_env_ttl
+
+    while [ $# -gt 0 ]; do
+        case $1 in
+            -h|--help)    moss_usage; exit 0 ;;
+            -V|--version) printf '%s %s\n' "$PROG_NAME" "$MOSS_VERSION"; exit 0 ;;
+            -q|--quiet)   MOSS_LOG_LEVEL=1; shift ;;
+            -v|--verbose) MOSS_LOG_LEVEL=3; shift ;;
+            -j|--json)    MOSS_JSON=1; shift ;;
+            -s|--system)  MOSS_SYSTEM=1; shift ;;
+            -n|--dry-run) MOSS_DRY_RUN=1; shift ;;
+            -f|--force)   MOSS_FORCE=1; shift ;;
+            --offline)    MOSS_OFFLINE=1; shift ;;
+            --index)
+                [ $# -ge 2 ] || moss_die $MOSS_EX_USAGE "--index requiere un valor"
+                MOSS_INDEX_URL=$2
+                shift 2
+                ;;
+            --index=*) MOSS_INDEX_URL=${1#--index=}; shift ;;
+            --) shift; break ;;
+            -*) moss_log ERROR "opcion desconocida: $1"; moss_usage >&2
+                exit $MOSS_EX_USAGE ;;
+            *)  break ;;
+        esac
+    done
+
+    _moss_sub=${1:-help}
+    [ $# -gt 0 ] && shift
+
+    MOSS_TMPDIR=$(moss_mktempdir) || moss_die $MOSS_EX_DEP "no se pudo crear un directorio temporal"
+    trap moss_cleanup 0
+    trap 'exit 129' 1
+    trap 'exit 130' 2
+    trap 'exit 143' 15
+
+    case $_moss_sub in
+        install|add)         moss_cmd_install "$@" ;;
+        remove|rm|uninstall) moss_cmd_remove "$@" ;;
+        update|upgrade)      moss_cmd_update "$@" ;;
+        list|ls)             moss_cmd_list "$@" ;;
+        search|find)         moss_cmd_search "$@" ;;
+        info|show)           moss_cmd_info "$@" ;;
+        verify|check)        moss_cmd_verify "$@" ;;
+        rollback)            moss_cmd_rollback "$@" ;;
+        sync)                moss_cmd_sync "$@" ;;
+        help)                moss_usage; exit 0 ;;
+        *)
+            moss_log ERROR "subcomando desconocido: $_moss_sub"
+            moss_usage >&2
+            exit $MOSS_EX_USAGE
+            ;;
+    esac
+}
+
+moss_main "$@"
+exit $?

@@ -1,0 +1,23 @@
+# moss index v1 (TSV)
+# nombre	version	url	sha256	descripcion	[firma.asc]
+# Los tarballs se publican como assets de GitHub Releases, no se commitean.
+# Rellenar <sha256> con el hash real del asset publicado.
+foo	1.0.0	https://github.com/<user>/moss/releases/download/foo-1.0.0/foo-1.0.0.tar.gz	<sha256>	Foo demo
+foo	2.0.0	https://github.com/<user>/moss/releases/download/foo-2.0.0/foo-2.0.0.tar.gz	<sha256>	Foo demo (nueva serie)
+bar	0.3.1	https://github.com/<user>/moss/releases/download/bar-0.3.1/bar-0.3.1.tar.gz	<sha256>	Bar utilidad de ejemplo
+prismlauncher	11.0.3	https://github.com/PrismLauncher/PrismLauncher/releases/download/11.0.3/PrismLauncher-11.0.3.tar.gz	78c368140a4d49bf2a12ef0e03d045c6723fe8e5a5c9590668fb63ee0a264ef2	Launcher de Minecraft (fork de MultiMC), gestion de instancias
+pineconemc	11.1.0	https://github.com/ElyPrismLauncher/Launcher/releases/download/11.1.0/PineconeMC-11.1.0.tar.gz	488b5880ab050d9bbd481154e639553d020b6996068d3b477889443c13807247	Fork de Prism Launcher con soporte integrado para cuentas Ely.by
+limine	11.2.1	https://github.com/limine-bootloader/limine/releases/download/v11.2.1/limine-11.2.1.tar.gz	1d0ab886b8ee213418f626b5cf8a4a89df35f967d7f421945124147ef04f3e01	Bootloader moderno multiprotocolo (x86/aarch64/riscv64/loongarch64)
+bat	0.26.1	https://github.com/sharkdp/bat/releases/download/v0.26.1/bat-v0.26.1-x86_64-unknown-linux-gnu.tar.gz	726f04c8f576a7fd18b7634f1bbf2f915c43494c1c0f013baa3287edb0d5a2a3	cat con resaltado de sintaxis y soporte Git
+lazygit	0.65.1	https://github.com/jesseduffield/lazygit/releases/download/v0.65.1/lazygit_0.65.1_linux_x86_64.tar.gz	02beacbcda0fa342e50ae3480ba8147307353af3fb28e1d5f790e02329c201a6	TUI simple para comandos de Git
+lf	r42	https://github.com/gokcehan/lf/releases/download/r42/lf-linux-amd64.tar.gz	c6abe6c0c11a0a4ae89754884aad67de18decc113935cbc5eaa57dc0d1850fb4	Gestor de archivos de terminal inspirado en ranger, escrito en Go
+nnn	5.3	https://github.com/jarun/nnn/releases/download/v5.3/nnn-v5.3.tar.gz	c626d57d0aaa5effe04a7e8c24ec9000bc3aca012461b821ecd3c81f5131bb6d	Gestor de archivos de terminal, rapido y liviano
+croc	11.5.4	https://github.com/schollz/croc/releases/download/v11.5.4/croc_v11.5.4_Linux-64bit.tar.gz	577f2c4170fac3f8ab244e325cdeea5644788e1cd7620f592a5d365ee349d556	Transferencia de archivos P2P cifrada por linea de comandos
+yt-dlp	2026.08.19	https://github.com/yt-dlp/yt-dlp/releases/download/2026.08.19/yt-dlp.tar.gz	072aad4f2a7604e92155f61a275a4752dc64046c8f6d90df3710525d94cd37c1	Descargador de video/audio, fork de youtube-dl
+micro	2.0.15	https://github.com/micro-editor/micro/releases/download/v2.0.15/micro-2.0.15-linux64.tar.gz	dfa1b6ae53e4e0b063b54224fd2b6b0a3c3159ea09d042a3a8f5cd001844d44c	Editor de texto de terminal moderno, atajos tipo GUI
+nvim	0.12.5	https://github.com/neovim/neovim/releases/download/v0.12.5/nvim-linux-x86_64.tar.gz	bce0f56eda1f1b1db6eee8f4133d7a38813ea07933837dd1777411ca384c6875	Fork de Vim, extensible via Lua
+helix	25.07.1	https://github.com/helix-editor/helix/releases/download/25.07.1/helix-25.07.1-x86_64-linux.tar.xz	3f08e63ecd388fff657ad39722f88bb03dcf326f1f2da2700d99e1dc40ab2e8b	Editor modal tipo Kakoune/Neovim, LSP integrado
+scrcpy	4.1	https://github.com/Genymobile/scrcpy/archive/refs/tags/v4.1.tar.gz	537b2ade623cb94b6edddfa5c61bf0b0af21484aa8365ea2531b686ea573249a	Muestra y controla dispositivos Android por USB/TCP (codigo fuente)
+keepassxc	2.7.12	https://github.com/keepassxreboot/keepassxc/releases/download/2.7.12/keepassxc-2.7.12-src.tar.xz	be34eeb297881adea4f894c7c6e4a1835bd7927f8043ddea495040df4792a7de	Gestor de contrasenas offline, base KDBX
+vesktop	1.6.7	https://github.com/Vencord/Vesktop/releases/download/v1.6.7/vesktop-1.6.7.tar.gz	152786c72cf97f510b3a527829568083dd5c79b723cf459c13d430b6ca385b66	Cliente de Discord independiente con Vencord integrado
+zen	1.22.3b	https://github.com/zen-browser/desktop/releases/download/1.22.3b/zen.linux-x86_64.tar.xz	0aaee1b3f67f074aebf7fc6c2fe824441bcafd431e9991336479c16370519dd0	Navegador basado en Firefox, enfocado en productividad/estetica

@@ -1,0 +1,39 @@
+name: Actualizar Índice de Paquetes
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # Todos los días a las 03:00 AM UTC
+  workflow_dispatch:    # Permite ejecución manual desde la pestaña Actions
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Dar permisos de ejecución al script
+        run: chmod +x scripts/build-repo.sh
+
+      - name: Ejecutar script indexador
+        run: ./scripts/build-repo.sh
+        env:
+          # Para evitar Rate Limits si se consulta mucho la API sin autenticación
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit y push de los cambios en packages.tsv
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packages.tsv
+          
+          # Verifica silenciosamente si hubo algún cambio real en el archivo
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: actualizar índice de paquetes automático 🤖"
+            git push
+          else
+            echo "No hubo cambios en las versiones. Saltando commit."
+          fi
