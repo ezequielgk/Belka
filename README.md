@@ -3,6 +3,8 @@
 Gestor de paquetes y tarballs (`.tar.gz`, `.tar.xz`, `.tar.bz2`, `.tar.zst`) estrictamente **Headless y CLI** escrito en **shell script puro**. 
 Diseñado con una filosofía similar a `brew` o `nix`, aislando las instalaciones y generando symlinks inteligentes. Sin bashismos: corre nativamente bajo `dash` y `busybox ash`, lo que lo hace perfecto para CI/CD y scripts de automatización.
 
+Actualmente el proyecto se encuentra en un estado muy joven, es estable para ciertas cosas pero todavia necesita tiempo para ser estable al completo.
+
 ## Dependencias
 
 Obligatorias: `tar`, `find`, `sort`, `awk`, `sed`, `grep`, `date`, `cp`, `sha256sum` (o `shasum -a 256`, u `openssl`), `curl` **o** `wget`, `jq` (para compilar el índice).
