@@ -1,12 +1,43 @@
 # moss
 
-Gestor de paquetes y tarballs (`.tar.gz`, `.tar.xz`, `.tar.bz2`, `.tar.zst`) estrictamente **Headless y CLI** escrito en **POSIX sh puro**. 
+Gestor de paquetes y tarballs (`.tar.gz`, `.tar.xz`, `.tar.bz2`, `.tar.zst`) estrictamente **Headless y CLI** escrito en **shell script puro**. 
 Diseñado con una filosofía similar a `brew` o `nix`, aislando las instalaciones y generando symlinks inteligentes. Sin bashismos: corre nativamente bajo `dash` y `busybox ash`, lo que lo hace perfecto para CI/CD y scripts de automatización.
 
 ## Dependencias
 
 Obligatorias: `tar`, `find`, `sort`, `awk`, `sed`, `grep`, `date`, `cp`, `sha256sum` (o `shasum -a 256`, u `openssl`), `curl` **o** `wget`, `jq` (para compilar el índice).
-Opcionales: `gpg` (verificación de firmas), `mktemp` (hay fallback POSIX).
+Opcionales: `gpg` (verificación de firmas), `mktemp` (incluye un fallback nativo).
+
+## Instalación
+
+Moss sigue un enfoque de "cero instalación" (estilo `nvm` o `oh-my-zsh`). Al basarse en componentes nativos, basta con clonar el repositorio y enlazar el ejecutable. Esto permite que las actualizaciones futuras sean instantáneas.
+
+**Prerrequisitos:** Debes tener `git` instalado en tu sistema.
+
+Copia y pega el siguiente bloque en tu terminal:
+
+```bash
+# 1. Clonar el repositorio en tu espacio local
+git clone https://github.com/ezequielgk/Moss.git ~/.local/opt/moss
+
+# 2. Asegurar que exista el directorio de binarios locales
+mkdir -p ~/.local/bin
+
+# 3. Crear el enlace simbólico del ejecutable
+ln -s ~/.local/opt/moss/bin/moss ~/.local/bin/moss
+```
+
+**Configuración del PATH:**
+Asegúrate de que `~/.local/bin` esté incluido en la variable de entorno `$PATH` de tu shell. Si no lo está, añade la siguiente línea a tu archivo `~/.bashrc` o `~/.zshrc`:
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+### Actualización de Moss
+Gracias a este método de instalación directo desde la fuente, actualizar tu gestor de paquetes a la última versión es tan simple como descargar los últimos cambios de git:
+```bash
+cd ~/.local/opt/moss && git pull
+```
 
 ## Arquitectura de Instalación y Sandboxing
 
@@ -61,7 +92,7 @@ Pipeline: descarga a caché -> verificación sha256 -> extracción a staging tem
 ## Estructura del Repositorio
 
 ```text
-bin/moss                     # CLI de Moss (POSIX sh)
+bin/moss                     # CLI principal de Moss
 meta/apps.list               # Semilla del repositorio de GitHub (TSV)
 scripts/build-repo.sh        # Generador del índice desde GitHub Releases
 packages.tsv                 # Índice compilado automáticamente por el Bot (en la raíz)
