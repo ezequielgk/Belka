@@ -10,43 +10,48 @@ Opcionales: `gpg` (verificación de firmas), `mktemp` (hay fallback POSIX).
 
 ## Arquitectura de Instalación y Sandboxing
 
-A diferencia de gestores tradicionales que mezclan miles de archivos, `moss` emplea una estrategia de aislamiento estricto:
+A diferencia de gestores tradicionales que mezclan miles de archivos, `moss` emplea una estrategia de aislamiento estricto e inteligencia automatizada:
 
 - **MOSS_PREFIX**: Por defecto se instala en `~/.local/moss` (usuario) o `/usr/local/moss` (con flag `--system`).
 - **Paquetes Normales**: Se aíslan en la subcarpeta `pkg/<nombre_paquete>/`.
-- **Paquetes Masivos (>100 archivos)**: Se aíslan en la subcarpeta `opt/<nombre_paquete>/` para evitar cuellos de botella.
-- **Symlinks Inteligentes**: Sin importar el tamaño, el binario ejecutable se expone limpia y automáticamente mediante un enlace simbólico en `bin/`. 
+- **Paquetes Masivos (>100 archivos)**: Se aíslan en la subcarpeta `opt/<nombre_paquete>/` para evitar cuellos de botella y "suciendad" en el sistema.
+- **Heurística de Ejecutables**: Moss lee una quinta columna `exec` en su índice de paquetes para determinar qué binario debe ser el "principal". De no existir, aplica una heurística nativa que busca y auto-selecciona el binario correcto dentro del tarball. El comando `install` también soporta `-e <binario>` para sobrescribir esto.
+- **Symlinks y Escritorio Automáticos**: 
+  - Expone limpia y automáticamente el binario detectado mediante un enlace simbólico en `bin/`. 
+  - Si se trata de un paquete, genera un archivo `.desktop` válido en `~/.local/share/applications` para que aparezca mágicamente en tu menú de aplicaciones, sin importar si es un tarball genérico de internet.
+- **Progreso Limpio**: Olvídate del "agujero negro". Moss emplea barras de progreso en texto plano (`[######---] 60%`) para descargas y extracciones pesadas, reportando exactamente lo que hace sin ahogar la consola con miles de líneas.
 
 *Nota:* Asegúrate de agregar el path a tu terminal: `export PATH="$HOME/.local/moss/bin:$PATH"`
 
 ## Uso Rápido
 
 ```sh
-moss update                                 # Sincronizar/actualizar el índice remoto
+moss update                                 # Sincronizar/actualizar el índice remoto localmente
 moss install foo                            # Instalar paquete por nombre desde el índice
-moss install ./foo-1.0.0.tar.gz             # Instalar archivo local directamente
-moss update foo ./foo-2.0.0.tar.gz          # Actualización de paquete forzada vía archivo local
-moss list                                   # Listar paquetes instalados
+moss install ./foo-1.0.0.tar.gz             # Instalar archivo local directamente (sin índice)
+moss upgrade                                # Actualizar todos los paquetes instalados a su última versión
+moss list                                   # Tabla limpia de instalados (ID, Binario Real, Versión, Fecha)
 moss search foo                             # Buscar en el índice
-moss info foo                               # Mostrar información de estado
+moss info foo                               # Mostrar información de estado detallada
 moss verify foo                             # Verificar checksums del tarball local
-moss rollback foo                           # Volver a la versión previa del paquete
-moss remove foo                             # Desinstalar un paquete
+moss rollback foo                           # Volver a la versión previa instalada del paquete
+moss remove foo                             # Desinstalar mediante su ID de paquete original
+moss remove my-foo-bin                      # Desinstalar un paquete usando solo su nombre de ejecutable
 ```
 
 ## Ecosistema de Datos y GitHub Actions
 
 El repositorio de `moss` sigue un paradigma impulsado por datos (Data-Driven):
 
-1. **`meta/apps.list`**: La fuente de la verdad. Un simple listado TSV (Nombre, Repo, Patrón, Descripción).
+1. **`meta/apps.list`**: La fuente de la verdad. Un simple listado TSV (Nombre, Repo, Patrón, Descripción, **Exec**).
 2. **`scripts/build-repo.sh`**: Script que consulta la API de GitHub Releases, extrae URLs de descarga dinámicas y precalcula los SHA256.
 3. **`.github/workflows/update.yml`**: Bot automático que corre todos los días a las 03:00 AM UTC. Si detecta nuevas versiones, re-construye silenciosamente el `packages.tsv` y hace `push` al índice.
 
 ## Estado y Seguridad
 
-Por paquete en `$MOSS_STATE_DIR/<nombre>/` (ej: `~/.local/share/moss/`): `manifest` (KEY=VALUE: name, version, url, sha256, prefix, tarball, installed_at), `files` (rutas instaladas), y `manifest.bak`/`files.bak` para `rollback`.
+Por paquete en `$MOSS_STATE_DIR/<nombre>/` (ej: `~/.local/share/moss/`): `manifest` (KEY=VALUE: name, version, url, sha256, prefix, tarball, installed_at), `files` (rutas instaladas para purga asincrónica con barra de progreso), y `manifest.bak`/`files.bak` para `rollback`.
 
-Pipeline: descarga a caché -> verificación sha256 -> extracción a staging temporal -> aislamiento en `pkg/` u `opt/` -> creación de Symlink -> copia con **rollback automático** si falla a mitad. 
+Pipeline: descarga a caché -> verificación sha256 -> extracción a staging temporal -> aislamiento en `pkg/` u `opt/` -> creación de Symlink y .desktop inteligente -> copia con **rollback automático** si falla a mitad. 
 
 ## Códigos de Salida (Automatización)
 
@@ -59,7 +64,7 @@ Pipeline: descarga a caché -> verificación sha256 -> extracción a staging tem
 bin/moss                     # CLI de Moss (POSIX sh)
 meta/apps.list               # Semilla del repositorio de GitHub (TSV)
 scripts/build-repo.sh        # Generador del índice desde GitHub Releases
-index/packages.tsv           # Índice compilado automáticamente por el Bot
+packages.tsv                 # Índice compilado automáticamente por el Bot (en la raíz)
 .github/workflows/update.yml # CI/CD diario de automatización
 tests/run_tests.sh           # Batería de pruebas unitarias
 README.md                    # Este archivo
