@@ -1,4 +1,4 @@
-# nombre	repo	patron_asset	descripcion
-bat	sharkdp/bat	x86_64-unknown-linux-musl.tar.gz	Un clon de cat con resaltado de sintaxis e integración con Git
-neovim	neovim/neovim	nvim-linux64.tar.gz	Editor de texto basado en Vim, fuertemente enfocado en extensibilidad
-jq	jqlang/jq	jq-linux-amd64	Procesador de JSON de línea de comandos ligero y flexible
+# nombre	repo	patron_asset	descripcion	exec
+bat	sharkdp/bat	x86_64-unknown-linux-musl.tar.gz	Un clon de cat con resaltado de sintaxis e integración con Git	bat
+neovim	neovim/neovim	nvim-linux64.tar.gz	Editor de texto basado en Vim, fuertemente enfocado en extensibilidad	nvim
+jq	jqlang/jq	jq-linux-amd64	Procesador de JSON de línea de comandos ligero y flexible	jq
