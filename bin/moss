@@ -1,38 +1,14 @@
 #!/bin/sh
-# SPDX-License-Identifier: MIT
-#
-# moss — gestor de tarballs (.tar.gz/.tar.xz/.tar.bz2/.tar.zst) en POSIX sh.
-#
-# Requisitos: tar, find, sort, awk, sed, grep, date, dirname, basename, cp, rm,
-#             sha256sum (o shasum u openssl), curl o wget.
-# Opcionales: fzf (TUI), gpg (verificacion de firmas), mktemp (recomendado).
-#
-# Codigos de salida:
-#   0  ok
-#   1  uso incorrecto / paquete no encontrado / no instalado
-#   2  fallo de descarga
-#   3  fallo de verificacion (checksum / firma / archivos faltantes)
-#   4  fallo de instalacion (con rollback ejecutado)
-#   5  conflicto de archivos existentes
-#   6  dependencia faltante / entorno no soportado
-#
-# Este archivo no debe tener bashismos: pasa "shellcheck -s sh" y corre bajo
-# dash y busybox ash.
-
-# Configuracion (precedencia: CLI > variables de entorno > archivo de config >
-# valores por defecto).
 
 MOSS_VERSION=1.1.0
 PROG_NAME=moss
 
-# Capturadas del entorno (pueden quedar vacias).
 MOSS_PREFIX=${MOSS_PREFIX:-}
 MOSS_STATE_DIR=${MOSS_STATE_DIR:-}
 MOSS_CACHE_DIR=${MOSS_CACHE_DIR:-}
 MOSS_INDEX_URL=${MOSS_INDEX_URL:-https://raw.githubusercontent.com/ezequielgk/Moss/main/packages.tsv}
 MOSS_INDEX_TTL=${MOSS_INDEX_TTL:-24}
 
-# Flags globales / por subcomando.
 MOSS_SYSTEM=${MOSS_SYSTEM:-0}
 MOSS_DRY_RUN=0
 MOSS_FORCE=0
@@ -40,7 +16,7 @@ MOSS_JSON=0
 MOSS_ASSUME_YES=0
 MOSS_OFFLINE=0
 MOSS_SYNC_FORCE=0
-MOSS_LOG_LEVEL=2          # 0=error 1=+aviso 2=+info (defecto) 3=+depuracion
+MOSS_LOG_LEVEL=2
 
 MOSS_EX_OK=0
 MOSS_EX_USAGE=1
@@ -52,9 +28,6 @@ MOSS_EX_DEP=6
 
 MOSS_TAB=$(printf '\t')
 
-# Utilidades basicas
-
-# moss_log NIVEL mensaje...  (todo va a stderr; los datos van a stdout)
 moss_log() {
     _moss_l_level=$1
     shift
@@ -78,7 +51,6 @@ moss_die() {
     exit "$_moss_d_code"
 }
 
-# moss_progress ACTUAL TOTAL MENSAJE
 moss_progress() {
     _moss_curr=$1
     _moss_tot=$2
@@ -103,7 +75,6 @@ moss_progress() {
         _moss_i=$((_moss_i + 1))
     done
     
-    # Limitar el mensaje a 25 caracteres para que junto con la barra (40) encaje perfecto en 80 columnas
     printf '\r%-25.25s [%s] %3d%%' "$_moss_msg" "$_moss_bar" "$_moss_pct"
     
     if [ "$_moss_curr" -ge "$_moss_tot" ]; then
@@ -130,8 +101,6 @@ moss_mktempdir() {
     return 1
 }
 
-# Formato: KEY=VALUE por linea, '#' comentarios. Solo se aceptan claves
-# conocidas; no se usa eval.
 moss_load_config() {
     _moss_c_file=${MOSS_CONFIG:-$HOME/.config/moss/config}
     [ -f "$_moss_c_file" ] || return 0
@@ -158,7 +127,6 @@ moss_apply_defaults() {
     [ -z "$MOSS_CACHE_DIR" ] && MOSS_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/moss"
 }
 
-# --system: instala a /usr/local/moss y registra en /var/lib/moss.
 moss_apply_scope() {
     if [ "$MOSS_SYSTEM" -eq 1 ]; then
         MOSS_PREFIX=/usr/local/moss
@@ -187,7 +155,6 @@ moss_sha256() {
     fi
 }
 
-# moss_download URL DEST
 moss_download() {
     case $1 in
         http://*|https://*)
@@ -209,8 +176,6 @@ moss_download() {
     esac
 }
 
-# moss_version_gt A B -> imprime "1" si A > B (comparacion numerica por
-# componentes, ignora prefijos tipo "v").
 moss_version_gt() {
     awk -v a="$1" -v b="$2" 'BEGIN {
         na = split(a, xa, /[^0-9]+/)
@@ -225,7 +190,6 @@ moss_version_gt() {
     }'
 }
 
-# Escapado JSON robusto (backslash, comillas, tabs, saltos de linea).
 moss_jesc() {
     printf '%s' "$1" | awk '
     {
@@ -236,8 +200,6 @@ moss_jesc() {
         printf "%s", $0
     }'
 }
-
-# Indice (TSV): nombre TAB version TAB url TAB sha256 TAB descripcion [TAB sig]
 
 moss_index_cache_file() {
     printf '%s\n' "$MOSS_CACHE_DIR/index/packages.tsv"
@@ -250,7 +212,6 @@ moss_index_source_is_url() {
     esac
 }
 
-# 0 = cache fresco; 1 = vencido o inexistente.
 moss_index_fresh() {
     _moss_f_file=$1
     [ -f "$_moss_f_file" ] || return 1
@@ -265,7 +226,6 @@ moss_index_fresh() {
     return 0
 }
 
-# descarga el indice al cache (atomico: tmp + mv). 0 ok, 2 fallo.
 moss_index_refresh() {
     _moss_r_cache=$(moss_index_cache_file)
     mkdir -p "$(dirname "$_moss_r_cache")"
@@ -277,8 +237,6 @@ moss_index_refresh() {
     return $MOSS_EX_DOWNLOAD
 }
 
-# garantiza un indice disponible en $_moss_index_file.
-# salidas: 0 listo | 1 no configurado / no encontrado | 2 descarga fallida
 moss_index_load() {
     [ -n "${MOSS_INDEX_URL:-}" ] || {
         moss_log ERROR "no hay indice configurado (MOSS_INDEX_URL, --index o ~/.config/moss/config)"
@@ -286,7 +244,6 @@ moss_index_load() {
     }
     case $MOSS_INDEX_URL in
         *'<user>'*)
-            # Asistente OOBE interactivo
             printf "MOSS_INDEX_URL no configurado.\n" >&2
             printf "Introduce la URL o ruta de tu indice: " >&2
             read -r _moss_new_url < /dev/tty || return $MOSS_EX_USAGE
@@ -345,7 +302,6 @@ moss_index_load() {
     return $MOSS_EX_DOWNLOAD
 }
 
-# moss_index_lookup NOMBRE -> MOSS_L_VERSION/URL/SHA/DESC/SIG o return 1.
 moss_index_lookup() {
     _moss_l_line=$(awk -F "$MOSS_TAB" -v n="$1" \
         '$1 !~ /^#/ && $1 == n { print; exit }' "$_moss_index_file")
@@ -357,9 +313,6 @@ EOF
     return 0
 }
 
-# Manifest (formato KEY=VALUE, una clave por linea)
-
-# moss_manifest_read ARCHIVO -> MOSS_M_*
 moss_manifest_read() {
     MOSS_M_NAME='' MOSS_M_VERSION='' MOSS_M_URL='' MOSS_M_SHA='' MOSS_M_PREFIX=''
     MOSS_M_TARBALL='' MOSS_M_DATE=''
@@ -377,7 +330,6 @@ moss_manifest_read() {
     done < "$1"
 }
 
-# moss_write_manifest ARCHIVO NOMBRE VERSION URL SHA PREFIX TARBALL
 moss_write_manifest() {
     {
         printf 'name=%s\n' "$2"
@@ -390,9 +342,6 @@ moss_write_manifest() {
     } > "$1"
 }
 
-# Extraccion / normalizacion / listas de archivos
-
-# moss_extract TARBALL DESTDIR
 moss_extract() {
     if tar -xf "$1" -C "$2" 2>/dev/null; then
         return 0
@@ -405,7 +354,6 @@ moss_extract() {
     esac
 }
 
-# Si el tarball tiene una unica carpeta raiz, se aplana un nivel.
 moss_normalize_staging() {
     _moss_n_entries=$(ls -A "$1" 2>/dev/null | sed '/^$/d')
     _moss_n_count=$(printf '%s\n' "$_moss_n_entries" | wc -l | tr -dc '0-9')
@@ -416,15 +364,11 @@ moss_normalize_staging() {
     fi
 }
 
-# moss_build_filelist STAGING OUTFILE
 moss_build_filelist() {
     ( cd "$1" && find . \( -type f -o -type l \) -print ) |
         sed 's|^\./||' | LC_ALL=C sort > "$2"
 }
 
-# Instalacion / desinstalacion de archivos (con rollback)
-
-# moss_check_conflicts LISTFILE -> 0 si no hay conflictos.
 moss_check_conflicts() {
     _moss_k_n=0
     _moss_k_any=0
@@ -441,7 +385,6 @@ moss_check_conflicts() {
     return "$_moss_k_any"
 }
 
-# moss_rmdir_chain RUTA_RELATIVA — elimina directorios vacios hacia arriba.
 moss_rmdir_chain() {
     _moss_rc_d=$(dirname "$1")
     while [ "$_moss_rc_d" != "." ] && [ "$MOSS_PREFIX/$_moss_rc_d" != "$MOSS_PREFIX" ]; do
@@ -450,7 +393,6 @@ moss_rmdir_chain() {
     done
 }
 
-# moss_install_files STAGING LISTFILE OUTLIST
 moss_install_files() {
     _moss_if_installed=$MOSS_TMPDIR/installed.$$
     
@@ -469,7 +411,6 @@ moss_install_files() {
     return 0
 }
 
-# moss_remove_pkg NOMBRE (usa el prefix registrado en el manifest).
 moss_remove_pkg() {
     _moss_rm_d=$MOSS_STATE_DIR/$1
     _moss_rm_prefix=$MOSS_PREFIX
@@ -505,7 +446,6 @@ moss_remove_pkg() {
             esac
             
             _moss_rm_curr=$((_moss_rm_curr + 1))
-            # Actualizar progreso cada 25 archivos o al final para no ahogar I/O
             if [ $((_moss_rm_curr % 25)) -eq 0 ] || [ "$_moss_rm_curr" -eq "$_moss_rm_tot" ]; then
                 moss_progress "$_moss_rm_curr" "$_moss_rm_tot" "Eliminando archivos..."
             fi
@@ -515,10 +455,6 @@ moss_remove_pkg() {
     rm -rf "$_moss_rm_d"
 }
 
-# Pipeline compartido de instalacion (usado por install, update y rollback)
-
-# moss_perform_install NOMBRE VERSION URL SHA SIG ARCHIVO_LOCAL
-# Devuelve: 0 ok | 2 descarga | 3 verificacion | 4 instalacion | 5 conflicto
 moss_perform_install() {
     _moss_p_name=$1
     _moss_p_version=$2
@@ -529,7 +465,6 @@ moss_perform_install() {
 
     moss_log INFO "Instalando paquete: $_moss_p_name"
 
-    # --- obtener tarball (cache o descarga) ---
     if [ -n "$_moss_p_local" ]; then
         _moss_p_src=$_moss_p_local
     else
@@ -550,7 +485,6 @@ moss_perform_install() {
         _moss_p_src=$_moss_p_cache
     fi
 
-    # --- verificacion de integridad ---
     if [ -n "$_moss_p_sha" ]; then
         moss_log STEP "Verificando integridad (SHA256)..."
         _moss_p_got=$(moss_sha256 "$_moss_p_src") || {
@@ -568,7 +502,6 @@ moss_perform_install() {
         moss_log WARN "$_moss_p_name: sin checksum en el indice; no se verifica integridad"
     fi
 
-    # --- firma GPG (opcional) ---
     if [ -n "$_moss_p_sig" ] && [ "$_moss_p_sig" != "-" ]; then
         if command -v gpg >/dev/null 2>&1; then
             _moss_p_sigfile=$MOSS_TMPDIR/pkg.$$.sig
@@ -586,7 +519,6 @@ moss_perform_install() {
         fi
     fi
 
-    # --- extraccion a staging ---
     moss_log STEP "Extrayendo archivos temporales..."
     _moss_p_staging=$MOSS_TMPDIR/staging.$$
     rm -rf "$_moss_p_staging"
@@ -603,7 +535,6 @@ moss_perform_install() {
         moss_log WARN "$_moss_p_name: el tarball no contiene archivos regulares"
     fi
 
-    # --- Aislamiento de paquetes (Sandboxing) ---
     _moss_p_filecount=$(wc -l < "$_moss_p_list" | tr -dc '0-9')
     _moss_p_opt_staging="$MOSS_TMPDIR/sandbox.$$"
     
@@ -611,7 +542,6 @@ moss_perform_install() {
         moss_log INFO "paquete masivo detectado ($_moss_p_filecount archivos), activando sandbox en opt/$_moss_p_name"
         mkdir -p "$_moss_p_opt_staging/opt/$_moss_p_name"
         
-        # shellcheck disable=SC2013,SC2043,SC2086
         for _moss_sb_f in "$_moss_p_staging"/* "$_moss_p_staging"/.[!.]*; do
             [ -e "$_moss_sb_f" ] || continue
             mv "$_moss_sb_f" "$_moss_p_opt_staging/opt/$_moss_p_name/"
@@ -620,7 +550,6 @@ moss_perform_install() {
         moss_log INFO "paquete normal detectado ($_moss_p_filecount archivos), instalando en pkg/$_moss_p_name"
         mkdir -p "$_moss_p_opt_staging/pkg/$_moss_p_name"
         
-        # shellcheck disable=SC2013,SC2043,SC2086
         for _moss_sb_f in "$_moss_p_staging"/* "$_moss_p_staging"/.[!.]*; do
             [ -e "$_moss_sb_f" ] || continue
             mv "$_moss_sb_f" "$_moss_p_opt_staging/pkg/$_moss_p_name/"
@@ -630,10 +559,8 @@ moss_perform_install() {
     rm -rf "$_moss_p_staging"
     mv "$_moss_p_opt_staging" "$_moss_p_staging"
     
-    # Reconstruir la lista de archivos
     moss_build_filelist "$_moss_p_staging" "$_moss_p_list"
 
-    # --- plan en modo dry-run ---
     if [ "$MOSS_DRY_RUN" -eq 1 ]; then
         _moss_p_count=$(wc -l < "$_moss_p_list" | tr -dc '0-9')
         moss_log INFO "[dry-run] se instalaria $_moss_p_name $_moss_p_version"
@@ -644,7 +571,6 @@ moss_perform_install() {
         return 0
     fi
 
-    # --- reinstalacion de paquete ya gestionado ---
     _moss_p_state=$MOSS_STATE_DIR/$_moss_p_name
     if [ -f "$_moss_p_state/manifest" ]; then
         if [ "$MOSS_FORCE" -eq 1 ]; then
@@ -671,7 +597,6 @@ moss_perform_install() {
         fi
     fi
 
-    # --- conflictos con archivos ajenos ---
     if ! moss_check_conflicts "$_moss_p_list"; then
         if [ "$MOSS_FORCE" -eq 1 ]; then
             moss_log WARN "conflictos con archivos existentes; se sobrescriben (--force)"
@@ -681,7 +606,6 @@ moss_perform_install() {
         fi
     fi
 
-    # --- copia con rollback automatico ---
     mkdir -p "$_moss_p_state"
     if ! moss_install_files "$_moss_p_staging" "$_moss_p_list" "$_moss_p_state/files"; then
         rmdir "$_moss_p_state" 2>/dev/null
@@ -691,18 +615,15 @@ moss_perform_install() {
     moss_write_manifest "$_moss_p_state/manifest" "$_moss_p_name" "$_moss_p_version" \
         "$_moss_p_url" "$_moss_p_sha" "$MOSS_PREFIX" "$(basename "$_moss_p_src")"
     
-    # --- INICIO MODIFICACION: Generar .desktop automatico ---
     moss_log STEP "Configurando ejecutable y enlaces..."
     _moss_desk_dir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
     [ "$MOSS_SYSTEM" -eq 1 ] && _moss_desk_dir="/usr/share/applications"
     
-    # Busca si hay un ejecutable con el mismo nombre del paquete en bin/ o en la raiz
     _moss_candidates=""
     _moss_cand_count=0
     while IFS= read -r _moss_raw_file; do
         _moss_file=${_moss_raw_file#./}
         
-        # Filtrar extensiones y carpetas inútiles
         case "$_moss_file" in
             *.so | *.so.* | *.pak | *.dat | *.bin | *.html | *.txt | *.json | */node_modules/*)
                 continue
@@ -714,7 +635,6 @@ moss_perform_install() {
             if [ -z "$_moss_candidates" ]; then
                 _moss_candidates="$_moss_cand"
             else
-                # Anexar con salto de línea (estrictamente POSIX)
                 _moss_candidates="$_moss_candidates
 $_moss_cand"
             fi
@@ -729,7 +649,6 @@ $_moss_cand"
         elif [ -x "$MOSS_PREFIX/bin/$_moss_p_exec_override" ]; then
             _moss_exec_path="$MOSS_PREFIX/bin/$_moss_p_exec_override"
         elif [ -n "$_moss_candidates" ]; then
-            # Buscar en los candidatos el que termine en el override
             _moss_exec_path=$(printf '%s\n' "$_moss_candidates" | grep -E "/$_moss_p_exec_override$" | head -n 1)
         fi
         [ -z "$_moss_exec_path" ] && moss_log WARN "el ejecutable forzado $_moss_p_exec_override no se encontro o no tiene permisos"
@@ -741,7 +660,6 @@ $_moss_cand"
         elif [ "$_moss_cand_count" -eq 1 ]; then
             _moss_exec_path="$_moss_candidates"
         else
-            # Heuristica de seleccion automatica avanzada (para modo headless)
         _moss_exec_path=$(printf '%s\n' "$_moss_candidates" | awk -v pkg="$_moss_p_name" '
             BEGIN { 
                 norm_pkg = tolower(pkg); gsub(/[-_ ]/, "", norm_pkg)
@@ -784,13 +702,11 @@ Terminal=false
 Type=Application
 Categories=Application;
 EOF
-        # Registrar el archivo .desktop en la lista de archivos para que se borre al desinstalar
         printf '%s\n' "$_moss_desk_file" >> "$_moss_p_state/files"
         moss_log INFO "acceso directo creado: $_moss_desk_file"
         
         command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$_moss_desk_dir"
         
-        # --- Nuevo symlink inteligente (Sandboxing) ---
         mkdir -p "$MOSS_PREFIX/bin"
         _moss_rel_target="../${_moss_exec_path#"$MOSS_PREFIX/"}"
         _moss_bin_name=$(basename "$_moss_exec_path")
@@ -799,15 +715,11 @@ EOF
         printf 'bin/%s\n' "$_moss_bin_name" >> "$_moss_p_state/files"
         moss_log INFO "enlace symlink creado: bin/$_moss_bin_name -> $_moss_rel_target"
     fi
-    # --- FIN MODIFICACION ---
 
     moss_log SUCCESS "Paquete '$_moss_p_name' instalado y listo para usar."
     return 0
 }
 
-# Resolucion de paquetes (indice o archivo local)
-
-# moss_resolve_pkg ARG -> MOSS_R_* (name/version/url/sha/sig/localfile)
 moss_resolve_pkg() {
     if [ -f "$1" ]; then
         _moss_res_base=$(basename "$1")
@@ -854,8 +766,6 @@ moss_resolve_pkg() {
     return 0
 }
 
-# Subcomandos
-
 moss_cmd_install() {
     moss_normargs "$@"
     _moss_an_saveifs=$IFS
@@ -888,8 +798,6 @@ moss_cmd_install() {
     moss_resolve_pkg "$1"
     _moss_i_rc=$?
     [ "$_moss_i_rc" -ne 0 ] && exit "$_moss_i_rc"
-
-
 
     moss_perform_install "$MOSS_R_NAME" "$MOSS_R_VERSION" "$MOSS_R_URL" \
         "$MOSS_R_SHA" "$MOSS_R_SIG" "$MOSS_R_LOCAL" "${MOSS_OPT_EXEC:-$MOSS_R_EXEC}"
@@ -942,8 +850,6 @@ moss_cmd_remove() {
         fi
     fi
 
-
-
     if moss_remove_pkg "$_moss_rm_name"; then
         moss_log SUCCESS "Paquete '$_moss_rm_name' eliminado completamente."
         exit $MOSS_EX_OK
@@ -951,7 +857,6 @@ moss_cmd_remove() {
     moss_die $MOSS_EX_INSTALL "no se pudo eliminar $_moss_rm_name"
 }
 
-# moss_update_one NOMBRE -> MOSS_U_RESULT=updated|uptodate|skipped|failed
 moss_update_one() {
     MOSS_U_RESULT=uptodate
     _moss_u_state=$MOSS_STATE_DIR/$1
@@ -1028,7 +933,6 @@ moss_update_one() {
 
 moss_cmd_update() {
     moss_state_init || return 1
-    # Caso 1: Actualización de un paquete local
     if [ "$#" -eq 2 ] && [ -f "$2" ]; then
         if [ ! -d "$MOSS_STATE_DIR/$1" ]; then
             moss_log ERROR "paquete no instalado: $1"
@@ -1053,7 +957,6 @@ moss_cmd_update() {
         return $?
     fi
 
-    # Caso 2: Sincronización del repositorio (Descarga de índice)
     if [ "$#" -eq 0 ]; then
         _moss_cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/moss/index"
         mkdir -p "$_moss_cache_dir"
@@ -1068,7 +971,6 @@ moss_cmd_update() {
         fi
     fi
 
-    # Manejo de error si los argumentos son incorrectos
     moss_log ERROR "Uso incorrecto. Argumentos esperados: 0 (sincronizar) o 2 (actualizacion local)."
     return 1
 }
@@ -1077,20 +979,17 @@ moss_cmd_upgrade() {
     moss_state_init || return 1
     moss_index_load || return 1
 
-    # Recopilar paquetes instalados
     _moss_up_pkgs=""
     _moss_up_tot=0
     for _moss_s_dir in "$MOSS_STATE_DIR"/*; do
         [ -d "$_moss_s_dir" ] || continue
         _moss_p_name=$(basename "$_moss_s_dir")
         
-        # Leer version instalada
         _moss_p_ver=""
         if [ -f "$_moss_s_dir/manifest" ]; then
             _moss_p_ver=$(awk -F= '$1=="version"{print $2; exit}' "$_moss_s_dir/manifest")
         fi
         
-        # Consultar indice y verificar si hay diferencias
         if moss_index_lookup "$_moss_p_name"; then
             if [ "$_moss_p_ver" != "$MOSS_L_VERSION" ]; then
                 _moss_up_pkgs="$_moss_up_pkgs $_moss_p_name"
@@ -1107,16 +1006,13 @@ moss_cmd_upgrade() {
     _moss_up_curr=0
     moss_progress "$_moss_up_curr" "$_moss_up_tot" "Calculando..."
 
-    # Iterar y actualizar con barra de progreso
     for _pkg in $_moss_up_pkgs; do
         moss_progress "$_moss_up_curr" "$_moss_up_tot" "Actualizando $_pkg..."
         
-        # Para evitar output ruidoso en la barra, apagamos logs temporales
         _moss_save_log=$MOSS_LOG_LEVEL
         MOSS_LOG_LEVEL=1
         MOSS_FORCE=1
         
-        # Instalamos forzadamente la nueva versión
         moss_cmd_install "$_pkg" >/dev/null 2>&1
         
         MOSS_LOG_LEVEL=$_moss_save_log
@@ -1296,7 +1192,6 @@ moss_cmd_list() {
         exit $MOSS_EX_OK
     fi
 
-    # 1. Cabecera minimalista y segura
     printf "%-20s %-25s %-15s %s\n" "ID PAQUETE" "BINARIO" "VERSION" "ACTUALIZADO"
 
     _moss_desk_base="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
@@ -1308,16 +1203,13 @@ moss_cmd_list() {
         [ -f "$_moss_ls_d/manifest" ] || continue
         _moss_ls_any=1
         
-        # ID PAQUETE
         _moss_ls_id=$(basename "$_moss_ls_d")
         
-        # VERSION
         _moss_ls_ver=$(awk -F= '$1=="version"{print $2; exit}' "$_moss_ls_d/manifest")
         [ -z "$_moss_ls_ver" ] && _moss_ls_ver="desconocida"
 
         _moss_ls_name=""
         
-        # 2. Búsqueda del Binario Real (Prioridad 1)
         if [ -d "$MOSS_PREFIX/bin" ]; then
             for _moss_ls_bin in "$MOSS_PREFIX/bin"/*; do
                 [ -h "$_moss_ls_bin" ] || continue
@@ -1328,7 +1220,6 @@ moss_cmd_list() {
             done
         fi
         
-        # 3. Fallback al archivo .desktop (Prioridad 2)
         if [ -z "$_moss_ls_name" ]; then
             _moss_desk_file="$_moss_desk_base/moss-$_moss_ls_id.desktop"
             if [ -f "$_moss_desk_file" ]; then
@@ -1338,14 +1229,12 @@ moss_cmd_list() {
         
         [ -z "$_moss_ls_name" ] && _moss_ls_name="$_moss_ls_id"
 
-        # Protección de formato: Fecha compatible ISO 8601
         _moss_ls_date=$(date -r "$_moss_ls_d" -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null)
         if [ -z "$_moss_ls_date" ]; then
             _moss_ls_date=$(stat -c "%y" "$_moss_ls_d" 2>/dev/null | awk '{print $1"T"$2"Z"}' | awk -F. '{print $1"Z"}')
             [ -z "$_moss_ls_date" ] && _moss_ls_date="desconocida"
         fi
 
-        # 4. Salida estricta de la fila truncando excesos
         printf "%-20.20s %-25.25s %-15.15s %s\n" "$_moss_ls_id" "$_moss_ls_name" "$_moss_ls_ver" "$_moss_ls_date"
     done
     
@@ -1536,12 +1425,7 @@ moss_cmd_verify() {
     exit $MOSS_EX_OK
 }
 
-# Parsing de argumentos
-
 MOSS_NORMED=''
-# Convierte opciones largas conocidas en cortas (getopts es POSIX y no
-# entiende opciones largas). Los argumentos se unen con \n y se
-# re-separan con IFS=nueva-linea (preserva espacios en nombres).
 moss_normargs() {
     MOSS_NORMED=''
     for _moss_na_arg do
@@ -1607,7 +1491,6 @@ ENTORNO Y RUTAS:
 EOF
 }
 
-# 1) precedencia: defectos < config < entorno < CLI
 moss_main() {
     _moss_env_prefix=$MOSS_PREFIX
     _moss_env_state=$MOSS_STATE_DIR
