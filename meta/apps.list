@@ -5,3 +5,4 @@ jq	jqlang/jq	jq-linux-amd64	Procesador de JSON de línea de comandos ligero y fl
 concord	chojs23/concord	concord-x86_64-unknown-linux-gnu.tar.xz	Cliente de Discord nativo y ligero escrito en Rust	concord	Network
 vesktop	Vencord/Vesktop	.tar.gz	Cliente de Discord independiente con Vencord integrado	vesktop	Network
 helium	imputnet/helium-linux	x86_64_linux.tar.xz	Navegador basado en Chromium, ungoogled y centrado en privacidad	helium	Network
+zen-browser	zen-browser/desktop	zen.linux-x86_64.tar.xz	un navegador basado en firefox y centrado en estetica	zen-bin	Network

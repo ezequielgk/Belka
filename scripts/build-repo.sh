@@ -10,16 +10,18 @@ OUTPUT_FILE="packages.tsv"
 > "$OUTPUT_FILE"
 
 # Agregar cabecera inicial (opcional, pero buena practica)
-printf '# nombre\tversion\turl\tsha256\tdescripcion\texec\n' > "$OUTPUT_FILE"
+printf '# nombre\tversion\turl\tsha256\tdescripcion\texec\tcategoria\n' > "$OUTPUT_FILE"
 
 # Configurar el separador interno de campos (IFS) para usar estrictamente Tabulaciones
 IFS="$(printf '\t')"
 
-while read -r name repo pattern desc exec_bin; do
+while read -r name repo pattern desc exec_bin _app_cat; do
     # Ignorar lineas vacias y comentarios
     case "$name" in
         \#*|"") continue ;;
     esac
+
+    [ -z "$_app_cat" ] || [ "$_app_cat" = "-" ] && _app_cat="Utility"
 
     printf 'Procesando %s (%s)...\n' "$name" "$repo" >&2
 
@@ -57,7 +59,7 @@ while read -r name repo pattern desc exec_bin; do
     rm -f "$tmp_file"
 
     # 5. Agregar la linea procesada a packages.tsv usando tabulaciones
-    printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$name" "$version" "$dl_url" "$hash" "$desc" "$exec_bin" >> "$OUTPUT_FILE"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$name" "$version" "$dl_url" "$hash" "$desc" "$exec_bin" "$_app_cat" >> "$OUTPUT_FILE"
     
     printf '  -> Listo: %s v%s\n' "$name" "$version" >&2
 
