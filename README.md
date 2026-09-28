@@ -78,7 +78,7 @@ El repositorio de `moss` sigue un paradigma impulsado por datos (Data-Driven):
 
 1. **`meta/apps.list`**: La fuente de la verdad. Un simple listado TSV (Nombre, Repo, Patrón, Descripción, **Exec**).
 2. **`scripts/build-repo.sh`**: Script que consulta la API de GitHub Releases, extrae URLs de descarga dinámicas y precalcula los SHA256.
-3. **`.github/workflows/update.yml`**: Bot automático que corre todos los días a las 03:00 AM UTC. Si detecta nuevas versiones, re-construye silenciosamente el `packages.tsv` y hace `push` al índice.
+3. **`.github/workflows/update.yml`**: Bot automático que corre una vez por semana (los domingos a las 03:00 AM UTC). Si detecta nuevas versiones, re-construye silenciosamente el `packages.tsv` y hace `push` al índice.
 
 ## Estado y Seguridad
 
