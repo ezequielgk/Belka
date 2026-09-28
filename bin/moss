@@ -1817,7 +1817,7 @@ $_moss_na_arg"
 #   0, via stdout
 moss_usage() {
     cat <<EOF
-$PROG_NAME $MOSS_VERSION — Gestor de tarballs en POSIX sh
+$PROG_NAME $MOSS_VERSION — Gestor de tarballs
 
 USO:
   $PROG_NAME [opciones] <comando> [argumentos]
