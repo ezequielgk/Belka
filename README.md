@@ -54,13 +54,15 @@ A diferencia de gestores tradicionales que mezclan miles de archivos, `moss` emp
 - **Heurística de Ejecutables**: Moss lee una quinta columna `exec` en su índice de paquetes para determinar qué binario debe ser el "principal". De no existir, aplica una heurística nativa que busca y auto-selecciona el binario correcto dentro del tarball. El comando `install` también soporta `-e <binario>` para sobrescribir esto.
 - **Symlinks y Escritorio Automáticos**: 
   - Expone limpia y automáticamente el binario detectado mediante un enlace simbólico en `~/.local/moss/bin/`. Moss utiliza este directorio aislado (en lugar del genérico `~/.local/bin/`) para evitar la contaminación cruzada con ejecutables instalados de otra manera en el sistema (Zero Pollution), asegurando un control absoluto del entorno y desinstalaciones prístinas.
-  - Si se trata de un paquete, genera un archivo `.desktop` válido en `~/.local/share/applications` para que aparezca mágicamente en tu menú de aplicaciones, sin importar si es un tarball genérico de internet.
+  - Si se trata de un paquete, genera un archivo `.desktop` válido y limpio en `~/.local/share/applications` para que aparezca mágicamente en tu menú de aplicaciones (con `Terminal=false` por defecto). Si la aplicación es de consola (ej. `htop`, `kotofetch`), puedes usar el flag `-t` durante la instalación para que el `.desktop` se ejecute correctamente en tu terminal (`Terminal=true`).
 
 ## Uso Rápido (leer moss help | -h antes)
 
 ```sh
 moss update                                 # Sincronizar/actualizar el índice remoto localmente
 moss install foo                            # Instalar paquete por nombre desde el índice
+moss install -t kotofetch                   # Instalar app de consola generando .desktop con Terminal=true
+moss install -e my-bin foo.tar.gz           # Instalar archivo local forzando qué binario enlazar
 moss install ./foo-1.0.0.tar.gz             # Instalar archivo local directamente (sin índice)
 moss upgrade                                # Actualizar todos los paquetes instalados a su última versión
 moss list                                   # Tabla limpia de instalados (ID, Binario Real, Versión, Fecha)
