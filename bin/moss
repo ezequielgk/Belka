@@ -464,11 +464,12 @@ moss_index_lookup() {
     _moss_l_line=$(awk -F "$MOSS_TAB" -v n="$1" \
         '$1 !~ /^#/ && $1 == n { print; exit }' "$_moss_index_file")
     [ -n "$_moss_l_line" ] || return 1
-    MOSS_L_VERSION='' MOSS_L_URL='' MOSS_L_SHA='' MOSS_L_DESC='' MOSS_L_EXEC='' MOSS_L_SIG='' MOSS_L_CAT=''
-    IFS=$MOSS_TAB read -r _moss_l_name MOSS_L_VERSION MOSS_L_URL MOSS_L_SHA MOSS_L_DESC MOSS_L_EXEC MOSS_L_CAT MOSS_L_SIG << EOF
+    MOSS_L_VERSION='' MOSS_L_URL='' MOSS_L_SHA='' MOSS_L_DESC='' MOSS_L_EXEC='' MOSS_L_SIG='' MOSS_L_CAT='' MOSS_L_TERM=''
+    IFS=$MOSS_TAB read -r _moss_l_name MOSS_L_VERSION MOSS_L_URL MOSS_L_SHA MOSS_L_DESC MOSS_L_EXEC MOSS_L_CAT MOSS_L_TERM MOSS_L_SIG << EOF
 $_moss_l_line
 EOF
     [ -z "$MOSS_L_CAT" ] || [ "$MOSS_L_CAT" = "-" ] && MOSS_L_CAT="Utility"
+    [ -z "$MOSS_L_TERM" ] || [ "$MOSS_L_TERM" = "-" ] && MOSS_L_TERM="N"
     return 0
 }
 
@@ -713,6 +714,7 @@ moss_perform_install() {
     _moss_p_local=$6
     _moss_p_exec_override=$7
     _moss_p_cat=${8:-Utility}
+    _moss_p_term=${9:-N}
 
     moss_log INFO "Instalando paquete: $_moss_p_name"
 
@@ -940,13 +942,16 @@ $_moss_cand"
     fi
 
     if [ -n "$_moss_exec_path" ]; then
-        mkdir -p "$_moss_desk_dir" 2>/dev/null
-        _moss_desk_file="$_moss_desk_dir/moss-$_moss_p_name.desktop"
-        
-        _moss_term_val="false"
-        [ "$MOSS_OPT_TERM" = "1" ] && _moss_term_val="true"
-        
-        cat <<EOF > "$_moss_desk_file"
+        if [ "$_moss_p_term" = "Y" ]; then
+            moss_log DEBUG "aplicacion de terminal; omitiendo creacion de .desktop"
+        else
+            mkdir -p "$_moss_desk_dir" 2>/dev/null
+            _moss_desk_file="$_moss_desk_dir/moss-$_moss_p_name.desktop"
+            
+            _moss_term_val="false"
+            [ "$MOSS_OPT_TERM" = "1" ] && _moss_term_val="true"
+            
+            cat <<EOF > "$_moss_desk_file"
 [Desktop Entry]
 Version=1.0
 Name=${MOSS_P_APP_NAME:-$_moss_p_name}
@@ -956,10 +961,11 @@ Terminal=$_moss_term_val
 Type=Application
 Categories=${_moss_p_cat};
 EOF
-        printf '%s\n' "$_moss_desk_file" >> "$_moss_p_state/files"
-        moss_log INFO "acceso directo creado: $_moss_desk_file"
-        
-        command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$_moss_desk_dir"
+            printf '%s\n' "$_moss_desk_file" >> "$_moss_p_state/files"
+            moss_log INFO "acceso directo creado: $_moss_desk_file"
+            
+            command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$_moss_desk_dir"
+        fi
         
         mkdir -p "$MOSS_PREFIX/bin"
         _moss_rel_target="../${_moss_exec_path#"$MOSS_PREFIX/"}"
@@ -995,6 +1001,7 @@ moss_resolve_pkg() {
         MOSS_R_SIG=''
         MOSS_R_EXEC=''
         MOSS_R_CAT='Utility'
+        MOSS_R_TERM='N'
         MOSS_R_LOCAL=$1
         return 0
     fi
@@ -1011,6 +1018,7 @@ moss_resolve_pkg() {
             MOSS_R_SIG=''
             MOSS_R_EXEC=''
             MOSS_R_CAT='Utility'
+            MOSS_R_TERM='N'
             MOSS_R_LOCAL=''
             return 0
             ;;
@@ -1027,6 +1035,7 @@ moss_resolve_pkg() {
     MOSS_R_SIG=$MOSS_L_SIG
     MOSS_R_EXEC=$MOSS_L_EXEC
     MOSS_R_CAT=$MOSS_L_CAT
+    MOSS_R_TERM=$MOSS_L_TERM
     MOSS_R_LOCAL=''
     return 0
 }
@@ -1074,7 +1083,7 @@ moss_cmd_install() {
     [ "$_moss_i_rc" -ne 0 ] && exit "$_moss_i_rc"
 
     moss_perform_install "$MOSS_R_NAME" "$MOSS_R_VERSION" "$MOSS_R_URL" \
-        "$MOSS_R_SHA" "$MOSS_R_SIG" "$MOSS_R_LOCAL" "${MOSS_OPT_EXEC:-$MOSS_R_EXEC}" "$MOSS_R_CAT"
+        "$MOSS_R_SHA" "$MOSS_R_SIG" "$MOSS_R_LOCAL" "${MOSS_OPT_EXEC:-$MOSS_R_EXEC}" "$MOSS_R_CAT" "$MOSS_R_TERM"
     exit $?
 }
 

@@ -1,8 +1,8 @@
-# nombre	repo	patron_asset	descripcion	exec	categoria
-bat	sharkdp/bat	x86_64-unknown-linux-musl.tar.gz	Un clon de cat con resaltado de sintaxis e integración con Git	bat	System
-neovim	neovim/neovim	nvim-linux-x86_64.tar.gz	Editor de texto basado en Vim, fuertemente enfocado en extensibilidad	nvim	Development
-jq	jqlang/jq	jq-linux-amd64	Procesador de JSON de línea de comandos ligero y flexible	jq	Utility
-concord	chojs23/concord	concord-x86_64-unknown-linux-gnu.tar.xz	Cliente de Discord nativo y ligero escrito en Rust	concord	Network
-vesktop	Vencord/Vesktop	.tar.gz	Cliente de Discord independiente con Vencord integrado	vesktop	Network
-helium	imputnet/helium-linux	x86_64_linux.tar.xz	Navegador basado en Chromium, ungoogled y centrado en privacidad	helium	Network
-zen-browser	zen-browser/desktop	zen.linux-x86_64.tar.xz	un navegador basado en firefox y centrado en estetica	zen-bin	Network
+# nombre	repo	patron_asset	descripcion	exec	categoria	terminal
+bat	sharkdp/bat	x86_64-unknown-linux-musl.tar.gz	Un clon de cat con resaltado de sintaxis e integración con Git	bat	System	Y
+neovim	neovim/neovim	nvim-linux-x86_64.tar.gz	Editor de texto basado en Vim, fuertemente enfocado en extensibilidad	nvim	Development	Y
+jq	jqlang/jq	jq-linux-amd64	Procesador de JSON de línea de comandos ligero y flexible	jq	Utility	Y
+concord	chojs23/concord	concord-x86_64-unknown-linux-gnu.tar.xz	Cliente de Discord nativo y ligero escrito en Rust	concord	Network	Y
+vesktop	Vencord/Vesktop	amd64.tar.gz	Cliente de Discord independiente con Vencord integrado	vesktop	Network	N
+helium	imputnet/helium-linux	x86_64_linux.tar.xz	Navegador basado en Chromium, ungoogled y centrado en privacidad	helium	Network	N
+zen-browser	zen-browser/desktop	zen.linux-x86_64.tar.xz	un navegador basado en firefox y centrado en estetica	zen-bin	Network	N
