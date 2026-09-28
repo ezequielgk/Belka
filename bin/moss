@@ -939,16 +939,18 @@ $_moss_cand"
     if [ -n "$_moss_exec_path" ]; then
         mkdir -p "$_moss_desk_dir" 2>/dev/null
         _moss_desk_file="$_moss_desk_dir/moss-$_moss_p_name.desktop"
+        
+        _moss_term_val="false"
+        [ "$MOSS_OPT_TERM" = "1" ] && _moss_term_val="true"
+        
         cat <<EOF > "$_moss_desk_file"
 [Desktop Entry]
 Version=1.0
 Name=${MOSS_P_APP_NAME:-$_moss_p_name}
 Comment=Instalado via moss
 Exec="$_moss_exec_path" %U
-Icon=
-Terminal=false
+Terminal=$_moss_term_val
 Type=Application
-Categories=Application;
 EOF
         printf '%s\n' "$_moss_desk_file" >> "$_moss_p_state/files"
         moss_log INFO "acceso directo creado: $_moss_desk_file"
@@ -1041,7 +1043,7 @@ moss_cmd_install() {
     IFS=$_moss_an_saveifs
     OPTIND=1
     MOSS_OPT_EXEC=""
-    while getopts ':hnfsqjve:' _moss_opt; do
+    while getopts ':hnfsqjve:t' _moss_opt; do
         case $_moss_opt in
             h) moss_usage; return 0 ;;
             n) MOSS_DRY_RUN=1 ;;
@@ -1051,6 +1053,7 @@ moss_cmd_install() {
             v) MOSS_LOG_LEVEL=3 ;;
             j) MOSS_JSON=1 ;;
             e) MOSS_OPT_EXEC="$OPTARG" ;;
+            t) MOSS_OPT_TERM=1 ;;
             :) moss_die $MOSS_EX_USAGE "falta argumento para -$OPTARG" ;;
             *) moss_die $MOSS_EX_USAGE "opcion invalida: -$OPTARG" ;;
         esac
@@ -1800,6 +1803,7 @@ moss_normargs() {
             --system)   _moss_na_arg=-s ;;
             --yes)      _moss_na_arg=-y ;;
             --exec)     _moss_na_arg=-e ;;
+            --terminal) _moss_na_arg=-t ;;
             --help)     _moss_na_arg=-h ;;
         esac
         if [ -z "$MOSS_NORMED" ]; then
@@ -1844,6 +1848,7 @@ CONSULTA Y MANTENIMIENTO:
 OPCIONES GLOBALES:
   -s, --system             Instala a nivel sistema (/usr/local, /var/lib/moss)
   -e, --exec <bin>         Fuerza el nombre del ejecutable a enlazar (solo install)
+  -t, --terminal           Marca el archivo .desktop para abrirse en terminal (solo install)
   -n, --dry-run            Simula la instalación sin modificar el sistema
       --offline            Usa el caché del índice aunque esté vencido
   -q, --quiet              Silencia la salida, mostrando solo errores
