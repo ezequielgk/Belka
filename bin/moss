@@ -661,7 +661,7 @@ moss_remove_pkg() {
     if [ -f "$_moss_rm_d/files" ]; then
         _moss_rm_tot=$(wc -l < "$_moss_rm_d/files" | tr -dc '0-9')
         if [ "$_moss_rm_tot" -gt 0 ]; then
-            moss_progress 0 "$_moss_rm_tot" "Preparando..."
+            [ "$MOSS_LOG_LEVEL" -lt 3 ] && moss_progress 0 "$_moss_rm_tot" "Preparando..."
             
             _moss_rm_curr=0
             LC_ALL=C sort -r "$_moss_rm_d/files" | while IFS= read -r _moss_rm_f; do
@@ -669,23 +669,27 @@ moss_remove_pkg() {
                     /*) _moss_rm_tgt="$_moss_rm_f" ;;
                     *)  _moss_rm_tgt="$_moss_rm_prefix/$_moss_rm_f" ;;
                 esac
+                
+                [ "$MOSS_LOG_LEVEL" -ge 3 ] && moss_log DEBUG "eliminando: $_moss_rm_tgt"
                 rm -f "$_moss_rm_tgt"
             
-            case "$_moss_rm_f" in
-                /*) ;;
-                *)
-                    _moss_rm_save=$MOSS_PREFIX
-                    MOSS_PREFIX=$_moss_rm_prefix
-                    moss_rmdir_chain "$_moss_rm_f"
-                    MOSS_PREFIX=$_moss_rm_save
-                    ;;
-            esac
+                case "$_moss_rm_f" in
+                    /*) ;;
+                    *)
+                        _moss_rm_save=$MOSS_PREFIX
+                        MOSS_PREFIX=$_moss_rm_prefix
+                        moss_rmdir_chain "$_moss_rm_f"
+                        MOSS_PREFIX=$_moss_rm_save
+                        ;;
+                esac
             
-            _moss_rm_curr=$((_moss_rm_curr + 1))
-            if [ $((_moss_rm_curr % 25)) -eq 0 ] || [ "$_moss_rm_curr" -eq "$_moss_rm_tot" ]; then
-                moss_progress "$_moss_rm_curr" "$_moss_rm_tot" "Eliminando archivos..."
-            fi
-        done
+                _moss_rm_curr=$((_moss_rm_curr + 1))
+                if [ "$MOSS_LOG_LEVEL" -lt 3 ]; then
+                    if [ $((_moss_rm_curr % 25)) -eq 0 ] || [ "$_moss_rm_curr" -eq "$_moss_rm_tot" ]; then
+                        moss_progress "$_moss_rm_curr" "$_moss_rm_tot" "Eliminando archivos..."
+                    fi
+                fi
+            done
         fi
     fi
     rm -rf "$_moss_rm_d"
