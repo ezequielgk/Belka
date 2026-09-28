@@ -40,7 +40,10 @@ Gracias a este método de instalación directo desde la fuente, actualizar tu ge
 ```bash
 cd ~/.local/opt/moss && git pull
 ```
-
+Para que tu terminal encuentre las apps instaladas por Moss directamente por su nombre, debes asegurarte de agregar este directorio seguro a tu archivo `~/.bashrc` o `~/.zshrc`:
+```bash
+export PATH="$HOME/.local/moss/bin:$PATH"
+```
 ## Arquitectura de Instalación y Sandboxing
 
 A diferencia de gestores tradicionales que mezclan miles de archivos, `moss` emplea una estrategia de aislamiento estricto e inteligencia automatizada:
@@ -50,16 +53,10 @@ A diferencia de gestores tradicionales que mezclan miles de archivos, `moss` emp
 - **Paquetes Masivos (>100 archivos)**: Se aíslan en la subcarpeta `opt/<nombre_paquete>/` para evitar cuellos de botella y "suciendad" en el sistema.
 - **Heurística de Ejecutables**: Moss lee una quinta columna `exec` en su índice de paquetes para determinar qué binario debe ser el "principal". De no existir, aplica una heurística nativa que busca y auto-selecciona el binario correcto dentro del tarball. El comando `install` también soporta `-e <binario>` para sobrescribir esto.
 - **Symlinks y Escritorio Automáticos**: 
-  - Expone limpia y automáticamente el binario detectado mediante un enlace simbólico en `~/.local/moss/bin/`. Moss utiliza este directorio aislado (en lugar del genérico `~/.local/bin/`) para evitar la contaminación cruzada con ejecutables instalados vía `pip`, `npm` o el sistema (Zero Pollution), asegurando un control absoluto del entorno y desinstalaciones prístinas.
+  - Expone limpia y automáticamente el binario detectado mediante un enlace simbólico en `~/.local/moss/bin/`. Moss utiliza este directorio aislado (en lugar del genérico `~/.local/bin/`) para evitar la contaminación cruzada con ejecutables instalados de otra manera en el sistema (Zero Pollution), asegurando un control absoluto del entorno y desinstalaciones prístinas.
   - Si se trata de un paquete, genera un archivo `.desktop` válido en `~/.local/share/applications` para que aparezca mágicamente en tu menú de aplicaciones, sin importar si es un tarball genérico de internet.
-- **Progreso Limpio**: Olvídate del "agujero negro". Moss emplea barras de progreso en texto plano (`[######---] 60%`) para descargas y extracciones pesadas, reportando exactamente lo que hace sin ahogar la consola con miles de líneas.
 
-*Nota:* Para que tu terminal encuentre las apps instaladas por Moss directamente por su nombre, debes asegurarte de agregar este directorio seguro a tu archivo `~/.bashrc` o `~/.zshrc`:
-```bash
-export PATH="$HOME/.local/moss/bin:$PATH"
-```
-
-## Uso Rápido
+## Uso Rápido (leer moss help | -h antes)
 
 ```sh
 moss update                                 # Sincronizar/actualizar el índice remoto localmente
