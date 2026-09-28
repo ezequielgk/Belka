@@ -50,11 +50,14 @@ A diferencia de gestores tradicionales que mezclan miles de archivos, `moss` emp
 - **Paquetes Masivos (>100 archivos)**: Se aíslan en la subcarpeta `opt/<nombre_paquete>/` para evitar cuellos de botella y "suciendad" en el sistema.
 - **Heurística de Ejecutables**: Moss lee una quinta columna `exec` en su índice de paquetes para determinar qué binario debe ser el "principal". De no existir, aplica una heurística nativa que busca y auto-selecciona el binario correcto dentro del tarball. El comando `install` también soporta `-e <binario>` para sobrescribir esto.
 - **Symlinks y Escritorio Automáticos**: 
-  - Expone limpia y automáticamente el binario detectado mediante un enlace simbólico en `bin/`. 
+  - Expone limpia y automáticamente el binario detectado mediante un enlace simbólico en `~/.local/moss/bin/`. Moss utiliza este directorio aislado (en lugar del genérico `~/.local/bin/`) para evitar la contaminación cruzada con ejecutables instalados vía `pip`, `npm` o el sistema (Zero Pollution), asegurando un control absoluto del entorno y desinstalaciones prístinas.
   - Si se trata de un paquete, genera un archivo `.desktop` válido en `~/.local/share/applications` para que aparezca mágicamente en tu menú de aplicaciones, sin importar si es un tarball genérico de internet.
 - **Progreso Limpio**: Olvídate del "agujero negro". Moss emplea barras de progreso en texto plano (`[######---] 60%`) para descargas y extracciones pesadas, reportando exactamente lo que hace sin ahogar la consola con miles de líneas.
 
-*Nota:* Asegúrate de agregar el path a tu terminal: `export PATH="$HOME/.local/moss/bin:$PATH"`
+*Nota:* Para que tu terminal encuentre las apps instaladas por Moss directamente por su nombre, debes asegurarte de agregar este directorio seguro a tu archivo `~/.bashrc` o `~/.zshrc`:
+```bash
+export PATH="$HOME/.local/moss/bin:$PATH"
+```
 
 ## Uso Rápido
 
