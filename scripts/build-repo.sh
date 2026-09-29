@@ -12,6 +12,14 @@ OUTPUT_FILE="packages.tsv"
 # Agregar cabecera inicial (opcional, pero buena practica)
 printf '# nombre\tversion\turl\tsha256\tdescripcion\texec\tcategoria\tterminal\n' > "$OUTPUT_FILE"
 
+github_api() {
+    if [ -n "$GITHUB_TOKEN" ]; then
+        curl -sL -H "Authorization: Bearer $GITHUB_TOKEN" "$1"
+    else
+        curl -sL "$1"
+    fi
+}
+
 # Configurar el separador interno de campos (IFS) para usar estrictamente Tabulaciones
 IFS="$(printf '\t')"
 
@@ -32,7 +40,7 @@ while read -r name repo pattern desc exec_bin _app_cat _app_term; do
     api_url="https://api.github.com/repos/$repo/releases/latest"
     
     # 1. Extraer version y limpiar la "v" inicial usando jq
-    version=$(curl -sL "$api_url" | jq -r 'if .tag_name != null then .tag_name | sub("^v"; "") else empty end')
+    version=$(github_api "$api_url" | jq -r 'if .tag_name != null then .tag_name | sub("^v"; "") else empty end')
     
     if [ -z "$version" ] || [ "$version" = "null" ]; then
         printf 'Error: No se pudo obtener la version de %s\n' "$repo" >&2
@@ -40,7 +48,7 @@ while read -r name repo pattern desc exec_bin _app_cat _app_term; do
     fi
 
     # 2. Extraer la URL de descarga que coincida con el patron del asset usando regex
-    dl_url=$(curl -sL "$api_url" | jq -r --arg pat "$pattern" 'if .assets != null then .assets[] | select(.name != null and (.name | test($pat; "i"))) | .browser_download_url else empty end' | head -n 1)
+    dl_url=$(github_api "$api_url" | jq -r --arg pat "$pattern" 'if .assets != null then .assets[] | select(.name != null and (.name | test($pat; "i"))) | .browser_download_url else empty end' | head -n 1)
 
     if [ -z "$dl_url" ] || [ "$dl_url" = "null" ]; then
         printf 'Error: No se encontro asset con el patron "%s" para %s\n' "$pattern" "$repo" >&2
