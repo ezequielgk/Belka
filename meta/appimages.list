@@ -397,6 +397,7 @@ unleashedrecomp	pkgforge-dev/UnleashedRecomp-AppImage	.*(x86_64|amd64|64bit).*\.
 varia	pkgforge-dev/Varia-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Download manager	varia	Network	N
 vcmi	pkgforge-dev/vcmi-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open-source engine for Heroes of Might and Magic III	vcmi	Game	N
 veracrypt	pkgforge-dev/VeraCrypt-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Disk encryption software	veracrypt	Security	N
+vesktop	https://github.com/Vencord/Vesktop	Vesktop-.*\.AppImage	Vesktop is a custom Discord App aiming to give you better performance and improve linux support	vesktop	Utility	N
 vibeprint-studio	pkgforge-dev/Vibeprint-Studio-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Automatically layout and print images in an ICC-aware environment	vibeprint-studio	Graphics	N
 viber	pkgforge-dev/Viber-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Free calls and messages	viber	InstantMessaging	N
 vice	pkgforge-dev/VICE-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Versatile Commodore Emulator for C64, C128, VIC20, PET and more	vice	Emulator	N
