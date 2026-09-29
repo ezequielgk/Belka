@@ -1961,6 +1961,7 @@ CONSULTA Y MANTENIMIENTO:
 OPCIONES GLOBALES:
   -s, --system             Instala a nivel sistema (/usr/local, /var/lib/moss)
   -e, --exec <bin>         Fuerza el nombre del ejecutable a enlazar (solo install)
+  -T, --type <tar|appimage> Fuerza la selección de formato sin preguntar (solo install)
   -t, --terminal           Marca el archivo .desktop para abrirse en terminal (solo install)
   -n, --dry-run            Simula la instalación sin modificar el sistema
       --offline            Usa el caché del índice aunque esté vencido
