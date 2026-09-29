@@ -14,10 +14,11 @@ permissions:
   contents: write
 
 jobs:
-  update-lists:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Auto-importar nuevos paquetes
         run: |
           if [ -s meta/next.list ]; then
@@ -33,69 +34,36 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-tar:
-    needs: update-lists
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-      - name: Construir Tarballs
+      - name: Construir Índice
         run: |
           APPS="${{ github.event.inputs.apps_to_index }}"
           [ -z "$APPS" ] && APPS="ALL"
-          MOSS_OUTPUT_FILE="packages_tar.tsv" BUILD_APPIMAGE=0 ./scripts/build-repo.sh $APPS
+          if [ "$APPS" = "ALL" ]; then
+            echo "Modo ALL detectado: Compilando en paralelo..."
+            MOSS_OUTPUT_FILE="packages_tar.tsv" BUILD_APPIMAGE=0 ./scripts/build-repo.sh ALL &
+            PID1=$!
+            MOSS_OUTPUT_FILE="packages_appimage.tsv" BUILD_TAR=0 ./scripts/build-repo.sh ALL &
+            PID2=$!
+            wait $PID1
+            wait $PID2
+            printf '# nombre\tversion\turl\tsha256\tdescripcion\texec\tcategoria\tterminal\ttipo\n' > packages.tsv
+            grep -v "^#" packages_tar.tsv >> packages.tsv || true
+            grep -v "^#" packages_appimage.tsv >> packages.tsv || true
+            rm -f packages_tar.tsv packages_appimage.tsv
+          else
+            echo "Modo Parcial detectado: Compilando secuencialmente..."
+            ./scripts/build-repo.sh "$APPS"
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/upload-artifact@v4
-        with:
-          name: tsv-tar
-          path: packages_tar.tsv
 
-  build-appimage:
-    needs: update-lists
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-      - name: Construir AppImages
+      - name: Commit y Push
         run: |
-          APPS="${{ github.event.inputs.apps_to_index }}"
-          [ -z "$APPS" ] && APPS="ALL"
-          MOSS_OUTPUT_FILE="packages_appimage.tsv" BUILD_TAR=0 ./scripts/build-repo.sh $APPS
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/upload-artifact@v4
-        with:
-          name: tsv-appimage
-          path: packages_appimage.tsv
-
-  merge-and-push:
-    needs: [build-tar, build-appimage]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-      - uses: actions/download-artifact@v4
-        with:
-          name: tsv-tar
-      - uses: actions/download-artifact@v4
-        with:
-          name: tsv-appimage
-      - name: Fusionar y hacer Push
-        run: |
-          printf '# nombre\tversion\turl\tsha256\tdescripcion\texec\tcategoria\tterminal\ttipo\n' > packages.tsv
-          grep -v "^#" packages_tar.tsv >> packages.tsv || true
-          grep -v "^#" packages_appimage.tsv >> packages.tsv || true
-          
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add packages.tsv
-          
           if ! git diff --staged --quiet; then
-            git commit -m "chore: actualizar índice de paquetes automático (parallelized) 🤖"
+            git commit -m "chore: actualizar índice de paquetes automático 🤖"
             git pull --rebase origin main
             git push
           else
