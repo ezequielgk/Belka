@@ -1523,15 +1523,15 @@ moss_cmd_list() {
             if [ "$_moss_ls_idx" -eq 1 ] && moss_index_lookup "$MOSS_M_NAME" 2>/dev/null; then
                 _moss_ls_avail=$(printf ',"available_version":"%s"' "$(moss_jesc "$MOSS_L_VERSION")")
             fi
-            printf '{"name":"%s","version":"%s","installed_at":"%s","prefix":"%s"%s}' \
+            printf '{"name":"%s","version":"%s","installed_at":"%s","prefix":"%s","type":"%s"%s}' \
                 "$(moss_jesc "$MOSS_M_NAME")" "$(moss_jesc "$MOSS_M_VERSION")" \
-                "$(moss_jesc "$MOSS_M_DATE")" "$(moss_jesc "$MOSS_M_PREFIX")" "$_moss_ls_avail"
+                "$(moss_jesc "$MOSS_M_DATE")" "$(moss_jesc "$MOSS_M_PREFIX")" "$(moss_jesc "${MOSS_M_TYPE:-tar}")" "$_moss_ls_avail"
         done
         printf ']}\n'
         exit $MOSS_EX_OK
     fi
 
-    printf "%-20s %-25s %-15s %s\n" "ID PAQUETE" "BINARIO" "VERSION" "ACTUALIZADO"
+    printf "%-20s %-25s %-15s %-10s %s\n" "ID PAQUETE" "BINARIO" "VERSION" "TIPO" "ACTUALIZADO"
 
     _moss_desk_base="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
     [ "$MOSS_SYSTEM" -eq 1 ] && _moss_desk_base="/usr/share/applications"
@@ -1546,6 +1546,9 @@ moss_cmd_list() {
         
         _moss_ls_ver=$(awk -F= '$1=="version"{print $2; exit}' "$_moss_ls_d/manifest")
         [ -z "$_moss_ls_ver" ] && _moss_ls_ver="desconocida"
+
+        _moss_ls_type=$(awk -F= '$1=="type"{print $2; exit}' "$_moss_ls_d/manifest")
+        [ -z "$_moss_ls_type" ] && _moss_ls_type="tar"
 
         _moss_ls_name=""
         
@@ -1574,7 +1577,7 @@ moss_cmd_list() {
             [ -z "$_moss_ls_date" ] && _moss_ls_date="desconocida"
         fi
 
-        printf "%-20.20s %-25.25s %-15.15s %s\n" "$_moss_ls_id" "$_moss_ls_name" "$_moss_ls_ver" "$_moss_ls_date"
+        printf "%-20.20s %-25.25s %-15.15s %-10.10s %s\n" "$_moss_ls_id" "$_moss_ls_name" "$_moss_ls_ver" "$_moss_ls_type" "$_moss_ls_date"
     done
     
     [ "$_moss_ls_any" -eq 1 ] || moss_log INFO "Ningun paquete instalado."
