@@ -37,7 +37,6 @@ blender	pkgforge-dev/blender-AppImage	blender.*	A fully integrated 3D graphics c
 bm64recomp	pkgforge-dev/BM64Recomp-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Static recompilation of the Nintendo 64 game Bomberman 64	bm64recomp	Game	N
 bmherorecomp	pkgforge-dev/BMHeroRecomp-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Static recompilation of Bomberman Hero for the Nintendo 64	bmherorecomp	Game	N
 brave-origin	pkgforge-dev/Brave-Origin-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A privacy-focused Brave browser variant with telemetry stripped out	brave-origin	Network	N
-LibreWolf	https://codeberg.org/librewolf/bsys6	librewolf-.*_64-appimage\.AppImage	Mirror of https://librewolf.dev/librewolf/bsys6	bsys6	Utility	N
 bulky	pkgforge-dev/Bulky-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Bulk file and folder renamer that works across desktop environments	bulky	Utility	N
 cannonball	pkgforge-dev/Cannonball-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Enhanced OutRun arcade game engine, a C++ rewrite of the Sega original	cannonball	Game	N
 cartridges	pkgforge-dev/Cartridges-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Simple game launcher for your games	cartridges	Game	N
@@ -163,6 +162,7 @@ gthumb	pkgforge-dev/gThumb-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Image vie
 gwenview	pkgforge-dev/Gwenview-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Image viewer by KDE	gwenview	Graphics	N
 haruna	pkgforge-dev/Haruna-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open source video player built with Qt/QML and libmpv	haruna	AudioVideo	N
 hatari	pkgforge-dev/Hatari-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Free Atari ST/STE/TT/Falcon emulator	hatari	Emulator	N
+helium-linux	https://github.com/imputnet/helium-linux	helium-.*.1-x86_64\.AppImage	Helium Browser for Linux	helium-linux	Network	N
 hp-15c-simulator	pkgforge-dev/HP-15C-Simulator-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Simulator of the HP-15C RPN scientific programmable calculator	hp-15c-simulator	Calculator	N
 htop	pkgforge-dev/htop-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Interactive process viewer and system monitor	htop	System	N
 identity	pkgforge-dev/Identity-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Compare images and videos	identity	Graphics	N
@@ -203,6 +203,7 @@ ktouch	pkgforge-dev/KTouch-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Touch typ
 ladybird	pkgforge-dev/ladybird-appimage	.*(x86_64|amd64|64bit).*\.appimage	Truly independent web browser	ladybird	Network	N
 libation	pkgforge-dev/Libation-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Audible audiobook library manager and downloader	libation	Audio	N
 librecad	pkgforge-dev/LibreCAD-AppImage	.*(x86_64|amd64|64bit).*\.appimage	2D CAD application	librecad	Construction	N
+LibreWolf	https://codeberg.org/librewolf/bsys6	librewolf-.*_64-appimage\.AppImage	Mirror of https://librewolf.dev/librewolf/bsys6	bsys6	Utility	N
 lighthouse	pkgforge-dev/Lighthouse-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	PC port of Banjo-Kazooie by Harbour Masters	lighthouse	Game	N
 lightzone	pkgforge-dev/LightZone-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open-source professional-grade digital photo editor and darkroom software	lightzone	Graphics	N
 linuxtoys	pkgforge-dev/LinuxToys-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A collection of user-friendly tools for Linux systems	linuxtoys	Utility	N
@@ -428,7 +429,7 @@ ymir	pkgforge-dev/Ymir-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Sega Saturn e
 zapzap	pkgforge-dev/ZapZap-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	WhatsApp desktop application written in PyQt6 + PyQt6-WebEngine	zapzap	Network	N
 zed	pkgforge-dev/Zed-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A high-performance, multiplayer code editor from the creators of Atom and Tree-sitter	zed	Development	N
 zelda64recomp	pkgforge-dev/Zelda64Recomp-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Static recompilation of The Legend of Zelda: Majora's Mask to run natively on PC	zelda64recomp	Game	N
+zen-browser	zen-browser/desktop	zen-x86_64\.AppImage	Un navegador basado en Firefox centrado en privacidad	zen-browser	Network	N
 zenity-gtk3	pkgforge-dev/Zenity-GTK3-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Display graphical dialog boxes from shell scripts (GTK3 version)	zenity-gtk3	Development	N
 zod-engine	pkgforge-dev/Zod-Engine-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open source remake of the 1996 strategy game Z	zod-engine	Game	N
 zsnes	pkgforge-dev/ZSNES-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A maintained fork of ZSNES, a Super Nintendo (SNES) emulator	zsnes	Emulator	N
-zen-browser	zen-browser/desktop	zen-x86_64\.AppImage	Un navegador basado en Firefox centrado en privacidad	zen-browser	Network	N

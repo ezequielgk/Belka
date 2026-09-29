@@ -88,6 +88,7 @@ gum	charmbracelet/gum	gum_.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	A tool for glam
 hadolint	hadolint/hadolint	hadolint-Linux-(x86_64|amd64|64bit)	Dockerfile linter, validate inline bash	hadolint	ConsoleOnly	Y
 halp	orhun/halp	halp-.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A CLI tool to get help with CLI tools	halp	ConsoleOnly	Y
 helium	imputnet/helium-linux	x86_64_linux.tar.xz	Navegador basado en Chromium, ungoogled y centrado en privacidad	helium	Network	N
+helium-linux	https://github.com/imputnet/helium-linux	helium-.*.1-x86_64_linux\.tar\.xz	Helium Browser for Linux	helium-linux	Network	N
 helix	helix-editor/helix	helix-.*-linux\.tar\.xz	A post-modern modal text editor.	helix	Utility	Y
 helm	helm/helm	helm-.*-amd64\.tar\.gz\.asc	The Kubernetes Package Manager	helm	Development	Y
 heroic-games-launcher	Heroic-Games-Launcher/HeroicGamesLauncher	linux-x64.tar.xz	Lanzador de juegos de código abierto para Epic Games, GOG y Amazon Games	heroic	Game	N
