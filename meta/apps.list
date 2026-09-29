@@ -154,3 +154,6 @@ dasel	TomWright/dasel	dasel_linux_(x86_64|amd64|64bit)	Select, put and delete da
 shfmt	mvdan/sh	shfmt_v.*_linux_(x86_64|amd64|64bit)	Shell parser, formatter, and interpreter with bash support	shfmt	ConsoleOnly	Y
 soft-serve	charmbracelet/soft-serve	soft-serve_.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	The mighty, self-hostable Git server for the command line	soft-serve	ConsoleOnly	Y
 hyperfine	sharkdp/hyperfine	hyperfine-v.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A command-line benchmarking tool	hyperfine	ConsoleOnly	Y
+kotofetch	hxpe-dev/kotofetch	kotofetch-v.*x86_64.*linux.*\.tar\.gz	A simple and fast system fetch tool	kotofetch	ConsoleOnly	Y
+umbrella-fetch	ezequielgk/Umbrella-Fetch	umbrella-fetch-v.*x86_64.*linux.*\.tar\.gz	System fetch tool themed around Resident Evil	umbrella-fetch	ConsoleOnly	Y
+pfetch	dylanaraps/pfetch	TARBALL	A pretty system information tool written in POSIX sh	pfetch	ConsoleOnly	Y

@@ -48,7 +48,11 @@ while read -r name repo pattern desc exec_bin _app_cat _app_term; do
     fi
 
     # 2. Extraer la URL de descarga que coincida con el patron del asset usando regex
-    dl_url=$(github_api "$api_url" | jq -r --arg pat "$pattern" 'if .assets != null then .assets[] | select(.name != null and (.name | test($pat; "i"))) | .browser_download_url else empty end' | head -n 1)
+    if [ "$pattern" = "TARBALL" ]; then
+        dl_url=$(github_api "$api_url" | jq -r '.tarball_url')
+    else
+        dl_url=$(github_api "$api_url" | jq -r --arg pat "$pattern" 'if .assets != null then .assets[] | select(.name != null and (.name | test($pat; "i"))) | .browser_download_url else empty end' | head -n 1)
+    fi
 
     if [ -z "$dl_url" ] || [ "$dl_url" = "null" ]; then
         printf 'Error: No se encontro asset con el patron "%s" para %s\n' "$pattern" "$repo" >&2
