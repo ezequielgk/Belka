@@ -518,15 +518,16 @@ moss_write_manifest() {
     } > "$1"
 }
 
-# Extrae los contenidos de un archivo tarball temporalmente al staging.
+# Extrae el paquete descargado segun su formato.
+# Soporta tarballs, zip, bz2 individuales y binarios crudos.
 #
 # Argumentos:
-#   $1 - Ruta del archivo tarball
-#   $2 - Directorio destino
+#   $1 - Ruta al archivo descargado
+#   $2 - Directorio temporal de destino (staging)
 # Globales:
 #   Ninguna
 # Retorna:
-#   0 en exito, 1 en fallo
+#   0 en exito, 1 si falta una herramienta de extraccion
 moss_extract() {
     if tar -xf "$1" -C "$2" 2>/dev/null; then
         return 0
@@ -535,7 +536,34 @@ moss_extract() {
         *.tar.gz|*.tgz)   tar -xzf "$1" -C "$2" ;;
         *.tar.xz|*.txz)   tar -xJf "$1" -C "$2" ;;
         *.tar.bz2|*.tbz2) tar -xjf "$1" -C "$2" ;;
-        *) return 1 ;;
+        *.zip)
+            if command -v unzip >/dev/null 2>&1; then
+                unzip -q "$1" -d "$2"
+            else
+                moss_log ERROR "comando 'unzip' no encontrado"
+                return 1
+            fi
+            ;;
+        *.bz2)
+            if command -v bunzip2 >/dev/null 2>&1; then
+                _moss_ex_bn=$(basename "$1" .bz2)
+                bunzip2 -c "$1" > "$2/$_moss_ex_bn"
+                chmod +x "$2/$_moss_ex_bn"
+            else
+                moss_log ERROR "comando 'bunzip2' no encontrado"
+                return 1
+            fi
+            ;;
+        *.AppImage|*.appimage|*.deb|*.rpm|*.exe|*.msi)
+            moss_log ERROR "formato de paquete no soportado: $(basename "$1")"
+            return 1
+            ;;
+        *)
+            _moss_ex_bn=$(basename "$1")
+            cp "$1" "$2/$_moss_ex_bn"
+            chmod +x "$2/$_moss_ex_bn"
+            return 0
+            ;;
     esac
 }
 

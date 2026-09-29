@@ -16,3 +16,21 @@ bottom	ClementTsang/bottom	x86_64-unknown-linux-gnu.tar.gz	Monitor de sistema gr
 localsend	localsend/localsend	linux-x86-64.tar.gz	Una alternativa a AirDrop de código abierto y multiplataforma	localsend	Network	N
 prism-launcher	PrismLauncher/PrismLauncher	Linux-Qt6-Portable.*\.tar\.gz	Un lanzador personalizado para Minecraft	prismlauncher	Game	N
 pinecone-launcher	ElyPrismLauncher/Launcher	Linux-Qt6-Portable.*\.tar\.gz	Un fork especializado de Prism Launcher	pinecone-launcher	Game	N
+gh	cli/cli	gh_.*_linux_amd64\.tar\.gz	Interfaz oficial de GitHub para la terminal	gh	Development	Y
+jqp	noahgorstein/jqp	jqp_Linux_x86_64\.tar\.gz	Visor interactivo de consultas jq	jqp	Development	Y
+dive	wagoodman/dive	dive_.*_linux_amd64\.tar\.gz	Herramienta para explorar y analizar imágenes de Docker	dive	Development	Y
+syncthing	syncthing/syncthing	syncthing-linux-amd64-v.*\.tar\.gz	Sincronización continua de archivos entre dispositivos	syncthing	Network	N
+ncdu	yorhel/ncdu	ncdu-.*-linux-x86_64\.tar\.gz	Analizador interactivo del uso del disco	ncdu	Utility	Y
+atuin	atuinsh/atuin	atuin-x86_64-unknown-linux-musl\.tar\.gz	Shell history moderno con búsqueda y sincronización	atuin	Utility	Y
+binsider	orhun/binsider	binsider-.*-x86_64-unknown-linux-musl\.tar\.gz	Herramienta para analizar binarios y detectar riesgos	binsider	System	Y
+ubi	houseabsolute/ubi	ubi-Linux-musl-x86_64\.tar\.gz	Instalador universal de binarios desde GitHub	ubi	Utility	Y
+alist	AlistGo/alist	alist-linux-musl-amd64\.tar\.gz	Servidor de archivos y WebDAV compatible con múltiples almacenamientos	alist	Network	Y
+ripgrep	BurntSushi/ripgrep	ripgrep-.*-x86_64-unknown-linux-musl\.tar\.gz	Búsqueda de texto rápida y recursiva	rg	Utility	Y
+fd	sharkdp/fd	fd-.*-x86_64-unknown-linux-musl\.tar\.gz	Alternativa sencilla y rápida a find	fd	Utility	Y
+fzf	junegunn/fzf	fzf-.*-linux_amd64\.tar\.gz	Filtro interactivo de búsqueda para la terminal	fzf	Utility	Y
+eza	eza-community/eza	eza_.*-linux-x86_64\.tar\.gz	Alternativa moderna a ls	eza	Utility	Y
+zoxide	ajeetdsouza/zoxide	zoxide-.*-x86_64-unknown-linux-musl\.tar\.gz	Navegación inteligente entre directorios	zoxide	Utility	Y
+yq	mikefarah/yq	yq_linux_amd64\.tar\.gz	Procesador de YAML, JSON, XML y otros formatos	yq	Development	Y
+rclone	rclone/rclone	.*-linux-amd64\.zip	Gestor de archivos para servicios de almacenamiento en la nube	rclone	Network	Y
+restic	restic/restic	restic_.*_linux_amd64\.bz2	Sistema de copias de seguridad rapido y seguro	restic	Utility	Y
+yt-dlp	yt-dlp/yt-dlp	yt-dlp_linux$	Descargador de videos y audio desde multiples sitios	yt-dlp	Network	Y
