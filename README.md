@@ -59,12 +59,14 @@ A diferencia de gestores tradicionales que mezclan miles de archivos, `moss` emp
 ## Uso Rápido (leer moss help | -h antes)
 
 ```sh
-moss update                                 # Sincronizar/actualizar el índice remoto localmente
+moss update                                 # Sincronizar repositorios y detectar actualizaciones
+moss update foo foo-1.2.tar.gz              # Actualizar un paquete específico usando un tarball local
+moss upgrade                                # Instalar iterativamente actualizaciones de paquetes instalados
+moss upgrade -y                             # Actualizar todos los paquetes sin pedir confirmación
 moss install foo                            # Instalar paquete por nombre desde el índice
 moss install -t kotofetch                   # Instalar app de consola generando .desktop con Terminal=true
 moss install -e my-bin foo.tar.gz           # Instalar archivo local forzando qué binario enlazar
 moss install ./foo-1.0.0.tar.gz             # Instalar archivo local directamente (sin índice)
-moss upgrade                                # Actualizar todos los paquetes instalados a su última versión
 moss list                                   # Tabla limpia de instalados (ID, Binario Real, Versión, Fecha)
 moss search foo                             # Buscar en el índice
 moss info foo                               # Mostrar información de estado detallada
