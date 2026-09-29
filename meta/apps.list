@@ -190,7 +190,7 @@ chezmoi	twpayne/chezmoi	chezmoi-linux-amd64-musl	Manage your dotfiles across mul
 ko	ko-build/ko	ko_.*_Linux_x86_64\.tar\.gz	Build and deploy Go applications	ko	Utility	Y
 tilt	tilt-dev/tilt	tilt\..*\.linux-alpine\.x86_64\.tar\.gz	Define your dev environment as code. For microservice apps on Kubernetes.	tilt	Development	Y
 superfile	yorukot/superfile	superfile-linux-.*\.tar\.gz	Pretty fancy and modern terminal file manager	superfile	Utility	Y
-television	alexpasmantier/television	tv-.*-unknown-linux-gnu\.deb	A very fast, portable and hackable fuzzy finder.	television	Utility	Y
+television	alexpasmantier/television	tv-.*-unknown-linux-musl\.tar\.gz	A very fast, portable and hackable fuzzy finder.	television	Utility	Y
 micro	micro-editor/micro	micro-.*-static\.tar\.gz	A modern and intuitive terminal-based text editor	micro	Utility	Y
 cilium-cli	cilium/cilium-cli	cilium-linux-amd64\.tar\.gz	CLI to install, manage & troubleshoot Kubernetes clusters running Cilium	cilium-cli	Development	Y
 helm	helm/helm	helm-.*-amd64\.tar\.gz\.asc	The Kubernetes Package Manager	helm	Development	Y
@@ -198,7 +198,6 @@ cargo-binstall	cargo-bins/cargo-binstall	cargo-binstall-x86_64-unknown-linux-gnu
 wasmtime	bytecodealliance/wasmtime	wasmtime-.*-linux-c-api\.tar\.xz	A lightweight WebAssembly runtime that is fast, secure, and standards-compliant	wasmtime	Network	Y
 flannel	flannel-io/flannel	flannel-.*-amd64\.tar\.gz	flannel is a network fabric for containers, designed for Kubernetes	flannel	Development	Y
 istio	istio/istio	istio-.*-amd64\.tar\.gz	Connect, secure, control, and observe services.	istio	Network	Y
-faugus-launcher	Faugus/faugus-launcher	Faugus-.*-x86_64\.AppImage	A simple and lightweight app for running Windows games using UMU-Launcher	faugus-launcher	Utility	N
 openmw	OpenMW/openmw	openmw-.*-64Bit.*\.tar\.gz	OpenMW is an open-source open-world RPG game engine that supports playing Morrowind. Main repo and issue tracker can be found here: https://gitlab.com/OpenMW/openmw/	openmw	Development	Y
 openrct2	OpenRCT2/OpenRCT2	OpenRCT2-.*-bookworm-x86_64\.tar\.gz	An open source re-implementation of RollerCoaster Tycoon 2 🎢	openrct2	Utility	Y
 splitux	splitux-gg/splitux	splitux-.*-x86_64\.tar\.gz	Local co-op split-screen launcher for Linux	splitux	Utility	Y
