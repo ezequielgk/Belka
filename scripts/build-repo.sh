@@ -9,9 +9,14 @@ OUTPUT_FILE="packages.tsv"
 INTERACTIVE=0
 [ -t 0 ] && INTERACTIVE=1
 
-SELECTED_APPS=" "
+SELECTED_APPS=""
 if [ $# -gt 0 ]; then
-    for arg in "$@"; do SELECTED_APPS="$SELECTED_APPS$arg "; done
+    if [ "$1" = "ALL" ] && [ $# -eq 1 ]; then
+        SELECTED_APPS="ALL"
+    else
+        SELECTED_APPS=" "
+        for arg in "$@"; do SELECTED_APPS="$SELECTED_APPS$arg "; done
+    fi
 elif [ "$INTERACTIVE" -eq 1 ]; then
     printf '¿Indexar todas las aplicaciones? (reconstrucción total) [S/n]: ' >&2
     read -r ans </dev/tty
