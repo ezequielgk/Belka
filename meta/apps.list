@@ -34,124 +34,124 @@ yq	mikefarah/yq	yq_linux_amd64\.tar\.gz	Procesador de YAML, JSON, XML y otros fo
 rclone	rclone/rclone	.*-linux-amd64\.zip	Gestor de archivos para servicios de almacenamiento en la nube	rclone	Network	Y
 restic	restic/restic	restic_.*_linux_amd64\.bz2	Sistema de copias de seguridad rapido y seguro	restic	Utility	Y
 yt-dlp	yt-dlp/yt-dlp	yt-dlp_linux$	Descargador de videos y audio desde multiples sitios	yt-dlp	Network	Y
-navi	denisidoro/navi	navi-v\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Interactive cheatsheet tool for the command-line	navi	ConsoleOnly	Y
-sd	chmln/sd	sd-v\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Intuitive find & replace CLI (sed alternative)	sd	ConsoleOnly	Y
-jql	yamafaktory/jql	jql-v\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A JSON Query Language CLI tool	jql	ConsoleOnly	Y
+navi	denisidoro/navi	navi-v.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Interactive cheatsheet tool for the command-line	navi	ConsoleOnly	Y
+sd	chmln/sd	sd-v.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Intuitive find & replace CLI (sed alternative)	sd	ConsoleOnly	Y
+jql	yamafaktory/jql	jql-v.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A JSON Query Language CLI tool	jql	ConsoleOnly	Y
 amdgpu_top	pkgforge/builds	amdgpu_top-\..*-(x86_64|amd64|64bit)-linux\.tar\.gz	Tool to display AMDGPU usage	amdgpu_top	System	N
-dufs	sigoden/dufs	dufs-v\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A file server that supports static serving, uploading, searching, accessing control, webdav	dufs	ConsoleOnly	Y
-halp	orhun/halp	halp-\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A CLI tool to get help with CLI tools	halp	ConsoleOnly	Y
-watchexec	watchexec/watchexec	watchexec-\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.xz	Executes commands in response to file modifications	watchexec	ConsoleOnly	Y
-curlie	rs/curlie	curlie_\.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Frontend to cURL that adds the ease of use of HTTPie	curlie	ConsoleOnly	Y
-alterx	projectdiscovery/alterx	alterx_\.*_linux_(x86_64|amd64|64bit)\.zip	Fast and customizable subdomain wordlist generator using DSL	alterx	Network	Y
-upx	upx/upx	upx-\.*-(x86_64|amd64|64bit)_linux\.tar\.xz	Ultimate packer for executables	upx	ConsoleOnly	Y
+dufs	sigoden/dufs	dufs-v.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A file server that supports static serving, uploading, searching, accessing control, webdav	dufs	ConsoleOnly	Y
+halp	orhun/halp	halp-.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A CLI tool to get help with CLI tools	halp	ConsoleOnly	Y
+watchexec	watchexec/watchexec	watchexec-.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.xz	Executes commands in response to file modifications	watchexec	ConsoleOnly	Y
+curlie	rs/curlie	curlie_.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Frontend to cURL that adds the ease of use of HTTPie	curlie	ConsoleOnly	Y
+alterx	projectdiscovery/alterx	alterx_.*_linux_(x86_64|amd64|64bit)\.zip	Fast and customizable subdomain wordlist generator using DSL	alterx	Network	Y
+upx	upx/upx	upx-.*-(x86_64|amd64|64bit)_linux\.tar\.xz	Ultimate packer for executables	upx	ConsoleOnly	Y
 jnv	ynqa/jnv	jnv-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.xz	Interactive JSON filter using jq	jnv	ConsoleOnly	Y
-algernon	xyproto/algernon	algernon-\.*-linux_(x86_64|amd64|64bit)_static\.tar\.xz	Small self-contained pure-Go web server with Lua, Teal, Markdown, HTTP/2, QUIC, Redis and PostgreSQL support	algernon	Network	Y
+algernon	xyproto/algernon	algernon-.*-linux_(x86_64|amd64|64bit)_static\.tar\.xz	Small self-contained pure-Go web server with Lua, Teal, Markdown, HTTP/2, QUIC, Redis and PostgreSQL support	algernon	Network	Y
 bingrep	pkgforge/builds	bingrep-\..*-(x86_64|amd64|64bit)-linux\.tar\.gz	Cross-platform binary parser and colorizer	bingrep	ConsoleOnly	Y
-lnav	tstack/lnav	lnav-\.*-linux-musl-(x86_64|amd64|64bit)\.zip	Log file navigator	lnav	ConsoleOnly	Y
-just	casey/just	just-\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A handy way to save and run project-specific commands	just	ConsoleOnly	Y
+lnav	tstack/lnav	lnav-.*-linux-musl-(x86_64|amd64|64bit)\.zip	Log file navigator	lnav	ConsoleOnly	Y
+just	casey/just	just-.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A handy way to save and run project-specific commands	just	ConsoleOnly	Y
 7zip	ip7z/7zip	.*linux-(x86_64|amd64|64bit).*\.tar\.xz	File archiver with a high compression ratio	7zip	Archiving	Y
-trippy	fujiapple852/trippy	trippy-\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A network diagnostic tool	trippy	ConsoleOnly	Y
+trippy	fujiapple852/trippy	trippy-.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A network diagnostic tool	trippy	ConsoleOnly	Y
 caddy	caddyserver/caddy	.*linux_(x86_64|amd64|64bit)\.tar\.gz	A powerful, enterprise-ready, and extensible HTTP/2 + HTTP/3 web server with automatic HTTPS	caddy	Network	Y
 bore	ekzhang/bore	.*(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A command line tool for making tunnels to localhost	bore	Network	Y
 fselect	jhspetersson/fselect	fselect-(x86_64|amd64|64bit)-linux-musl\.gz	Find files with SQL-like queries	fselect	ConsoleOnly	Y
 clipcat	xrelkd/clipcat	.*(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A clipboard manager in Rust	clipcat	System	Y
-ffuf	ffuf/ffuf	ffuf_\.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Fast web fuzzer written in Go	ffuf	ConsoleOnly	Y
+ffuf	ffuf/ffuf	ffuf_.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Fast web fuzzer written in Go	ffuf	ConsoleOnly	Y
 jaq	01mf02/jaq	jaq-(x86_64|amd64|64bit)-unknown-linux-musl	A jq clone focussed on correctness, speed, and simplicity	jaq	ConsoleOnly	Y
-intermodal	casey/intermodal	imdl-v\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A user-friendly and featureful command-line BitTorrent metainfo utility	intermodal	ConsoleOnly	Y
+intermodal	casey/intermodal	imdl-v.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A user-friendly and featureful command-line BitTorrent metainfo utility	intermodal	ConsoleOnly	Y
 doggo	mr-karan/doggo	doggo-linux-(x86_64|amd64|64bit)\.tar\.gz	Command-line DNS client for humans	doggo	ConsoleOnly	Y
 difftastic	Wilfred/difftastic	difft-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A structural diff that understands syntax	difftastic	ConsoleOnly	Y
 zellij	zellij-org/zellij	zellij-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A terminal workspace with batteries included	zellij	ConsoleOnly	Y
-freeze	charmbracelet/freeze	freeze_\.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	Generate images of code and terminal output	freeze	ConsoleOnly	Y
+freeze	charmbracelet/freeze	freeze_.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	Generate images of code and terminal output	freeze	ConsoleOnly	Y
 csvtk	shenwei356/csvtk	csvtk_linux_(x86_64|amd64|64bit)\.tar\.gz	A cross-platform, efficient and practical CSV/TSV toolkit	csvtk	ConsoleOnly	Y
 gitui	extrawurst/gitui	gitui-linux-(x86_64|amd64|64bit)\.tar\.gz	Blazing fast terminal-ui for git written in Rust	gitui	ConsoleOnly	Y
-kmon	orhun/kmon	kmon-\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Linux kernel manager and activity monitor	kmon	ConsoleOnly	Y
-mkcert	FiloSottile/mkcert	mkcert-v\.*-linux-(x86_64|amd64|64bit)	Simple zero-config tool to make locally trusted development certificates	mkcert	ConsoleOnly	Y
-sequin	charmbracelet/sequin	sequin_\.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	Human-readable ANSI sequences	sequin	ConsoleOnly	Y
-lsd	lsd-rs/lsd	lsd-v\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	The next gen ls command	lsd	ConsoleOnly	Y
+kmon	orhun/kmon	kmon-.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Linux kernel manager and activity monitor	kmon	ConsoleOnly	Y
+mkcert	FiloSottile/mkcert	mkcert-v.*-linux-(x86_64|amd64|64bit)	Simple zero-config tool to make locally trusted development certificates	mkcert	ConsoleOnly	Y
+sequin	charmbracelet/sequin	sequin_.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	Human-readable ANSI sequences	sequin	ConsoleOnly	Y
+lsd	lsd-rs/lsd	lsd-v.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	The next gen ls command	lsd	ConsoleOnly	Y
 k9s	derailed/k9s	k9s_Linux_(x86_64|amd64|64bit)\.tar\.gz	Terminal UI to interact with Kubernetes clusters	k9s	ConsoleOnly	Y
-viddy	sachaos/viddy	viddy-v\.*-linux-(x86_64|amd64|64bit)\.tar\.gz	A modern watch command	viddy	ConsoleOnly	Y
+viddy	sachaos/viddy	viddy-v.*-linux-(x86_64|amd64|64bit)\.tar\.gz	A modern watch command	viddy	ConsoleOnly	Y
 gdu	dundee/gdu	gdu_linux_(x86_64|amd64|64bit)\.tgz	Fast disk usage calculator with console interface	gdu	ConsoleOnly	Y
-macchina	Macchina-CLI/macchina	macchina-v\.*-linux-musl-(x86_64|amd64|64bit)\.tar\.gz	A system information frontend with an emphasis on performance	macchina	ConsoleOnly	Y
-sops	getsops/sops	sops-v\.*\.linux\.(x86_64|amd64|64bit)	Simple and flexible tool for managing secrets	sops	ConsoleOnly	Y
-hexyl	sharkdp/hexyl	hexyl-v\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A command-line hex viewer	hexyl	ConsoleOnly	Y
+macchina	Macchina-CLI/macchina	macchina-v.*-linux-musl-(x86_64|amd64|64bit)\.tar\.gz	A system information frontend with an emphasis on performance	macchina	ConsoleOnly	Y
+sops	getsops/sops	sops-v.*\.linux\.(x86_64|amd64|64bit)	Simple and flexible tool for managing secrets	sops	ConsoleOnly	Y
+hexyl	sharkdp/hexyl	hexyl-v.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A command-line hex viewer	hexyl	ConsoleOnly	Y
 tailspin	bensadeh/tailspin	tailspin-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A log file highlighter	tailspin	ConsoleOnly	Y
 fx	antonmedv/fx	fx_linux_(x86_64|amd64|64bit)	Terminal JSON viewer & processor	fx	ConsoleOnly	Y
-vhs	charmbracelet/vhs	vhs_\.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	Your CLI home video recorder	vhs	ConsoleOnly	Y
+vhs	charmbracelet/vhs	vhs_.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	Your CLI home video recorder	vhs	ConsoleOnly	Y
 starship	starship/starship	starship-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	The minimal, blazing-fast, and infinitely customizable prompt for any shell	starship	ConsoleOnly	Y
-git-cliff	orhun/git-cliff	git-cliff-\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Highly customizable changelog generator following Conventional Commits	git-cliff	ConsoleOnly	Y
-hugo	gohugoio/hugo	hugo_\.*_linux-(x86_64|amd64|64bit)\.tar\.gz	The world's fastest framework for building websites	hugo	ConsoleOnly	Y
-vegeta	tsenart/vegeta	vegeta_\.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Versatile HTTP load testing tool	vegeta	ConsoleOnly	Y
+git-cliff	orhun/git-cliff	git-cliff-.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Highly customizable changelog generator following Conventional Commits	git-cliff	ConsoleOnly	Y
+hugo	gohugoio/hugo	hugo_.*_linux-(x86_64|amd64|64bit)\.tar\.gz	The world's fastest framework for building websites	hugo	ConsoleOnly	Y
+vegeta	tsenart/vegeta	vegeta_.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Versatile HTTP load testing tool	vegeta	ConsoleOnly	Y
 act	nektos/act	act_Linux_(x86_64|amd64|64bit)\.tar\.gz	Run your GitHub Actions locally	act	Development	Y
 fnm	Schniz/fnm	fnm-arm64\.zip'}	Fast and simple Node.js version manager, built in Rust	fnm	ConsoleOnly	Y
-genact	svenstaro/genact	genact-\.*-(x86_64|amd64|64bit)-unknown-linux-musl	A nonsense activity generator	genact	ConsoleOnly	Y
-f2	ayoisaiah/f2	f2_\.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Cross-platform tool for batch renaming files and directories	f2	ConsoleOnly	Y
+genact	svenstaro/genact	genact-.*-(x86_64|amd64|64bit)-unknown-linux-musl	A nonsense activity generator	genact	ConsoleOnly	Y
+f2	ayoisaiah/f2	f2_.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Cross-platform tool for batch renaming files and directories	f2	ConsoleOnly	Y
 mise	jdx/mise	.*linux-(x86_64|amd64|64bit)-musl\.tar\.xz	The front-end to your dev env	mise	Development	Y
 feroxbuster	epi052/feroxbuster	aarch64-linux-feroxbuster\.zip'}	Fast, simple, recursive content discovery tool written in Rust	feroxbuster	ConsoleOnly	Y
-grex	pemistahl/grex	grex-v\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Command-line tool for generating regular expressions from test cases	grex	ConsoleOnly	Y
-tlrc	tldr-pages/tlrc	tlrc-v\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A tldr client written in Rust	tlrc	ConsoleOnly	Y
-usql	xo/usql	usql_static-\.*-linux-(x86_64|amd64|64bit)\.tar\.bz2	Universal command-line interface for SQL databases	usql	ConsoleOnly	Y
+grex	pemistahl/grex	grex-v.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Command-line tool for generating regular expressions from test cases	grex	ConsoleOnly	Y
+tlrc	tldr-pages/tlrc	tlrc-v.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A tldr client written in Rust	tlrc	ConsoleOnly	Y
+usql	xo/usql	usql_static-.*-linux-(x86_64|amd64|64bit)\.tar\.bz2	Universal command-line interface for SQL databases	usql	ConsoleOnly	Y
 hadolint	hadolint/hadolint	hadolint-Linux-(x86_64|amd64|64bit)	Dockerfile linter, validate inline bash	hadolint	ConsoleOnly	Y
-xq	sibprogrammer/xq	xq_\.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Command-line XML and HTML beautifier and content extractor	xq	ConsoleOnly	Y
-melt	charmbracelet/melt	melt_\.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	Backup and restore Ed25519 SSH keys with seed words	melt	ConsoleOnly	Y
+xq	sibprogrammer/xq	xq_.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Command-line XML and HTML beautifier and content extractor	xq	ConsoleOnly	Y
+melt	charmbracelet/melt	melt_.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	Backup and restore Ed25519 SSH keys with seed words	melt	ConsoleOnly	Y
 fblog	brocode/fblog	fblog	Small command-line JSON log viewer	fblog	ConsoleOnly	Y
 aeris	pkgforge/aeris	aeris-(x86_64|amd64|64bit)-linux\.onelf	Manages your package managers	aeris	System	N
-age	FiloSottile/age	age-v\.*-linux-(x86_64|amd64|64bit)\.tar\.gz	A simple, modern and secure encryption tool	age	ConsoleOnly	Y
-xh	ducaale/xh	xh-v\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Friendly and fast tool for sending HTTP requests	xh	ConsoleOnly	Y
+age	FiloSottile/age	age-v.*-linux-(x86_64|amd64|64bit)\.tar\.gz	A simple, modern and secure encryption tool	age	ConsoleOnly	Y
+xh	ducaale/xh	xh-v.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Friendly and fast tool for sending HTTP requests	xh	ConsoleOnly	Y
 amp	jmacdonald/amp	amp-(x86_64|amd64|64bit)-unknown-linux-musl	A complete text editor for your terminal	amp	ConsoleOnly	Y
 soar	pkgforge/soar	soar-(x86_64|amd64|64bit)-linux\.tar\.gz	Fast, modern, bloat-free distro-independent package manager	soar	PackageManager	Y
-lazygit	jesseduffield/lazygit	lazygit_\.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Simple terminal UI for git commands	lazygit	ConsoleOnly	Y
+lazygit	jesseduffield/lazygit	lazygit_.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Simple terminal UI for git commands	lazygit	ConsoleOnly	Y
 gping	orf/gping	gping-Linux-musl-(x86_64|amd64|64bit)\.tar\.gz	Ping, but with a graph	gping	ConsoleOnly	Y
-nerdctl	containerd/nerdctl	nerdctl-\.*-linux-(x86_64|amd64|64bit)\.tar\.gz	Docker-compatible CLI for containerd	nerdctl	ConsoleOnly	Y
+nerdctl	containerd/nerdctl	nerdctl-.*-linux-(x86_64|amd64|64bit)\.tar\.gz	Docker-compatible CLI for containerd	nerdctl	ConsoleOnly	Y
 arduino-cli	arduino/arduino-cli	.*Linux_(x86_64|amd64|64bit)\.tar\.gz	Arduino command line interface	arduino-cli	Development	Y
 skim	lotabout/skim	skim-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.xz	Fuzzy Finder in rust	skim	ConsoleOnly	Y
-bandwhich	imsnif/bandwhich	bandwhich-v\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Terminal bandwidth utilization tool	bandwhich	ConsoleOnly	Y
-mcfly	cantino/mcfly	mcfly-v\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Fly through your shell history	mcfly	ConsoleOnly	Y
-gum	charmbracelet/gum	gum_\.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	A tool for glamorous shell scripts	gum	ConsoleOnly	Y
+bandwhich	imsnif/bandwhich	bandwhich-v.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Terminal bandwidth utilization tool	bandwhich	ConsoleOnly	Y
+mcfly	cantino/mcfly	mcfly-v.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Fly through your shell history	mcfly	ConsoleOnly	Y
+gum	charmbracelet/gum	gum_.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	A tool for glamorous shell scripts	gum	ConsoleOnly	Y
 bluetuith	bluetuith-org/bluetuith	.*Linux_(x86_64|amd64|64bit)\.tar\.gz	A TUI bluetooth manager for Linux	bluetuith	ConsoleOnly	Y
-delta	dandavison/delta	delta-\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A syntax-highlighting pager for git, diff, and grep output	delta	ConsoleOnly	Y
-miniserve	pkgforge/builds	miniserve-\.*-riscv64-linux\.tar\.gz'}	CLI tool to serve files and dirs over HTTP	miniserve	ConsoleOnly	Y
+delta	dandavison/delta	delta-.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A syntax-highlighting pager for git, diff, and grep output	delta	ConsoleOnly	Y
+miniserve	pkgforge/builds	miniserve-.*-riscv64-linux\.tar\.gz'}	CLI tool to serve files and dirs over HTTP	miniserve	ConsoleOnly	Y
 btop	aristocratos/btop	btop-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Modern and colorful command line resource monitor that shows usage and stats	btop	ConsoleOnly	Y
-broot	Canop/broot	broot_\.*\.zip	A new way to see and navigate directory trees	broot	ConsoleOnly	Y
-hwatch	blacknon/hwatch	hwatch-\.*\.(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Modern alternative to the watch command	hwatch	ConsoleOnly	Y
+broot	Canop/broot	broot_.*\.zip	A new way to see and navigate directory trees	broot	ConsoleOnly	Y
+hwatch	blacknon/hwatch	hwatch-.*\.(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Modern alternative to the watch command	hwatch	ConsoleOnly	Y
 pueue	Nukesor/pueue	pueue-(x86_64|amd64|64bit)-unknown-linux-musl	Manage your shell commands with a task queue	pueue	ConsoleOnly	Y
 direnv	direnv/direnv	direnv\.linux-(x86_64|amd64|64bit)	Unclutter your .profile - per-directory shell configuration	direnv	ConsoleOnly	Y
-httpx	projectdiscovery/httpx	httpx_\.*_linux_(x86_64|amd64|64bit)\.zip	Fast and multi-purpose HTTP toolkit	httpx	ConsoleOnly	Y
+httpx	projectdiscovery/httpx	httpx_.*_linux_(x86_64|amd64|64bit)\.zip	Fast and multi-purpose HTTP toolkit	httpx	ConsoleOnly	Y
 fish	fish-shell/fish-shell	.*linux-(x86_64|amd64|64bit)\.tar\.xz	The user-friendly command line shell	fish	ConsoleOnly	Y
 appimagetool	pkgforge-dev/appimagetool	appimagetool-(x86_64|amd64|64bit)-linux	Rust implementation of appimagetool for the Anylinux-AppImages project	appimagetool	ConsoleOnly	Y
 albafetch	alba4k/albafetch	albafetch-linux-(x86_64|amd64|64bit)-static\.zip	Faster neofetch alternative, written in C	albafetch	ConsoleOnly	Y
-dummyhttp	pkgforge/builds	dummyhttp-\.*-riscv64-linux\.tar\.gz'}	Super simple HTTP server that replies a fixed body with a fixed response code	dummyhttp	ConsoleOnly	Y
-glow	charmbracelet/glow	glow_\.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	Render markdown on the CLI	glow	ConsoleOnly	Y
-actionlint	rhysd/actionlint	actionlint_\.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Static checker for GitHub Actions workflow files	actionlint	Development	Y
-duf	muesli/duf	duf_\.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Disk Usage/Free Utility - a better 'df' alternative	duf	ConsoleOnly	Y
+dummyhttp	pkgforge/builds	dummyhttp-.*-riscv64-linux\.tar\.gz'}	Super simple HTTP server that replies a fixed body with a fixed response code	dummyhttp	ConsoleOnly	Y
+glow	charmbracelet/glow	glow_.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	Render markdown on the CLI	glow	ConsoleOnly	Y
+actionlint	rhysd/actionlint	actionlint_.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Static checker for GitHub Actions workflow files	actionlint	Development	Y
+duf	muesli/duf	duf_.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Disk Usage/Free Utility - a better 'df' alternative	duf	ConsoleOnly	Y
 b3sum	pkgforge/builds	b3sum-\..*-(x86_64|amd64|64bit)-linux\.tar\.gz	Command line utility for calculating BLAKE3 hashes	b3sum	ConsoleOnly	Y
 walk	antonmedv/walk	walk_linux_(x86_64|amd64|64bit)	Terminal file manager	walk	ConsoleOnly	Y
-ruff	pkgforge/builds	ruff-\.*-riscv64-linux\.tar\.gz'}	Extremely fast Python linter and code formatter, written in Rust	ruff	ConsoleOnly	Y
-shellcheck	koalaman/shellcheck	shellcheck-v\.*\.linux\.(x86_64|amd64|64bit)\.tar\.xz	Static analysis tool for shell scripts	shellcheck	ConsoleOnly	Y
-gitleaks	gitleaks/gitleaks	gitleaks_\.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Find secrets with Gitleaks	gitleaks	ConsoleOnly	Y
+ruff	pkgforge/builds	ruff-.*-riscv64-linux\.tar\.gz'}	Extremely fast Python linter and code formatter, written in Rust	ruff	ConsoleOnly	Y
+shellcheck	koalaman/shellcheck	shellcheck-v.*\.linux\.(x86_64|amd64|64bit)\.tar\.xz	Static analysis tool for shell scripts	shellcheck	ConsoleOnly	Y
+gitleaks	gitleaks/gitleaks	gitleaks_.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Find secrets with Gitleaks	gitleaks	ConsoleOnly	Y
 so	samtay/so	so-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A terminal interface for Stack Overflow	so	ConsoleOnly	Y
-presenterm	mfontanini/presenterm	presenterm-\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Terminal-based markdown slideshow tool	presenterm	ConsoleOnly	Y
+presenterm	mfontanini/presenterm	presenterm-.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Terminal-based markdown slideshow tool	presenterm	ConsoleOnly	Y
 oha	hatoo/oha	oha-linux-(x86_64|amd64|64bit)	HTTP load generator, inspired by rakyll/hey with TUI animation	oha	ConsoleOnly	Y
-dyff	homeport/dyff	dyff_\.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Diff tool for YAML files, and sometimes JSON	dyff	ConsoleOnly	Y
-lazydocker	jesseduffield/lazydocker	lazydocker_\.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	TUI for docker resource visualization and management	lazydocker	ConsoleOnly	Y
+dyff	homeport/dyff	dyff_.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Diff tool for YAML files, and sometimes JSON	dyff	ConsoleOnly	Y
+lazydocker	jesseduffield/lazydocker	lazydocker_.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	TUI for docker resource visualization and management	lazydocker	ConsoleOnly	Y
 binfmt	tonistiigi/binfmt	binfmt_linux-(x86_64|amd64|64bit)\.tar\.gz	Cross-platform emulator collection distributed with Docker images	binfmt	ConsoleOnly	Y
 zfind	laktak/zfind	zfind-linux-(x86_64|amd64|64bit)\.tar\.gz	Search for files using a SQL-WHERE filter, even inside archives	zfind	ConsoleOnly	Y
 aws-nuke	ekristen/aws-nuke	.*linux-(x86_64|amd64|64bit)\.tar\.gz	Remove all the resources from an AWS account	aws-nuke	Development	Y
 sttr	abhimanyu003/sttr	sttr_Linux_(x86_64|amd64|64bit)\.tar\.gz	CLI app to perform various operations on strings	sttr	ConsoleOnly	Y
 lf	gokcehan/lf	lf-linux-(x86_64|amd64|64bit)\.tar\.gz	Terminal file manager	lf	ConsoleOnly	Y
-yazi	pkgforge/builds	yazi-\.*-riscv64-linux\.tar\.gz'}	Blazing fast terminal file manager written in Rust, based on async I/O	yazi	ConsoleOnly	Y
-grpcurl	fullstorydev/grpcurl	grpcurl_\.*_linux_(x86_64|amd64|64bit)\.tar\.gz	CLI tool for interacting with gRPC servers	grpcurl	ConsoleOnly	Y
-nnn	jarun/nnn	nnn-musl-static-\.*\.(x86_64|amd64|64bit)\.tar\.gz	n³ The unorthodox terminal file manager	nnn	ConsoleOnly	Y
+yazi	pkgforge/builds	yazi-.*-riscv64-linux\.tar\.gz'}	Blazing fast terminal file manager written in Rust, based on async I/O	yazi	ConsoleOnly	Y
+grpcurl	fullstorydev/grpcurl	grpcurl_.*_linux_(x86_64|amd64|64bit)\.tar\.gz	CLI tool for interacting with gRPC servers	grpcurl	ConsoleOnly	Y
+nnn	jarun/nnn	nnn-musl-static-.*\.(x86_64|amd64|64bit)\.tar\.gz	n³ The unorthodox terminal file manager	nnn	ConsoleOnly	Y
 cpufetch	Dr-Noob/cpufetch	cpufetch_(x86_64|amd64|64bit)_linux	Simple yet fancy CPU architecture fetching tool	cpufetch	System	Y
 tealdeer	dbrgn/tealdeer	tealdeer-linux-(x86_64|amd64|64bit)-musl	Very fast implementation of tldr in Rust	tealdeer	ConsoleOnly	Y
 dust	bootandy/dust	.*(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A CLI disk usage analyzer	dust	ConsoleOnly	Y
 choose	theryangeary/choose	choose-(x86_64|amd64|64bit)-unknown-linux-musl	A human-friendly and fast alternative to cut and (sometimes) awk	choose	ConsoleOnly	Y
 cosign	sigstore/cosign	cosign-linux-(x86_64|amd64|64bit)	Code signing and transparency for containers and binaries	cosign	ConsoleOnly	Y
-nushell	pkgforge/builds	nushell-\.*-riscv64-linux\.tar\.gz'}	A new type of shell	nushell	ConsoleOnly	Y
-fclones	pkolaczk/fclones	fclones-\.*-linux-musl-(x86_64|amd64|64bit)\.tar\.gz	Efficient duplicate file finder	fclones	ConsoleOnly	Y
+nushell	pkgforge/builds	nushell-.*-riscv64-linux\.tar\.gz'}	A new type of shell	nushell	ConsoleOnly	Y
+fclones	pkolaczk/fclones	fclones-.*-linux-musl-(x86_64|amd64|64bit)\.tar\.gz	Efficient duplicate file finder	fclones	ConsoleOnly	Y
 yj	sclevine/yj	yj-linux-(x86_64|amd64|64bit)	Convert between YAML, TOML, JSON, and HCL	yj	ConsoleOnly	Y
 sad	ms-jpq/sad	(x86_64|amd64|64bit)-unknown-linux-musl\.zip	CLI search and replace, Space Age seD	sad	ConsoleOnly	Y
-procs	dalance/procs	procs-v\.*-(x86_64|amd64|64bit)-linux\.zip	A modern replacement for ps written in Rust	procs	ConsoleOnly	Y
+procs	dalance/procs	procs-v.*-(x86_64|amd64|64bit)-linux\.zip	A modern replacement for ps written in Rust	procs	ConsoleOnly	Y
 dasel	TomWright/dasel	dasel_linux_(x86_64|amd64|64bit)	Select, put and delete data from JSON, TOML, YAML, XML and CSV	dasel	ConsoleOnly	Y
-shfmt	mvdan/sh	shfmt_v\.*_linux_(x86_64|amd64|64bit)	Shell parser, formatter, and interpreter with bash support	shfmt	ConsoleOnly	Y
-soft-serve	charmbracelet/soft-serve	soft-serve_\.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	The mighty, self-hostable Git server for the command line	soft-serve	ConsoleOnly	Y
-hyperfine	sharkdp/hyperfine	hyperfine-v\.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A command-line benchmarking tool	hyperfine	ConsoleOnly	Y
+shfmt	mvdan/sh	shfmt_v.*_linux_(x86_64|amd64|64bit)	Shell parser, formatter, and interpreter with bash support	shfmt	ConsoleOnly	Y
+soft-serve	charmbracelet/soft-serve	soft-serve_.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	The mighty, self-hostable Git server for the command line	soft-serve	ConsoleOnly	Y
+hyperfine	sharkdp/hyperfine	hyperfine-v.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A command-line benchmarking tool	hyperfine	ConsoleOnly	Y
