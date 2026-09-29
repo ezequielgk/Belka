@@ -4,14 +4,16 @@
 set -e
 
 OUTPUT_FILE=${MOSS_OUTPUT_FILE:-"packages.tsv"}
+TMP_DIR="/tmp/moss_build_$$"
+mkdir -p "$TMP_DIR"
+trap 'rm -rf "$TMP_DIR"' EXIT INT TERM HUP
 
-# Determinar qué aplicaciones indexar
 INTERACTIVE=0
 [ -t 0 ] && INTERACTIVE=1
 
 SELECTED_APPS=""
 if [ $# -gt 0 ]; then
-    if [ "$1" = "ALL" ] && [ $# -eq 1 ]; then
+    if [ "$1" = "ALL" ] || [ "$1" = "--rebuild" ]; then
         SELECTED_APPS="ALL"
     else
         SELECTED_APPS=" "
@@ -46,16 +48,17 @@ else
     SELECTED_APPS="ALL"
 fi
 
-if [ "$SELECTED_APPS" != "ALL" ] && [ -f "$OUTPUT_FILE" ]; then
-    cp "$OUTPUT_FILE" "${OUTPUT_FILE}.bak"
+if [ "$SELECTED_APPS" = "ALL" ]; then
+    STAGING_FILE="$TMP_DIR/packages.tsv.tmp"
+    > "$STAGING_FILE"
+    printf '# nombre\tversion\turl\tsha256\tdescripcion\texec\tcategoria\tterminal\ttipo\n' > "$STAGING_FILE"
+else
+    if [ ! -f "$OUTPUT_FILE" ]; then
+        printf '# nombre\tversion\turl\tsha256\tdescripcion\texec\tcategoria\tterminal\ttipo\n' > "$OUTPUT_FILE"
+    fi
 fi
 
-# Crear o vaciar el archivo packages.tsv en la raiz
-> "$OUTPUT_FILE"
-
-# Agregar cabecera inicial (opcional, pero buena practica)
-printf '# nombre\tversion\turl\tsha256\tdescripcion\texec\tcategoria\tterminal\ttipo\n' > "$OUTPUT_FILE"
-
+# Obtiene la información del último release desde la API correspondiente
 repo_fetch_latest_release() {
     _repo_url="$1"
     _pattern="$2"
@@ -107,62 +110,63 @@ repo_fetch_latest_release() {
     fi
 }
 
-IFS="$(printf '\t')"
+# Actualiza o inserta un paquete de forma segura en el índice local
+update_atomic_index() {
+    _pkg_name="$1"
+    _pkg_line="$2"
+    _target_file="$3"
+    _tmp_idx="$TMP_DIR/atomic_index.tmp"
+    if grep -q "^${_pkg_name}$(printf '\t')" "$_target_file"; then
+        awk -F'\t' -v pkg="$_pkg_name" -v newline="$_pkg_line" '
+            $1 == pkg { print newline; next }
+            { print }
+        ' "$_target_file" > "$_tmp_idx"
+        mv "$_tmp_idx" "$_target_file"
+    else
+        printf '%s\n' "$_pkg_line" >> "$_target_file"
+    fi
+}
 
+# Procesa y registra cada aplicación desde los archivos .list
 process_meta_file() {
     _pm_file=$1
     _pm_type=$2
     [ -f "$_pm_file" ] || return 0
-
     while IFS="$(printf '\t')" read -r name repo pattern desc exec_bin _app_cat _app_term; do
         case "$name" in \#*|"") continue ;; esac
-
         [ -z "$_app_cat" ] || [ "$_app_cat" = "-" ] && _app_cat="Utility"
         [ -z "$_app_term" ] || [ "$_app_term" = "-" ] && _app_term="N"
-
         if [ "$SELECTED_APPS" != "ALL" ]; then
             case "$SELECTED_APPS" in
                 *" $name "*) ;;
-                *)
-                    if [ -f "${OUTPUT_FILE}.bak" ] && grep -q "^${name}	" "${OUTPUT_FILE}.bak"; then
-                        grep "^${name}	" "${OUTPUT_FILE}.bak" >> "$OUTPUT_FILE"
-                        printf '  -> Preservado (sin cambios): %s\n' "$name" >&2
-                    else
-                        printf '  -> Omitido (no existía previamente): %s\n' "$name" >&2
-                    fi
-                    continue
-                    ;;
+                *) continue ;;
             esac
         fi
-
         printf 'Procesando %s (%s)...\n' "$name" "$repo" >&2
         sleep 1
-
         _release_data=$(repo_fetch_latest_release "$repo" "$pattern")
-        
         if [ -z "$_release_data" ]; then
             printf 'Error: No se pudo obtener la version o el asset de %s\n' "$repo" >&2
             continue
         fi
-        
         version=$(printf '%s\n' "$_release_data" | awk -F'\t' '{print $1}')
         dl_url=$(printf '%s\n' "$_release_data" | awk -F'\t' '{print $2}')
-
         printf '  -> Descargando %s para calcular sha256...\n' "$dl_url" >&2
-        tmp_file="/tmp/moss_asset_$name.$$"
-        
+        tmp_file="$TMP_DIR/asset_$name"
         if ! curl -sL "$dl_url" -o "$tmp_file"; then
             printf 'Error al descargar %s\n' "$dl_url" >&2
             rm -f "$tmp_file"
             continue
         fi
-
         hash=$(sha256sum "$tmp_file" | awk '{print $1}')
         rm -f "$tmp_file"
-
-        printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$name" "$version" "$dl_url" "$hash" "$desc" "$exec_bin" "$_app_cat" "$_app_term" "$_pm_type" >> "$OUTPUT_FILE"
+        new_line=$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' "$name" "$version" "$dl_url" "$hash" "$desc" "$exec_bin" "$_app_cat" "$_app_term" "$_pm_type")
+        if [ "$SELECTED_APPS" = "ALL" ]; then
+            printf '%s\n' "$new_line" >> "$STAGING_FILE"
+        else
+            update_atomic_index "$name" "$new_line" "$OUTPUT_FILE"
+        fi
         printf '  -> Listo: %s v%s\n' "$name" "$version" >&2
-
     done < "$_pm_file"
 }
 
@@ -172,6 +176,8 @@ BUILD_APPIMAGE=${BUILD_APPIMAGE:-1}
 [ "$BUILD_TAR" -eq 1 ] && process_meta_file "meta/tar.list" "tar"
 [ "$BUILD_APPIMAGE" -eq 1 ] && process_meta_file "meta/appimages.list" "appimage"
 
-[ -f "${OUTPUT_FILE}.bak" ] && rm -f "${OUTPUT_FILE}.bak"
+if [ "$SELECTED_APPS" = "ALL" ]; then
+    mv "$STAGING_FILE" "$OUTPUT_FILE"
+fi
 
 printf '\nGeneracion completada: %s\n' "$OUTPUT_FILE" >&2
