@@ -43,6 +43,8 @@ def generate_regex(asset_name, app_name):
     # Reemplazar arquitecturas especificas por .* o agruparlas si es necesario
     # Por seguridad escapamos los puntos
     asset_name = asset_name.replace('.', r'\.')
+    # Restaurar el .* que acabamos de romper accidentalmente con el escape de puntos
+    asset_name = asset_name.replace(r'\.*', '.*')
     
     return asset_name
 
