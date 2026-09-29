@@ -115,10 +115,11 @@ update_atomic_index() {
     _pkg_name="$1"
     _pkg_line="$2"
     _target_file="$3"
+    _pkg_type="$4"
     _tmp_idx="$TMP_DIR/atomic_index.tmp"
-    if grep -q "^${_pkg_name}$(printf '\t')" "$_target_file"; then
-        awk -F'\t' -v pkg="$_pkg_name" -v newline="$_pkg_line" '
-            $1 == pkg { print newline; next }
+    if awk -F'\t' -v pkg="$_pkg_name" -v type="$_pkg_type" '$1 == pkg && $9 == type {found=1; exit} END {if(!found) exit 1}' "$_target_file"; then
+        awk -F'\t' -v pkg="$_pkg_name" -v type="$_pkg_type" -v newline="$_pkg_line" '
+            $1 == pkg && $9 == type { print newline; next }
             { print }
         ' "$_target_file" > "$_tmp_idx"
         mv "$_tmp_idx" "$_target_file"
@@ -164,7 +165,7 @@ process_meta_file() {
         if [ "$SELECTED_APPS" = "ALL" ]; then
             printf '%s\n' "$new_line" >> "$STAGING_FILE"
         else
-            update_atomic_index "$name" "$new_line" "$OUTPUT_FILE"
+            update_atomic_index "$name" "$new_line" "$OUTPUT_FILE" "$_pm_type"
         fi
         printf '  -> Listo: %s v%s\n' "$name" "$version" >&2
     done < "$_pm_file"
