@@ -163,7 +163,6 @@ gthumb	pkgforge-dev/gThumb-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Image vie
 gwenview	pkgforge-dev/Gwenview-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Image viewer by KDE	gwenview	Graphics	N
 haruna	pkgforge-dev/Haruna-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open source video player built with Qt/QML and libmpv	haruna	AudioVideo	N
 hatari	pkgforge-dev/Hatari-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Free Atari ST/STE/TT/Falcon emulator	hatari	Emulator	N
-helium-browser	pkgforge-dev/Helium-Browser-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Private browser based on Chromium with built-in ad blocking	helium-browser	Network	N
 hp-15c-simulator	pkgforge-dev/HP-15C-Simulator-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Simulator of the HP-15C RPN scientific programmable calculator	hp-15c-simulator	Calculator	N
 htop	pkgforge-dev/htop-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Interactive process viewer and system monitor	htop	System	N
 identity	pkgforge-dev/Identity-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Compare images and videos	identity	Graphics	N
