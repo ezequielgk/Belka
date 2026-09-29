@@ -461,11 +461,23 @@ moss_index_load() {
 # Retorna:
 #   0 y puebla variables globales si lo encuentra, 1 si no
 moss_index_lookup() {
-    _moss_l_lines=$(awk -F "$MOSS_TAB" -v n="$1" '$1 !~ /^#/ && $1 == n { print }' "$_moss_index_file")
+    _moss_l_name="$1"
+    _moss_pref_type="$2"
+    _moss_l_lines=$(awk -F "$MOSS_TAB" -v n="$_moss_l_name" '$1 !~ /^#/ && $1 == n { print }' "$_moss_index_file")
     [ -n "$_moss_l_lines" ] || return 1
 
-    _moss_l_count=$(printf '%s\n' "$_moss_l_lines" | wc -l | tr -dc '0-9')
-    _moss_l_line=$(printf '%s\n' "$_moss_l_lines" | head -n 1)
+    if [ -n "$_moss_pref_type" ]; then
+        _moss_l_filtered=$(printf '%s
+' "$_moss_l_lines" | awk -F'	' -v t="$_moss_pref_type" '{ if ($9 == t || ($9 == "" && t == "tar")) print }')
+        if [ -n "$_moss_l_filtered" ]; then
+            _moss_l_lines="$_moss_l_filtered"
+        fi
+    fi
+
+    _moss_l_count=$(printf '%s
+' "$_moss_l_lines" | wc -l | tr -dc '0-9')
+    _moss_l_line=$(printf '%s
+' "$_moss_l_lines" | head -n 1)
     
     if [ "$_moss_l_count" -gt 1 ]; then
         if [ "$MOSS_ASSUME_YES" -eq 0 ] && [ -t 0 ]; then
@@ -1068,7 +1080,7 @@ moss_resolve_pkg() {
             ;;
     esac
     moss_index_load || return $?
-    if ! moss_index_lookup "$1"; then
+    if ! moss_index_lookup "$1" "${MOSS_OPT_TYPE:-}"; then
         moss_log ERROR "paquete no encontrado en el indice: $1"
         return $MOSS_EX_USAGE
     fi
@@ -1104,7 +1116,7 @@ moss_cmd_install() {
     IFS=$_moss_an_saveifs
     OPTIND=1
     MOSS_OPT_EXEC=""
-    while getopts ':hnfsqjve:t' _moss_opt; do
+    while getopts ':hnfsqjve:tT:' _moss_opt; do
         case $_moss_opt in
             h) moss_usage; return 0 ;;
             n) MOSS_DRY_RUN=1 ;;
@@ -1114,6 +1126,7 @@ moss_cmd_install() {
             v) MOSS_LOG_LEVEL=3 ;;
             j) MOSS_JSON=1 ;;
             e) MOSS_OPT_EXEC="$OPTARG" ;;
+            T) MOSS_OPT_TYPE="$OPTARG" ;;
             t) MOSS_OPT_TERM=1 ;;
             :) moss_die $MOSS_EX_USAGE "falta argumento para -$OPTARG" ;;
             *) moss_die $MOSS_EX_USAGE "opcion invalida: -$OPTARG" ;;
@@ -1214,7 +1227,7 @@ moss_update_one() {
         MOSS_U_RESULT=failed
         return 1
     fi
-    if ! moss_index_lookup "$1"; then
+    if ! moss_index_lookup "$1" "${MOSS_OPT_TYPE:-}"; then
         moss_log WARN "$1 no esta en el indice; se omite"
         MOSS_U_RESULT=skipped
         return 0
@@ -1371,12 +1384,10 @@ moss_cmd_upgrade() {
         [ -d "$_moss_s_dir" ] || continue
         _moss_p_name=$(basename "$_moss_s_dir")
         
-        _moss_p_ver=""
-        if [ -f "$_moss_s_dir/manifest" ]; then
-            _moss_p_ver=$(awk -F= '$1=="version"{print $2; exit}' "$_moss_s_dir/manifest")
-        fi
+        moss_manifest_read "$_moss_s_dir/manifest" 2>/dev/null || continue
+        _moss_p_ver="$MOSS_M_VERSION"
         
-        if moss_index_lookup "$_moss_p_name"; then
+        if moss_index_lookup "$_moss_p_name" "$MOSS_M_TYPE"; then
             if [ "$_moss_p_ver" != "$MOSS_L_VERSION" ]; then
                 _moss_up_pkgs="$_moss_up_pkgs $_moss_p_name"
                 _moss_up_tot=$((_moss_up_tot + 1))
@@ -1389,7 +1400,10 @@ moss_cmd_upgrade() {
         return 0
     fi
 
-    printf 'Se actualizarán los siguientes %d paquetes:\n  %s\n\n' "$_moss_up_tot" "$_moss_up_pkgs"
+    printf 'Se actualizarán los siguientes %d paquetes:
+  %s
+
+' "$_moss_up_tot" "$_moss_up_pkgs"
 
     if [ "${MOSS_ASSUME_YES:-0}" -ne 1 ]; then
         printf '¿Desea continuar con la actualización? [S/n] '
@@ -1403,18 +1417,54 @@ moss_cmd_upgrade() {
     fi
 
     _moss_up_curr=0
+    _moss_up_ok=0
+    _moss_up_failed=""
     moss_progress "$_moss_up_curr" "$_moss_up_tot" "Calculando..."
 
     for _pkg in $_moss_up_pkgs; do
         moss_progress "$_moss_up_curr" "$_moss_up_tot" "Actualizando $_pkg..."
-        
-        "$0" install -f -q "$_pkg" >/dev/null 2>&1
-        
+
+        _moss_up_state="$MOSS_STATE_DIR/$_pkg"
+        moss_manifest_read "$_moss_up_state/manifest"
+
+        if ! moss_index_lookup "$_pkg" "$MOSS_M_TYPE"; then
+            moss_log WARN "$_pkg: no encontrado en el indice para el formato instalado ($MOSS_M_TYPE); se omite"
+            _moss_up_failed="$_moss_up_failed $_pkg"
+            _moss_up_curr=$((_moss_up_curr + 1))
+            continue
+        fi
+
+        cp "$_moss_up_state/manifest" "$_moss_up_state/manifest.bak" 2>/dev/null
+        [ -f "$_moss_up_state/files" ] && cp "$_moss_up_state/files" "$_moss_up_state/files.bak"
+
+        _moss_up_saved_force=$MOSS_FORCE
+        MOSS_FORCE=1
+        moss_perform_install "$_pkg" "$MOSS_L_VERSION" "$MOSS_L_URL" "$MOSS_L_SHA" "$MOSS_L_SIG" '' "$MOSS_L_EXEC" "$MOSS_L_CAT" "$MOSS_L_TERM" "$MOSS_L_TYPE"
+        _moss_up_rc=$?
+        MOSS_FORCE=$_moss_up_saved_force
+
+        if [ "$_moss_up_rc" -eq 0 ]; then
+            _moss_up_ok=$((_moss_up_ok + 1))
+        else
+            moss_log ERROR "fallo al actualizar $_pkg (rc=$_moss_up_rc); revirtiendo al estado anterior"
+            mv "$_moss_up_state/manifest.bak" "$_moss_up_state/manifest" 2>/dev/null
+            [ -f "$_moss_up_state/files.bak" ] && mv "$_moss_up_state/files.bak" "$_moss_up_state/files"
+            _moss_up_failed="$_moss_up_failed $_pkg"
+        fi
+
         _moss_up_curr=$((_moss_up_curr + 1))
-        moss_progress "$_moss_up_curr" "$_moss_up_tot" "$_pkg actualizado."
+        moss_progress "$_moss_up_curr" "$_moss_up_tot" "$_pkg procesado."
     done
 
-    moss_log INFO "Actualizacion de $_moss_up_tot paquetes completada exitosamente."
+    if [ -n "$_moss_up_failed" ]; then
+        moss_log ERROR "fallaron:$_moss_up_failed"
+        _moss_up_fcount=$(printf '%s
+' $_moss_up_failed | wc -w)
+        moss_log INFO "resumen: actualizados=$_moss_up_ok fallidos=$_moss_up_fcount"
+        return $MOSS_EX_INSTALL
+    fi
+    moss_log SUCCESS "Actualizacion de $_moss_up_ok paquetes completada exitosamente."
+    return 0
 }
 
 # Comando principal 'rollback': restaura la configuracion previa tras fallo o pedido.
@@ -1865,6 +1915,8 @@ moss_normargs() {
             --system)   _moss_na_arg=-s ;;
             --yes)      _moss_na_arg=-y ;;
             --exec)     _moss_na_arg=-e ;;
+            --type)     _moss_na_arg=-T ;;
+            --type=*)   _moss_na_arg="-T${_moss_na_arg#*=}" ;;
             --terminal) _moss_na_arg=-t ;;
             --help)     _moss_na_arg=-h ;;
         esac
