@@ -1286,9 +1286,8 @@ moss_cmd_update() {
         export MOSS_R_NAME="$1"
         export MOSS_P_APP_NAME="${_moss_prev_name:-$1}"
         export MOSS_IS_LOCAL_UPDATE=1
-        MOSS_FORCE=1
         
-        moss_cmd_install "$2"
+        "$0" install -f "$2"
         return $?
     fi
 
@@ -1319,6 +1318,25 @@ moss_cmd_update() {
 # Retorna:
 #   0 en exito
 moss_cmd_upgrade() {
+    moss_normargs "$@"
+    _moss_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $MOSS_NORMED
+    set +f
+    IFS=$_moss_an_saveifs
+    OPTIND=1
+    while getopts ':hy' _moss_opt; do
+        case $_moss_opt in
+            h) moss_usage; return 0 ;;
+            y) MOSS_ASSUME_YES=1 ;;
+            :) moss_die $MOSS_EX_USAGE "falta argumento para -$OPTARG" ;;
+            *) moss_die $MOSS_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+
     moss_state_init || return 1
     moss_index_load || return 1
 
@@ -1346,19 +1364,27 @@ moss_cmd_upgrade() {
         return 0
     fi
 
+    printf 'Se actualizarán los siguientes %d paquetes:\n  %s\n\n' "$_moss_up_tot" "$_moss_up_pkgs"
+
+    if [ "${MOSS_ASSUME_YES:-0}" -ne 1 ]; then
+        printf '¿Desea continuar con la actualización? [S/n] '
+        read -r _moss_ans </dev/tty
+        case "$_moss_ans" in
+            [Nn]*)
+                moss_log INFO "Actualización cancelada por el usuario."
+                return 0
+                ;;
+        esac
+    fi
+
     _moss_up_curr=0
     moss_progress "$_moss_up_curr" "$_moss_up_tot" "Calculando..."
 
     for _pkg in $_moss_up_pkgs; do
         moss_progress "$_moss_up_curr" "$_moss_up_tot" "Actualizando $_pkg..."
         
-        _moss_save_log=$MOSS_LOG_LEVEL
-        MOSS_LOG_LEVEL=1
-        MOSS_FORCE=1
+        "$0" install -f -q "$_pkg" >/dev/null 2>&1
         
-        moss_cmd_install "$_pkg" >/dev/null 2>&1
-        
-        MOSS_LOG_LEVEL=$_moss_save_log
         _moss_up_curr=$((_moss_up_curr + 1))
         moss_progress "$_moss_up_curr" "$_moss_up_tot" "$_pkg actualizado."
     done
@@ -1883,10 +1909,9 @@ USO:
 COMANDOS PRINCIPALES:
   install <nombre|URL|tar> Instala desde índice remoto, URL o archivo local
   remove <nombre|bin>      Desinstala un paquete del sistema
-  update                   Igual que 'sync', fuerza la descarga del índice
+  update                   Sincroniza repositorios y detecta actualizaciones
+  upgrade                  Instala las actualizaciones de paquetes disponibles
   update <nombre> <tar>    Actualiza un paquete usando un tarball local
-  upgrade                  Actualiza todos los paquetes usando el índice remoto
-
 CONSULTA Y MANTENIMIENTO:
   list                     Lista los paquetes instalados y sus versiones
   search <patron>          Busca paquetes en el índice remoto por nombre/desc
