@@ -85,12 +85,16 @@ def main():
         
     apps_list_path = "meta/apps.list"
     
+    failed_repos = []
+    
     # Procesar y escribir directo al archivo
     with open(apps_list_path, "a") as out_file:
         for repo in repos:
             print(f"Analizando {repo}...")
             info = get_repo_info(repo)
-            if not info: continue
+            if not info: 
+                failed_repos.append(repo)
+                continue
             
             desc = info.get('description', 'Sin descripcion')
             if not desc: desc = "Sin descripcion"
@@ -131,11 +135,17 @@ def main():
             out_file.write(line)
             print(f"  -> Agregado a {apps_list_path} exitosamente!")
             
-    # Vaciar el archivo next.list si se leyó de ahí
+    # Actualizar o vaciar el archivo next.list si se leyó de ahí
     if len(sys.argv) <= 1 and os.path.exists(next_list_path):
-        with open(next_list_path, "w") as f:
-            pass
-        print(f"-> {next_list_path} limpiado automáticamente.")
+        if failed_repos:
+            with open(next_list_path, "w") as f:
+                for r in failed_repos:
+                    f.write(f"{r}\n")
+            print(f"-> {next_list_path} actualizado: se conservaron {len(failed_repos)} repositorios fallidos para el proximo intento.")
+        else:
+            with open(next_list_path, "w") as f:
+                pass
+            print(f"-> {next_list_path} limpiado automáticamente (todos exitosos).")
 
 if __name__ == "__main__":
     main()
