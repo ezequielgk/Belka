@@ -1640,14 +1640,20 @@ moss_cmd_search() {
         exit $MOSS_EX_OK
     fi
 
-    awk -F "$MOSS_TAB" -v p="$_moss_s_pat" '
-        BEGIN { pl = tolower(p) }
+    if ! awk -F "$MOSS_TAB" -v p="$_moss_s_pat" '
+        BEGIN { pl = tolower(p); found = 0 }
         $1 ~ /^#/ || NF < 4 { next }
         {
             line = tolower($0)
-            if (index(line, pl) > 0)
+            if (index(line, pl) > 0) {
                 printf "%-24s %-14s %s\n", $1, $2, $5
-        }' "$_moss_index_file"
+                found = 1
+            }
+        }
+        END { if (!found) exit 1 }
+    ' "$_moss_index_file"; then
+        moss_log WARN "No se encontraron paquetes que coincidan con '$_moss_s_pat'"
+    fi
     exit $MOSS_EX_OK
 }
 
