@@ -769,7 +769,18 @@ moss_perform_install() {
             _moss_p_cache=$MOSS_CACHE_DIR/$_moss_p_base
         fi
         if [ ! -f "$_moss_p_cache" ]; then
-            moss_log STEP "Descargando desde el repositorio..."
+            _moss_p_size=""
+            if command -v curl >/dev/null 2>&1; then
+                _moss_p_bytes=$(curl -sI "$_moss_p_url" 2>/dev/null | awk 'BEGIN{IGNORECASE=1} /^content-length:/ {print $2; exit}' | tr -d '\r')
+                if [ -n "$_moss_p_bytes" ] && [ "$_moss_p_bytes" -gt 0 ] 2>/dev/null; then
+                    if [ "$_moss_p_bytes" -gt 1048576 ]; then
+                        _moss_p_size=" ($((_moss_p_bytes / 1048576)) MB)"
+                    else
+                        _moss_p_size=" ($((_moss_p_bytes / 1024)) KB)"
+                    fi
+                fi
+            fi
+            moss_log STEP "Descargando desde el repositorio${_moss_p_size}..."
             if ! moss_download "$_moss_p_url" "$_moss_p_cache"; then
                 rm -f "$_moss_p_cache"
                 moss_log ERROR "fallo la descarga de $_moss_p_url"
