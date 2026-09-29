@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '0 3 * * 0' # Todos los domingos a las 03:00 AM UTC
   workflow_dispatch:    # Permite ejecución manual desde la pestaña Actions
+    inputs:
+      apps_to_index:
+        description: 'Apps a actualizar (separadas por espacio, ej: "moss jq"). Deja en "ALL" para todas.'
+        required: false
+        default: 'ALL'
 
 permissions:
   contents: write
@@ -25,7 +30,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Ejecutar script indexador
-        run: ./scripts/build-repo.sh
+        run: |
+          APPS="${{ github.event.inputs.apps_to_index }}"
+          if [ -z "$APPS" ]; then
+            APPS="ALL"
+          fi
+          ./scripts/build-repo.sh $APPS
         env:
           # Para evitar Rate Limits si se consulta mucho la API sin autenticación
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

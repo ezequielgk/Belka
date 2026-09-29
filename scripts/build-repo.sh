@@ -6,6 +6,43 @@ set -e
 META_FILE="meta/apps.list"
 OUTPUT_FILE="packages.tsv"
 
+# Determinar qué aplicaciones indexar
+INTERACTIVE=0
+[ -t 0 ] && INTERACTIVE=1
+
+SELECTED_APPS=" "
+if [ $# -gt 0 ]; then
+    for arg in "$@"; do SELECTED_APPS="$SELECTED_APPS$arg "; done
+elif [ "$INTERACTIVE" -eq 1 ]; then
+    printf '¿Indexar todas las aplicaciones? (reconstrucción total) [S/n]: ' >&2
+    read -r ans </dev/tty
+    case "$ans" in
+        [nN]*)
+            _i=1
+            printf '\nAplicaciones disponibles:\n' >&2
+            while read -r name _; do
+                case "$name" in \#*|"") continue ;; esac
+                printf ' %d) %s\n' "$_i" "$name" >&2
+                eval "_app_${_i}=\$name"
+                _i=$((_i + 1))
+            done < "$META_FILE"
+            printf '\nIntroduce los números a indexar (separados por espacio): ' >&2
+            read -r nums </dev/tty
+            for n in $nums; do
+                eval "app_name=\$_app_${n}"
+                SELECTED_APPS="$SELECTED_APPS$app_name "
+            done
+            ;;
+        *) SELECTED_APPS="ALL" ;;
+    esac
+else
+    SELECTED_APPS="ALL"
+fi
+
+if [ "$SELECTED_APPS" != "ALL" ] && [ -f "$OUTPUT_FILE" ]; then
+    cp "$OUTPUT_FILE" "${OUTPUT_FILE}.bak"
+fi
+
 # Crear o vaciar el archivo packages.tsv en la raiz
 > "$OUTPUT_FILE"
 
@@ -81,6 +118,21 @@ while read -r name repo pattern desc exec_bin _app_cat _app_term; do
     [ -z "$_app_cat" ] || [ "$_app_cat" = "-" ] && _app_cat="Utility"
     [ -z "$_app_term" ] || [ "$_app_term" = "-" ] && _app_term="N"
 
+    if [ "$SELECTED_APPS" != "ALL" ]; then
+        case "$SELECTED_APPS" in
+            *" $name "*) ;; # Proceder con la red
+            *)
+                if [ -f "${OUTPUT_FILE}.bak" ] && grep -q "^${name}	" "${OUTPUT_FILE}.bak"; then
+                    grep "^${name}	" "${OUTPUT_FILE}.bak" >> "$OUTPUT_FILE"
+                    printf '  -> Preservado (sin cambios): %s\n' "$name" >&2
+                else
+                    printf '  -> Omitido (no existía previamente): %s\n' "$name" >&2
+                fi
+                continue
+                ;;
+        esac
+    fi
+
     printf 'Procesando %s (%s)...\n' "$name" "$repo" >&2
     
     # Prevenir "Secondary Rate Limit" de GitHub al consultar decenas de paquetes
@@ -117,5 +169,7 @@ while read -r name repo pattern desc exec_bin _app_cat _app_term; do
     printf '  -> Listo: %s v%s\n' "$name" "$version" >&2
 
 done < "$META_FILE"
+
+[ -f "${OUTPUT_FILE}.bak" ] && rm -f "${OUTPUT_FILE}.bak"
 
 printf '\nGeneracion completada: %s\n' "$OUTPUT_FILE" >&2
