@@ -979,6 +979,8 @@ $_moss_cand"
     fi
 
     if [ -n "$_moss_exec_path" ]; then
+        _moss_bin_name=$(basename "$_moss_exec_path")
+        
         if [ "$_moss_p_term" = "Y" ]; then
             moss_log DEBUG "aplicacion de terminal; omitiendo creacion de .desktop"
         else
@@ -1004,7 +1006,6 @@ EOF
         
         mkdir -p "$MOSS_PREFIX/bin"
         _moss_rel_target="../${_moss_exec_path#"$MOSS_PREFIX/"}"
-        _moss_bin_name=$(basename "$_moss_exec_path")
         _moss_symlink="$MOSS_PREFIX/bin/$_moss_bin_name"
         ln -sf "$_moss_rel_target" "$_moss_symlink"
         printf 'bin/%s\n' "$_moss_bin_name" >> "$_moss_p_state/files"
