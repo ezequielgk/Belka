@@ -73,7 +73,7 @@ repo_fetch_latest_release() {
             if [ "$_pattern" = "TARBALL" ]; then
                 _dl_url=$(printf '%s\n' "$_resp" | jq -r '.tarball_url')
             else
-                _dl_url=$(printf '%s\n' "$_resp" | jq -r --arg pat "$_pattern" 'if .assets != null then .assets[] | select(.name != null and (.name | test($pat; "i")) and (.name | test("aarch64|arm64|armv|armhf|i386|i686|386"; "i") | not)) | .browser_download_url else empty end' | head -n 1)
+                _dl_url=$(printf '%s\n' "$_resp" | jq -r --arg pat "$_pattern" 'if .assets != null then .assets[] | select(.name != null and (.name | test($pat; "i")) and (.name | test("aarch64|arm64|armv|armhf|i386|i686|386|riscv|mips|s390x|ppc"; "i") | not)) | .browser_download_url else empty end' | head -n 1)
             fi
             ;;
         *gitlab.com*)
@@ -86,7 +86,7 @@ repo_fetch_latest_release() {
                 _dl_url=$(printf '%s\n' "$_resp" | jq -r '.assets.sources[] | select(.format == "tar.gz") | .url' | head -n 1)
                 [ -z "$_dl_url" ] || [ "$_dl_url" = "null" ] && _dl_url="https://gitlab.com/${_repo_path}/-/archive/${_version}/${_repo_path##*/}-${_version}.tar.gz"
             else
-                _dl_url=$(printf '%s\n' "$_resp" | jq -r --arg pat "$_pattern" 'if .assets.links != null then .assets.links[] | select(.name != null and (.name | test($pat; "i")) and (.name | test("aarch64|arm64|armv|armhf|i386|i686|386"; "i") | not)) | .url else empty end' | head -n 1)
+                _dl_url=$(printf '%s\n' "$_resp" | jq -r --arg pat "$_pattern" 'if .assets.links != null then .assets.links[] | select(.name != null and (.name | test($pat; "i")) and (.name | test("aarch64|arm64|armv|armhf|i386|i686|386|riscv|mips|s390x|ppc"; "i") | not)) | .url else empty end' | head -n 1)
             fi
             ;;
         *)
@@ -101,7 +101,7 @@ repo_fetch_latest_release() {
             if [ "$_pattern" = "TARBALL" ]; then
                 _dl_url=$(printf '%s\n' "$_resp" | jq -r '.tarball_url')
             else
-                _dl_url=$(printf '%s\n' "$_resp" | jq -r --arg pat "$_pattern" 'if .assets != null then .assets[] | select(.name != null and (.name | test($pat; "i")) and (.name | test("aarch64|arm64|armv|armhf|i386|i686|386"; "i") | not)) | .browser_download_url else empty end' | head -n 1)
+                _dl_url=$(printf '%s\n' "$_resp" | jq -r --arg pat "$_pattern" 'if .assets != null then .assets[] | select(.name != null and (.name | test($pat; "i")) and (.name | test("aarch64|arm64|armv|armhf|i386|i686|386|riscv|mips|s390x|ppc"; "i") | not)) | .browser_download_url else empty end' | head -n 1)
             fi
             ;;
     esac
