@@ -64,12 +64,17 @@ def get_latest_release(repo_url):
         return None
 
 def generate_regex(asset_name, app_name):
-    # Reemplazar version con .*
-    # Buscar patrones tipicos como v1.2.3 o 1.2.3
-    version_pattern = re.compile(r'(v?\d+\.\d+\.\d+(-\w+)?)')
+    # Buscar patrones tipicos de versiones, ej: v1.2.3, 1.2.3, 1.4.4-1, 156.0.1-1
+    version_pattern = re.compile(r'(v?\d+\.\d+(\.\d+)?(-[a-zA-Z0-9]+)?)')
     match = version_pattern.search(asset_name)
     if match:
         asset_name = asset_name.replace(match.group(1), '.*')
+    else:
+        # Intento secundario: version simple ej 1.28
+        version_pattern_2 = re.compile(r'(\d+\.\d+)')
+        match2 = version_pattern_2.search(asset_name)
+        if match2:
+            asset_name = asset_name.replace(match2.group(1), '.*')
     
     # Reemplazar arquitecturas especificas por .* o agruparlas si es necesario
     # Por seguridad escapamos los puntos
@@ -139,18 +144,42 @@ def main():
             if release and 'assets' in release and len(release['assets']) > 0:
                 assets = [a['name'] for a in release['assets']]
                 target = None
-                for a in assets:
+                
+                valid_exts = ('.tar.gz', '.tar.xz', '.txz', '.zip', '.appimage', '.deb', '.tar')
+                filtered_assets = [a for a in assets if any(a.lower().endswith(ext) for ext in valid_exts) and not a.lower().endswith('.sig')]
+                
+                def is_linux_amd64(name):
+                    al = name.lower()
+                    if any(x in al for x in ['windows', 'win32', 'darwin', 'mac', 'apple', 'arm64', 'aarch64', 'armv7', 'armhf', 'i386', '386', 'ia32']):
+                        return False
+                    if 'linux' in al and any(x in al for x in ['x86_64', 'amd64', 'x64', '64bit']):
+                        return True
+                    if any(x in al for x in ['x86_64', 'amd64', 'x64']):
+                        return True
+                    return False
+
+                # Nivel 1: Linux x86_64 explicito y formato musl/gnu
+                for a in filtered_assets:
                     al = a.lower()
-                    if 'linux' in al and ('x86_64' in al or 'amd64' in al or 'x64' in al) and ('musl' in al or 'gnu' in al or al.endswith('.tar.gz') or al.endswith('.zip')):
+                    if is_linux_amd64(a) and ('musl' in al or 'gnu' in al):
                         target = a
                         break
-                
+                        
+                # Nivel 2: Cualquier archivo linux x86_64 válido
                 if not target:
-                    for a in assets:
-                        al = a.lower()
-                        if 'linux' in al and ('x86_64' in al or 'amd64' in al or '64bit' in al or 'x64' in al):
+                    for a in filtered_assets:
+                        if is_linux_amd64(a):
                             target = a
                             break
+                            
+                # Nivel 3: Algún asset genérico de linux o deb/appimage
+                if not target:
+                    for a in filtered_assets:
+                        al = a.lower()
+                        if 'linux' in al or ('debian' in al) or ('ubuntu' in al) or al.endswith('.deb') or al.endswith('.appimage') or ('binary' in al):
+                            if not any(x in al for x in ['windows', 'darwin', 'mac', 'arm', 'aarch64', 'i386']):
+                                target = a
+                                break
                             
                 if target:
                     regex = generate_regex(target, app_name)
