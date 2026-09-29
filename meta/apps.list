@@ -206,3 +206,4 @@ melee-pc	999sian/melee-pc	TARBALL	Native PC port of Super Smash Bros. Melee (NTS
 gba-emulator	amyanger/gba-emulator	gba_emulator-.*-x86_64\.tar\.gz	A Game Boy Advance emulator written in C, targeting Pokemon Emerald. ARM7TDMI CPU interpreter with scanline-based PPU and SDL2 frontend.	gba-emulator	System	Y
 linapple	linappleii/linapple	linapple-.*-linux-x86_64\.tar\.gz	Apple 2e emulator	linapple	System	Y
 moss	ezequielgk/Moss	moss-linux-amd64\.tar\.gz	Gestor de paquetes estricto, Headless y CLI	moss	System	Y
+zig	https://codeberg.org/ziglang/zig	TARBALL	General-purpose programming language and toolchain for maintaining robust, optimal, and reusable software.	zig	Utility	Y
