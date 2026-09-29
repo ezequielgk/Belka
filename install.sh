@@ -14,7 +14,11 @@ curl -sL "$URL" | tar -xz -C "$TMP_DIR"
 MOSS_VER=$("$TMP_DIR/moss" -V | awk '{print $2}')
 echo "Instalando Moss (v${MOSS_VER}) de forma limpia..."
 
-if ! "$TMP_DIR/moss" install -q -f "$URL"; then
+# Sincronizamos silenciosamente para bajar el último índice
+"$TMP_DIR/moss" -q update || true
+
+# Instalamos usando el nombre para que verifique el SHA256 contra packages.tsv
+if ! "$TMP_DIR/moss" install -q -f moss; then
     echo "Error durante la instalación."
     exit 1
 fi
