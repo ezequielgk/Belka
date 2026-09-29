@@ -19,7 +19,7 @@ MOSS_VER=$("$TMP_DIR/moss" -V | awk '{print $2}')
 echo "Instalando Moss (v${MOSS_VER}) de forma limpia..."
 
 if ! "$TMP_DIR/moss" install -q -f "$URL"; then
-    echo "${RED}Error durante la instalación.${NC}"
+    printf "${RED}Error durante la instalación.${NC}\n"
     exit 1
 fi
 
@@ -53,7 +53,7 @@ setup_path "$HOME/.bashrc"
 setup_path "$HOME/.zshrc"
 setup_fish_path
 
-echo "${GREEN}¡Moss se ha instalado con éxito!${NC}"
+printf "${GREEN}¡Moss se ha instalado con éxito!${NC}\n"
 echo ""
 echo "Por favor, reinicia tu terminal o ejecuta:"
 if command -v fish >/dev/null 2>&1 && [ "$(basename "$SHELL")" = "fish" ]; then
