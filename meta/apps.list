@@ -208,4 +208,3 @@ librewolf	https://codeberg.org/librewolf/bsys6	librewolf-.*-linux-x86_64-package
 limine	https://github.com/limine-bootloader/limine	limine-binary\.tar\.gz	Modern, secure, portable, multiprotocol bootloader and boot manager.	limine	Utility	Y
 zerotierone-static	https://github.com/rafalb8/ZeroTierOne-Static	zerotier-one-x86_64\.tar\.gz	Static Zerotier-One binaries	zerotierone-static	Utility	Y
 kitty	https://github.com/kovidgoyal/kitty	kitty-.*-x86_64\.txz	If you live in the terminal, kitty is made for you! Cross-platform, fast, feature-rich, GPU based.	kitty	Utility	Y
-goofcord	https://github.com/Milkshiift/GoofCord	GoofCord-.*-x64\.tar\.xz	:shield: Take control of your Discord experience with GoofCord – a highly configurable and privacy minded discord client.	goofcord	Network	Y
