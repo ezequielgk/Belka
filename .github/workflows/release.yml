@@ -1,0 +1,28 @@
+name: Release Moss
+
+on:
+  push:
+    tags:
+      - 'v*' # Se ejecuta automáticamente al pushear un tag (ej: v1.0.0)
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Empaquetar Moss
+        run: |
+          tar -czvf moss-linux-amd64.tar.gz -C bin moss
+
+      - name: Crear Release y adjuntar Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: moss-linux-amd64.tar.gz
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
