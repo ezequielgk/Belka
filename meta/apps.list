@@ -158,7 +158,7 @@ kotofetch	hxpe-dev/kotofetch	kotofetch-v.*x86_64.*linux.*\.tar\.gz	A simple and 
 umbrella-fetch	ezequielgk/Umbrella-Fetch	umbrella-fetch-v.*x86_64.*linux.*\.tar\.gz	System fetch tool themed around Resident Evil	umbrella-fetch	ConsoleOnly	Y
 pfetch	dylanaraps/pfetch	TARBALL	A pretty system information tool written in POSIX sh	pfetch	ConsoleOnly	Y
 legcord	Legcord/Legcord	Legcord-.*-linux-x64\.tar\.gz	A lightweight, customizable Discord client	legcord	Network	N
-goofcord	Milkshiift/GoofCord	GoofCord-.*-amd64\.deb	:shield: Take control of your Discord experience with GoofCord – a highly configurable and privacy minded discord client.	goofcord	Network	Y
+goofcord	Milkshiift/GoofCord	GoofCord-.*-linux-x64\.tar\.xz	:shield: Take control of your Discord experience with GoofCord – a highly configurable and privacy minded discord client.	goofcord	Network	Y
 fastfetch	fastfetch-cli/fastfetch	fastfetch-linux-amd64-polyfilled\.tar\.gz	A maintained, feature-rich and performance oriented, neofetch like system information tool.	fastfetch	System	Y
 helix	helix-editor/helix	helix-.*-linux\.tar\.xz	A post-modern modal text editor.	helix	Utility	Y
 task	go-task/task	task_linux_amd64\.tar\.gz	A fast, cross-platform build tool inspired by Make, designed for modern workflows.	task	Utility	Y
