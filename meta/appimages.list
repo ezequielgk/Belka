@@ -232,7 +232,7 @@ neochat	pkgforge-dev/NeoChat-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A clien
 nestopia	pkgforge-dev/Nestopia-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Cross-platform NES/Famicom emulator with a GUI	nestopia	Emulator	N
 neverball	pkgforge-dev/Neverball-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Tilt the floor to roll a ball through obstacle courses before time runs out	neverball	Game	N
 newsflash	pkgforge-dev/NewsFlash-AppImage	.*(x86_64|amd64|64bit).*\.appimage	RSS reader	newsflash	Feed	N
-nfsiise	pkgforge-dev/NFSIISE-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Fork of the Need For Speed II SE cross-platform port with x86_64/arm64 support	nfsiise	Game	N
+nfsiise	pkgforge-dev/NFSIISE-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Fork of the Need For Speed II SE cross-platform port with x86_64/amd64 support	nfsiise	Game	N
 nitrogen	pkgforge-dev/Nitrogen-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Background browser and setter for X11 windows	nitrogen	Utility	N
 nomacs	pkgforge-dev/Nomacs-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Lightweight, fast image viewer supporting many formats and RAW files	nomacs	Graphics	N
 nsz	pkgforge-dev/NSZ-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Nintendo Switch ROM compression tool	nsz	Archiving	N

@@ -187,8 +187,9 @@ def main():
         
         def is_linux_amd64(name):
             al = name.lower()
-            if any(x in al for x in ['windows', 'win32', 'darwin', 'mac', 'apple', 'arm64', 'aarch64', 'armv7', 'armhf', 'i386', '386', 'ia32']):
-                return False
+            if any(x in al for x in ['windows', 'win32', 'darwin', 'mac', 'apple', 'arm', 'aarch64', 'i386', '386', 'ia32', 'i686', 'x86']):
+                if 'x86_64' not in al:
+                    return False
             if 'linux' in al and any(x in al for x in ['x86_64', 'amd64', 'x64', '64bit']):
                 return True
             if any(x in al for x in ['x86_64', 'amd64', 'x64']):
