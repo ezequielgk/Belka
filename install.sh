@@ -1,10 +1,6 @@
 #!/bin/sh
 set -e
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-NC='\033[0m'
-
 echo "Limpiando instalaciones y cachés anteriores..."
 rm -rf ~/.local/moss ~/.local/share/moss ~/.cache/moss ~/.config/moss
 rm -f ~/.local/bin/moss
@@ -19,7 +15,7 @@ MOSS_VER=$("$TMP_DIR/moss" -V | awk '{print $2}')
 echo "Instalando Moss (v${MOSS_VER}) de forma limpia..."
 
 if ! "$TMP_DIR/moss" install -q -f "$URL"; then
-    printf "${RED}Error durante la instalación.${NC}\n"
+    echo "Error durante la instalación."
     exit 1
 fi
 
@@ -53,7 +49,7 @@ setup_path "$HOME/.bashrc"
 setup_path "$HOME/.zshrc"
 setup_fish_path
 
-printf "${GREEN}¡Moss se ha instalado con éxito!${NC}\n"
+echo "¡Moss se ha instalado con éxito!"
 echo ""
 echo "Por favor, reinicia tu terminal o ejecuta:"
 if command -v fish >/dev/null 2>&1 && [ "$(basename "$SHELL")" = "fish" ]; then
