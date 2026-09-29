@@ -4,32 +4,63 @@ import json
 import urllib.request
 import re
 
-def get_repo_info(repo):
+def parse_repo_url(repo_url):
+    if "codeberg.org" in repo_url:
+        path = repo_url.split("codeberg.org/")[-1].strip('/')
+        return "codeberg", path
+    elif "gitlab.com" in repo_url:
+        path = repo_url.split("gitlab.com/")[-1].strip('/')
+        return "gitlab", path
+    else:
+        path = repo_url.split("github.com/")[-1].strip('/')
+        return "github", path
+
+def get_repo_info(repo_url):
     import os
-    url = f"https://api.github.com/repos/{repo}"
+    forge, path = parse_repo_url(repo_url)
+    if forge == "codeberg":
+        url = f"https://codeberg.org/api/v1/repos/{path}"
+    elif forge == "gitlab":
+        enc_path = path.replace("/", "%2F")
+        url = f"https://gitlab.com/api/v4/projects/{enc_path}"
+    else:
+        url = f"https://api.github.com/repos/{path}"
+        
     req = urllib.request.Request(url)
     token = os.environ.get("GITHUB_TOKEN")
-    if token:
+    if token and forge == "github":
         req.add_header("Authorization", f"token {token}")
     try:
         with urllib.request.urlopen(req) as response:
             return json.loads(response.read().decode())
     except Exception as e:
-        print(f"Error fetching repo info for {repo}: {e}")
+        print(f"Error fetching repo info for {repo_url}: {e}")
         return None
 
-def get_latest_release(repo):
+def get_latest_release(repo_url):
     import os
-    url = f"https://api.github.com/repos/{repo}/releases/latest"
+    forge, path = parse_repo_url(repo_url)
+    if forge == "codeberg":
+        url = f"https://codeberg.org/api/v1/repos/{path}/releases/latest"
+    elif forge == "gitlab":
+        enc_path = path.replace("/", "%2F")
+        url = f"https://gitlab.com/api/v4/projects/{enc_path}/releases/permalink/latest"
+    else:
+        url = f"https://api.github.com/repos/{path}/releases/latest"
+
     req = urllib.request.Request(url)
     token = os.environ.get("GITHUB_TOKEN")
-    if token:
+    if token and forge == "github":
         req.add_header("Authorization", f"token {token}")
     try:
         with urllib.request.urlopen(req) as response:
-            return json.loads(response.read().decode())
+            data = json.loads(response.read().decode())
+            # Normalize GitLab assets to look like GitHub/Codeberg
+            if forge == "gitlab" and "assets" in data and "links" in data["assets"]:
+                data["assets"] = data["assets"]["links"]
+            return data
     except Exception as e:
-        print(f"Error fetching release for {repo}: {e}")
+        print(f"Error fetching release for {repo_url}: {e}")
         return None
 
 def generate_regex(asset_name, app_name):
