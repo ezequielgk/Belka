@@ -37,7 +37,7 @@ blender	pkgforge-dev/blender-AppImage	blender.*	A fully integrated 3D graphics c
 bm64recomp	pkgforge-dev/BM64Recomp-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Static recompilation of the Nintendo 64 game Bomberman 64	bm64recomp	Game	N
 bmherorecomp	pkgforge-dev/BMHeroRecomp-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Static recompilation of Bomberman Hero for the Nintendo 64	bmherorecomp	Game	N
 brave-origin	pkgforge-dev/Brave-Origin-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A privacy-focused Brave browser variant with telemetry stripped out	brave-origin	Network	N
-bsys6	librewolf/bsys6	librewolf-.*_64-appimage\.AppImage	Mirror of https://librewolf.dev/librewolf/bsys6	bsys6	Utility	N
+bsys6	https://codeberg.org/librewolf/bsys6	librewolf-.*_64-appimage\.AppImage	Mirror of https://librewolf.dev/librewolf/bsys6	bsys6	Utility	N
 bulky	pkgforge-dev/Bulky-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Bulk file and folder renamer that works across desktop environments	bulky	Utility	N
 cannonball	pkgforge-dev/Cannonball-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Enhanced OutRun arcade game engine, a C++ rewrite of the Sega original	cannonball	Game	N
 cartridges	pkgforge-dev/Cartridges-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Simple game launcher for your games	cartridges	Game	N

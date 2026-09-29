@@ -12,15 +12,15 @@ def normalize_repo(url: str):
         
     if "codeberg.org" in url:
         path = url.split("codeberg.org/")[-1]
-        return "codeberg", path
+        return "codeberg", path, url
     elif "gitlab.com" in url:
         path = url.split("gitlab.com/")[-1]
-        return "gitlab", path
+        return "gitlab", path, url
     elif "github.com" in url:
         path = url.split("github.com/")[-1]
-        return "github", path
+        return "github", path, url
     else:
-        return "github", url
+        return "github", url, url
 
 def get_repo_info(forge: str, path: str):
     try:
@@ -163,7 +163,7 @@ def main():
     added_appimage = False
     
     for raw_url, alias in repos_to_process:
-        forge, norm_repo = normalize_repo(raw_url)
+        forge, norm_repo, out_repo = normalize_repo(raw_url)
         app_name = alias.lower() if alias else norm_repo.split('/')[-1].lower()
         
         print(f"Analizando {app_name} en {norm_repo}...")
@@ -223,13 +223,13 @@ def main():
         is_terminal = "Y" if "terminal" in desc.lower() or "cli" in desc.lower() else "N"
         
         if target_tar:
-            if app_name not in existing_tar_apps and norm_repo.lower() not in existing_tar_repos:
+            if app_name not in existing_tar_apps and out_repo.lower() not in existing_tar_repos:
                 regex = generate_regex(target_tar, app_name)
-                line = f"{app_name}\t{norm_repo}\t{regex}\t{desc}\t{exec_name}\t{categoria}\t{is_terminal}\n"
+                line = f"{app_name}\t{out_repo}\t{regex}\t{desc}\t{exec_name}\t{categoria}\t{is_terminal}\n"
                 with open(tar_list_path, "a") as out_file:
                     out_file.write(line)
                 existing_tar_apps.add(app_name)
-                existing_tar_repos.add(norm_repo.lower())
+                existing_tar_repos.add(out_repo.lower())
                 added_tar = True
                 found_any = True
                 print(f"  -> {app_name} agregado a tar.list exitosamente!")
@@ -238,13 +238,13 @@ def main():
                 found_any = True
                 
         if target_appimage:
-            if app_name not in existing_appimage_apps and norm_repo.lower() not in existing_appimage_repos:
+            if app_name not in existing_appimage_apps and out_repo.lower() not in existing_appimage_repos:
                 regex = generate_regex(target_appimage, app_name)
-                line = f"{app_name}\t{norm_repo}\t{regex}\t{desc}\t{exec_name}\t{categoria}\t{is_terminal}\n"
+                line = f"{app_name}\t{out_repo}\t{regex}\t{desc}\t{exec_name}\t{categoria}\t{is_terminal}\n"
                 with open(appimages_list_path, "a") as out_file:
                     out_file.write(line)
                 existing_appimage_apps.add(app_name)
-                existing_appimage_repos.add(norm_repo.lower())
+                existing_appimage_repos.add(out_repo.lower())
                 added_appimage = True
                 found_any = True
                 print(f"  -> {app_name} agregado a appimages.list exitosamente!")
