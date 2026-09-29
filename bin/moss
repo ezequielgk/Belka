@@ -1,6 +1,6 @@
 #!/bin/sh
 
-MOSS_VERSION=1.1.1
+MOSS_VERSION=1.1.2
 PROG_NAME=moss
 
 MOSS_PREFIX=${MOSS_PREFIX:-}
@@ -925,12 +925,8 @@ $_moss_cand"
 
     _moss_exec_path=""
     if [ -n "$_moss_p_exec_override" ]; then
-        if [ -x "$MOSS_PREFIX/$_moss_p_exec_override" ]; then
-            _moss_exec_path="$MOSS_PREFIX/$_moss_p_exec_override"
-        elif [ -x "$MOSS_PREFIX/bin/$_moss_p_exec_override" ]; then
-            _moss_exec_path="$MOSS_PREFIX/bin/$_moss_p_exec_override"
-        elif [ -n "$_moss_candidates" ]; then
-            _moss_exec_path=$(printf '%s\n' "$_moss_candidates" | grep -E "/$_moss_p_exec_override$" | head -n 1)
+        if [ -n "$_moss_candidates" ]; then
+            _moss_exec_path=$(printf '%s\n' "$_moss_candidates" | awk -v pat="/$_moss_p_exec_override$" '$0 ~ pat {print; exit}')
         fi
         [ -z "$_moss_exec_path" ] && moss_log WARN "el ejecutable forzado $_moss_p_exec_override no se encontro o no tiene permisos"
     fi
