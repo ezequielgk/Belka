@@ -145,7 +145,7 @@ def main():
                 assets = [a['name'] for a in release['assets']]
                 target = None
                 
-                valid_exts = ('.tar.gz', '.tar.xz', '.txz', '.zip', '.appimage', '.deb', '.tar')
+                valid_exts = ('.tar.gz', '.tar.xz', '.txz', '.zip', '.tar')
                 filtered_assets = [a for a in assets if any(a.lower().endswith(ext) for ext in valid_exts) and not a.lower().endswith('.sig')]
                 
                 def is_linux_amd64(name):
@@ -172,11 +172,11 @@ def main():
                             target = a
                             break
                             
-                # Nivel 3: Algún asset genérico de linux o deb/appimage
+                # Nivel 3: Algún asset genérico de linux
                 if not target:
                     for a in filtered_assets:
                         al = a.lower()
-                        if 'linux' in al or ('debian' in al) or ('ubuntu' in al) or al.endswith('.deb') or al.endswith('.appimage') or ('binary' in al):
+                        if 'linux' in al or ('binary' in al):
                             if not any(x in al for x in ['windows', 'darwin', 'mac', 'arm', 'aarch64', 'i386']):
                                 target = a
                                 break
