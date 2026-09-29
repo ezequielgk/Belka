@@ -63,6 +63,9 @@ while read -r name repo pattern desc exec_bin _app_cat _app_term; do
     printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$name" "$version" "$dl_url" "$hash" "$desc" "$exec_bin" "$_app_cat" "$_app_term" >> "$OUTPUT_FILE"
     
     printf '  -> Listo: %s v%s\n' "$name" "$version" >&2
+    
+    # Prevenir "Secondary Rate Limit" de GitHub al consultar decenas de paquetes
+    sleep 1
 
 done < "$META_FILE"
 
