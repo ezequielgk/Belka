@@ -2,7 +2,17 @@
 bat	sharkdp/bat	x86_64-unknown-linux-musl.tar.gz	Un clon de cat con resaltado de sintaxis e integración con Git	bat	System	Y
 neovim	neovim/neovim	nvim-linux-x86_64.tar.gz	Editor de texto basado en Vim, fuertemente enfocado en extensibilidad	nvim	Development	Y
 jq	jqlang/jq	jq-linux-amd64	Procesador de JSON de línea de comandos ligero y flexible	jq	Utility	Y
-concord	chojs23/concord	concord-x86_64-unknown-linux-gnu.tar.xz	Cliente de Discord nativo y ligero escrito en Rust	concord	Network	Y
-vesktop	Vencord/Vesktop	amd64.tar.gz	Cliente de Discord independiente con Vencord integrado	vesktop	Network	N
+concord	chojs23/concord	concord-x86_64-unknown-linux-gnu.tar.xz	Cliente de Discord nativo y ligero escrito en Rust	concord	Network	N
+vesktop	Vencord/Vesktop	^vesktop-[0-9\.]+\.tar\.gz$	Cliente de Discord independiente con Vencord integrado	vesktop	Network	N
 helium	imputnet/helium-linux	x86_64_linux.tar.xz	Navegador basado en Chromium, ungoogled y centrado en privacidad	helium	Network	N
 zen-browser	zen-browser/desktop	zen.linux-x86_64.tar.xz	un navegador basado en firefox y centrado en estetica	zen-bin	Network	N
+vscodium	VSCodium/vscodium	VSCodium-linux-x64-.*\.tar\.gz	Binarios de código abierto y libres de VS Code	codium	Development	N
+scrcpy	Genymobile/scrcpy	linux-x86_64.*\.tar\.gz	Muestra y controla dispositivos Android conectados vía USB o TCP/IP	scrcpy	Development	Y
+croc	schollz/croc	Linux-64bit.tar.gz	Envía archivos y carpetas fácilmente y de forma segura de un PC a otro	croc	Utility	Y
+heroic-games-launcher	Heroic-Games-Launcher/HeroicGamesLauncher	linux-x64.tar.xz	Lanzador de juegos de código abierto para Epic Games, GOG y Amazon Games	heroic	Game	N
+youtube-music	pear-devs/pear-desktop	youtube-music.*\.tar\.gz	Cliente de escritorio para YouTube Music	youtube-music	AudioVideo	N
+supertuxkart	supertuxkart/stk-code	linux-x86_64.tar.gz	Un juego de carreras arcade 3D de código abierto	supertuxkart	Game	N
+bottom	ClementTsang/bottom	x86_64-unknown-linux-gnu.tar.gz	Monitor de sistema gráfico multiplataforma y personalizable para terminal	btm	System	Y
+localsend	localsend/localsend	linux-x86-64.tar.gz	Una alternativa a AirDrop de código abierto y multiplataforma	localsend	Network	N
+prism-launcher	PrismLauncher/PrismLauncher	Linux-Qt6-Portable.*\.tar\.gz	Un lanzador personalizado para Minecraft	prismlauncher	Game	N
+pinecone-launcher	ElyPrismLauncher/Launcher	Linux-Qt6-Portable.*\.tar\.gz	Un fork especializado de Prism Launcher	pinecone-launcher	Game	N
