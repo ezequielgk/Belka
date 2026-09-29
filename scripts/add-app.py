@@ -6,146 +6,124 @@ import urllib.request
 import re
 
 def normalize_repo(url: str):
-    """
-    Limpia y normaliza la URL del repositorio.
-    Retorna una tupla (plataforma, cadena_normalizada).
-    """
     url = url.split('?')[0].strip('/')
     if url.endswith('.git'):
         url = url[:-4]
         
     if "codeberg.org" in url:
-        return "codeberg", url
+        path = url.split("codeberg.org/")[-1]
+        return "codeberg", path
     elif "gitlab.com" in url:
-        return "gitlab", url
+        path = url.split("gitlab.com/")[-1]
+        return "gitlab", path
     elif "github.com" in url:
         path = url.split("github.com/")[-1]
         return "github", path
     else:
-        # Formato corto autor/repo asume github
         return "github", url
 
-def get_repo_info(forge, repo_str):
-    if forge == "codeberg":
-        path = repo_str.split("codeberg.org/")[-1]
-        url = f"https://codeberg.org/api/v1/repos/{path}"
-    elif forge == "gitlab":
-        path = repo_str.split("gitlab.com/")[-1]
-        enc_path = path.replace("/", "%2F")
-        url = f"https://gitlab.com/api/v4/projects/{enc_path}"
-    else:
-        url = f"https://api.github.com/repos/{repo_str}"
-        
-    req = urllib.request.Request(url)
-    token = os.environ.get("GITHUB_TOKEN")
-    if token and forge == "github":
-        req.add_header("Authorization", f"token {token}")
+def get_repo_info(forge: str, path: str):
     try:
-        with urllib.request.urlopen(req) as response:
-            return json.loads(response.read().decode())
+        if forge == "codeberg":
+            api_url = f"https://codeberg.org/api/v1/repos/{path}"
+        elif forge == "gitlab":
+            api_url = f"https://gitlab.com/api/v4/projects/{urllib.parse.quote(path, safe='')}"
+        else:
+            api_url = f"https://api.github.com/repos/{path}"
+            
+        req = urllib.request.Request(api_url)
+        if forge == "github" and os.environ.get("GITHUB_TOKEN"):
+            req.add_header("Authorization", f"Bearer {os.environ['GITHUB_TOKEN']}")
+            
+        with urllib.request.urlopen(req, timeout=10) as response:
+            return json.loads(response.read().decode('utf-8'))
     except Exception as e:
-        print(f"Error fetching repo info para {repo_str}: {e}")
+        print(f"Error obteniendo info de {forge}/{path}: {e}")
         return None
 
-def get_latest_release(forge, repo_str):
-    if forge == "codeberg":
-        path = repo_str.split("codeberg.org/")[-1]
-        url = f"https://codeberg.org/api/v1/repos/{path}/releases/latest"
-    elif forge == "gitlab":
-        path = repo_str.split("gitlab.com/")[-1]
-        enc_path = path.replace("/", "%2F")
-        url = f"https://gitlab.com/api/v4/projects/{enc_path}/releases/permalink/latest"
-    else:
-        url = f"https://api.github.com/repos/{repo_str}/releases/latest"
-
-    req = urllib.request.Request(url)
-    token = os.environ.get("GITHUB_TOKEN")
-    if token and forge == "github":
-        req.add_header("Authorization", f"token {token}")
+def get_latest_release(forge: str, path: str):
     try:
-        with urllib.request.urlopen(req) as response:
-            data = json.loads(response.read().decode())
-            if forge == "gitlab" and "assets" in data and "links" in data["assets"]:
-                data["assets"] = data["assets"]["links"]
-            return data
+        if forge == "codeberg":
+            api_url = f"https://codeberg.org/api/v1/repos/{path}/releases/latest"
+        elif forge == "gitlab":
+            api_url = f"https://gitlab.com/api/v4/projects/{urllib.parse.quote(path, safe='')}/releases/permalink/latest"
+        else:
+            api_url = f"https://api.github.com/repos/{path}/releases/latest"
+            
+        req = urllib.request.Request(api_url)
+        if forge == "github" and os.environ.get("GITHUB_TOKEN"):
+            req.add_header("Authorization", f"Bearer {os.environ['GITHUB_TOKEN']}")
+            
+        with urllib.request.urlopen(req, timeout=10) as response:
+            return json.loads(response.read().decode('utf-8'))
     except Exception as e:
-        print(f"Error fetching release para {repo_str}: {e}")
+        print(f"Error obteniendo release de {forge}/{path}: {e}")
         return None
 
-def generate_regex(asset_name, app_name):
-    version_pattern = re.compile(r'(v?\d+\.\d+(\.\d+)?(-[a-zA-Z0-9]+)?)')
-    match = version_pattern.search(asset_name)
-    if match:
-        asset_name = asset_name.replace(match.group(1), '.*')
-    else:
-        version_pattern_2 = re.compile(r'(\d+\.\d+)')
-        match2 = version_pattern_2.search(asset_name)
-        if match2:
-            asset_name = asset_name.replace(match2.group(1), '.*')
+def generate_regex(filename: str, app_name: str):
+    name, ext = os.path.splitext(filename)
+    if filename.lower().endswith('.tar.gz'):
+        name = filename[:-7]
+        ext = '.tar.gz'
+    elif filename.lower().endswith('.tar.xz'):
+        name = filename[:-7]
+        ext = '.tar.xz'
     
-    asset_name = asset_name.replace('.', r'\.')
-    asset_name = asset_name.replace(r'\.*', '.*')
-    return asset_name
+    parts = re.split(r'([0-9]+\.[0-9]+(?:\.[0-9]+)?(?:-[a-zA-Z0-9]+)*)', name)
+    if len(parts) > 1:
+        regex = parts[0] + ".*" + "".join(parts[2:]) + ext.replace('.', r'\.')
+        return regex
+    
+    return filename.replace('.', r'\.')
 
-def get_category(desc, name):
-    desc = desc.lower()
-    name = name.lower()
-    if any(k in desc or k in name for k in ["fetch", "system", "disk", "usage", "resource", "monitor", "kernel", "hw", "watch", "process", "log file", "secrets", "emulator", "prompt"]):
-        return "System"
-    if any(k in desc or k in name for k in ["git", "linter", "formatter", "python", "json", "yaml", "xml", "node", "compiler", "hex", "markdown", "docker", "kubernetes", "k8s", "code", "dev", "sql", "bash"]):
+def get_category(desc: str, app_name: str):
+    desc_lower = desc.lower()
+    if any(x in desc_lower for x in ['game', 'juego', 'emulator']):
+        return "Game"
+    if any(x in desc_lower for x in ['music', 'audio', 'player', 'sound']):
+        return "Audio"
+    if any(x in desc_lower for x in ['video', 'movie', 'player']):
+        return "Video"
+    if any(x in desc_lower for x in ['editor', 'ide', 'code', 'develop']):
         return "Development"
-    if any(k in desc or k in name for k in ["http", "network", "curl", "dns", "ping", "web", "serve", "download", "bandwidth", "bittorrent", "bluetooth", "grpc", "discord"]):
+    if any(x in desc_lower for x in ['browser', 'web', 'internet']):
         return "Network"
-    if any(k in desc or k in name for k in ["archive", "pack", "compress", "zip", "tar"]):
-        return "Utility"
     return "Utility"
 
-def sort_apps_list(apps_list_path):
-    if not os.path.exists(apps_list_path):
-        return
-        
-    with open(apps_list_path, 'r') as f:
+def sort_apps_list(path: str):
+    if not os.path.exists(path): return
+    with open(path, 'r') as f:
         lines = f.readlines()
         
-    if not lines:
-        return
-        
-    headers = []
-    app_lines = []
+    headers = [l for l in lines if l.strip() and l.startswith('#')]
+    apps = [l for l in lines if l.strip() and not l.startswith('#')]
     
-    for line in lines:
-        if line.startswith('#') or not line.strip():
-            headers.append(line)
-        else:
-            app_lines.append(line)
-            
-    app_lines.sort(key=lambda x: x.split('\t')[0].lower())
+    apps.sort(key=lambda x: x.split('\t')[0].lower())
     
-    with open(apps_list_path, 'w') as f:
-        for header in headers:
-            f.write(header)
-        for line in app_lines:
-            f.write(line if line.endswith('\n') else line + '\n')
-            
-    print("-> meta/apps.list reescrito y ordenado alfabéticamente de la A a la Z.")
+    with open(path, 'w') as f:
+        for h in headers: f.write(h)
+        for a in apps: f.write(a)
 
 def main():
+    import urllib.parse
+    tar_list_path = "meta/tar.list"
+    appimages_list_path = "meta/appimages.list"
     next_list_path = "meta/next.list"
-    apps_list_path = "meta/apps.list"
     
     repos_to_process = []
     
-    # 1. Leer entradas
     if len(sys.argv) > 1:
         for arg in sys.argv[1:]:
-            repos_to_process.append((arg, None))
+            parts = arg.split(maxsplit=1)
+            alias = parts[1] if len(parts) > 1 else None
+            repos_to_process.append((parts[0], alias))
     else:
         if os.path.exists(next_list_path):
-            with open(next_list_path, "r") as f:
+            with open(next_list_path, 'r') as f:
                 for line in f:
                     line = line.strip()
-                    if not line or line.startswith("#"): continue
-                    parts = re.split(r'[\t ]+', line)
+                    if not line or line.startswith('#'): continue
+                    parts = line.split(maxsplit=1)
                     url = parts[0]
                     alias = parts[1] if len(parts) > 1 else None
                     repos_to_process.append((url, alias))
@@ -158,106 +136,129 @@ def main():
         print("No hay repositorios para procesar.")
         sys.exit(0)
         
-    # 2. Cargar entradas existentes para prevenir duplicados
-    existing_apps = set()
-    existing_repos = set()
-    if os.path.exists(apps_list_path):
-        with open(apps_list_path, 'r') as f:
+    existing_tar_apps = set()
+    existing_tar_repos = set()
+    if os.path.exists(tar_list_path):
+        with open(tar_list_path, 'r') as f:
             for line in f:
                 if not line.strip() or line.startswith('#'): continue
                 parts = line.strip().split('\t')
                 if len(parts) > 1:
-                    existing_apps.add(parts[0].lower())
-                    existing_repos.add(parts[1].lower())
+                    existing_tar_apps.add(parts[0].lower())
+                    existing_tar_repos.add(parts[1].lower())
+                    
+    existing_appimage_apps = set()
+    existing_appimage_repos = set()
+    if os.path.exists(appimages_list_path):
+        with open(appimages_list_path, 'r') as f:
+            for line in f:
+                if not line.strip() or line.startswith('#'): continue
+                parts = line.strip().split('\t')
+                if len(parts) > 1:
+                    existing_appimage_apps.add(parts[0].lower())
+                    existing_appimage_repos.add(parts[1].lower())
     
     failed_repos = []
-    added_any = False
+    added_tar = False
+    added_appimage = False
     
-    # 3. Procesar y escribir
-    with open(apps_list_path, "a") as out_file:
-        for raw_url, alias in repos_to_process:
-            forge, norm_repo = normalize_repo(raw_url)
-            app_name = alias.lower() if alias else norm_repo.split('/')[-1].lower()
+    for raw_url, alias in repos_to_process:
+        forge, norm_repo = normalize_repo(raw_url)
+        app_name = alias.lower() if alias else norm_repo.split('/')[-1].lower()
+        
+        print(f"Analizando {app_name} en {norm_repo}...")
+        info = get_repo_info(forge, norm_repo)
+        if not info: 
+            failed_repos.append(raw_url if not alias else f"{raw_url}\t{alias}")
+            continue
+        
+        desc = info.get('description', 'Sin descripcion')
+        if not desc: desc = "Sin descripcion"
+        desc = desc.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').strip()
+        
+        release = get_latest_release(forge, norm_repo)
+        
+        if not release or 'assets' not in release or len(release['assets']) == 0:
+            print(f"  -> Error: no se encontraron assets para {app_name}")
+            failed_repos.append(raw_url if not alias else f"{raw_url}\t{alias}")
+            continue
             
-            if app_name in existing_apps or norm_repo.lower() in existing_repos:
-                print(f"[SKIP] {app_name} ({norm_repo}) ya está indexado. Ignorando duplicado.")
-                continue
-                
-            print(f"Analizando {app_name} en {norm_repo}...")
-            info = get_repo_info(forge, norm_repo)
-            if not info: 
-                failed_repos.append(raw_url if not alias else f"{raw_url}\t{alias}")
-                continue
-            
-            desc = info.get('description', 'Sin descripcion')
-            if not desc: desc = "Sin descripcion"
-            desc = desc.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').strip()
-            
-            release = get_latest_release(forge, norm_repo)
-            regex = "TARBALL"
-            
-            if release and 'assets' in release and len(release['assets']) > 0:
-                assets = [a['name'] for a in release['assets']]
-                target = None
-                
-                valid_exts = ('.tar.gz', '.tar.xz', '.txz', '.zip', '.tar')
-                filtered_assets = [a for a in assets if any(a.lower().endswith(ext) for ext in valid_exts) and not a.lower().endswith('.sig')]
-                
-                def is_linux_amd64(name):
-                    al = name.lower()
-                    if any(x in al for x in ['windows', 'win32', 'darwin', 'mac', 'apple', 'arm64', 'aarch64', 'armv7', 'armhf', 'i386', '386', 'ia32']):
-                        return False
-                    if 'linux' in al and any(x in al for x in ['x86_64', 'amd64', 'x64', '64bit']):
-                        return True
-                    if any(x in al for x in ['x86_64', 'amd64', 'x64']):
-                        return True
-                    return False
+        assets = [a['name'] for a in release['assets']]
+        
+        def is_linux_amd64(name):
+            al = name.lower()
+            if any(x in al for x in ['windows', 'win32', 'darwin', 'mac', 'apple', 'arm64', 'aarch64', 'armv7', 'armhf', 'i386', '386', 'ia32']):
+                return False
+            if 'linux' in al and any(x in al for x in ['x86_64', 'amd64', 'x64', '64bit']):
+                return True
+            if any(x in al for x in ['x86_64', 'amd64', 'x64']):
+                return True
+            if 'appimage' in al:
+                return True
+            return False
 
-                # Nivel 1: Linux x86_64 explicito y formato musl/gnu
-                for a in filtered_assets:
-                    al = a.lower()
-                    if is_linux_amd64(a) and ('musl' in al or 'gnu' in al):
-                        target = a
-                        break
-                        
-                # Nivel 2: Cualquier archivo linux x86_64 válido
-                if not target:
-                    for a in filtered_assets:
-                        if is_linux_amd64(a):
-                            target = a
-                            break
-                            
-                # Nivel 3: Algún asset genérico de linux
-                if not target:
-                    for a in filtered_assets:
-                        al = a.lower()
-                        if 'linux' in al or ('binary' in al):
-                            if not any(x in al for x in ['windows', 'darwin', 'mac', 'arm', 'aarch64', 'i386']):
-                                target = a
-                                break
-                            
-                if target:
-                    regex = generate_regex(target, app_name)
-                else:
-                    print(f"  -> Advertencia: No se encontro asset Linux x86_64 claro. Revisa apps.list")
-                    regex = "REEMPLAZAME"
-            
-            exec_name = app_name
-            categoria = get_category(desc, app_name)
-            is_terminal = "Y"
-            
-            line = f"{app_name}\t{norm_repo}\t{regex}\t{desc}\t{exec_name}\t{categoria}\t{is_terminal}\n"
-            out_file.write(line)
-            existing_apps.add(app_name)
-            existing_repos.add(norm_repo.lower())
-            added_any = True
-            print(f"  -> {app_name} agregado exitosamente!")
-            
-    # 4. Ordenar archivo si se agrego algo
-    if added_any:
-        sort_apps_list(apps_list_path)
+        def get_best_target(exts):
+            filtered = [a for a in assets if any(a.lower().endswith(e) for e in exts) and not a.lower().endswith('.sig')]
+            target = None
+            for a in filtered:
+                al = a.lower()
+                if is_linux_amd64(a) and ('musl' in al or 'gnu' in al):
+                    return a
+            for a in filtered:
+                if is_linux_amd64(a):
+                    return a
+            for a in filtered:
+                al = a.lower()
+                if 'linux' in al or ('binary' in al) or ('appimage' in al):
+                    if not any(x in al for x in ['windows', 'darwin', 'mac', 'arm', 'aarch64', 'i386']):
+                        return a
+            return None
 
-    # Actualizar o vaciar next.list
+        target_tar = get_best_target(('.tar.gz', '.tar.xz', '.txz', '.zip', '.tar'))
+        target_appimage = get_best_target(('.appimage',))
+        
+        found_any = False
+        exec_name = app_name
+        categoria = get_category(desc, app_name)
+        is_terminal = "Y" if "terminal" in desc.lower() or "cli" in desc.lower() else "N"
+        
+        if target_tar:
+            if app_name not in existing_tar_apps and norm_repo.lower() not in existing_tar_repos:
+                regex = generate_regex(target_tar, app_name)
+                line = f"{app_name}\t{norm_repo}\t{regex}\t{desc}\t{exec_name}\t{categoria}\t{is_terminal}\n"
+                with open(tar_list_path, "a") as out_file:
+                    out_file.write(line)
+                existing_tar_apps.add(app_name)
+                existing_tar_repos.add(norm_repo.lower())
+                added_tar = True
+                found_any = True
+                print(f"  -> {app_name} agregado a tar.list exitosamente!")
+            else:
+                print(f"  -> [SKIP] {app_name} ya existe en tar.list.")
+                found_any = True
+                
+        if target_appimage:
+            if app_name not in existing_appimage_apps and norm_repo.lower() not in existing_appimage_repos:
+                regex = generate_regex(target_appimage, app_name)
+                line = f"{app_name}\t{norm_repo}\t{regex}\t{desc}\t{exec_name}\t{categoria}\t{is_terminal}\n"
+                with open(appimages_list_path, "a") as out_file:
+                    out_file.write(line)
+                existing_appimage_apps.add(app_name)
+                existing_appimage_repos.add(norm_repo.lower())
+                added_appimage = True
+                found_any = True
+                print(f"  -> {app_name} agregado a appimages.list exitosamente!")
+            else:
+                print(f"  -> [SKIP] {app_name} ya existe en appimages.list.")
+                found_any = True
+                
+        if not found_any:
+            print(f"  -> Advertencia: No se encontro asset Linux compatible para {app_name}.")
+            failed_repos.append(raw_url if not alias else f"{raw_url}\t{alias}")
+
+    if added_tar: sort_apps_list(tar_list_path)
+    if added_appimage: sort_apps_list(appimages_list_path)
+
     if len(sys.argv) <= 1 and os.path.exists(next_list_path):
         if failed_repos:
             with open(next_list_path, "w") as f:

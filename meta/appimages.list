@@ -1,0 +1,439 @@
+# nombre	repo	patron_asset	descripcion	exec	categoria	terminal
+12to11	pkgforge-dev/12to11-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Tool for running Wayland applications on an X server	12to11	System	N
+2ship2harkinian	pkgforge-dev/2ship2harkinian-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Native PC port of The Legend of Zelda: Majora's Mask	2ship2harkinian	Game	N
+86box	pkgforge-dev/86box-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Emulator of x86-based machines	86box	Emulator	N
+aaaaxy	pkgforge-dev/AAAAXY-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Nonlinear 2D puzzle platformer taking place in impossible spaces	aaaaxy	ActionGame	N
+abaddon	pkgforge-dev/Abaddon-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Alternative Discord client with voice support made with C++ and GTK 3	abaddon	Chat	N
+adobe-flash-player	pkgforge-dev/Adobe-Flash-Player-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Standalone player for Adobe Flash (SWF) content	adobe-flash-player	AudioVideo	N
+aerofoil	pkgforge-dev/Aerofoil-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Modern port of Glider PRO, the classic Macintosh paper airplane game	aerofoil	Game	N
+akhenaten	pkgforge-dev/Akhenaten-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open source re-implementation of Pharaoh, the classic city builder	akhenaten	Game	N
+alacritty	pkgforge-dev/alacritty-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A cross-platform, GPU-accelerated terminal emulator	alacritty	TerminalEmulator	N
+amarok	pkgforge-dev/Amarok-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Powerful music player that lets you rediscover your music	amarok	Audio	N
+amiberry	pkgforge-dev/Amiberry-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Optimized Amiga emulator	amiberry	Emulator	N
+android-tools	pkgforge-dev/android-tools-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Android SDK Platform-Tools (adb, fastboot & more)	android-tools	Development	N
+android-translation-layer	pkgforge-dev/android_translation_layer-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Android Translation Layer - Run Android apps on Linux	android-translation-layer	Emulator	N
+anki	pkgforge-dev/anki-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Powerful, intelligent flash cards	anki	Education	N
+antigravity	pkgforge-dev/Antigravity-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Agentic AI-powered IDE from Google	antigravity	Development	N
+antigravity-ide	pkgforge-dev/Antigravity-IDE-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Agentic development platform from Google, evolving the IDE into the agent-first era	antigravity-ide	Development	N
+appimageupdatetool	pkgforge-dev/AppImageUpdate-Enhanced-Edition	.*(x86_64|amd64|64bit).*\.appimage	Tool to update AppImages	appimageupdatetool	PackageManager	N
+ares-emu	pkgforge-dev/ares-emu-appimage	.*(x86_64|amd64|64bit).*\.appimage	Multi-system emulator focused on accuracy and preservation	ares-emu	Emulator	N
+arx-libertatis	pkgforge-dev/Arx-Libertatis-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Cross-platform port of Arx Fatalis, a first-person role-playing game	arx-libertatis	Game	N
+asphyxia-core	pkgforge-dev/Asphyxia-CORE-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Local private server for Konami BEMANI arcade rhythm games	asphyxia-core	Game	N
+asunder	pkgforge-dev/Asunder-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Graphical Audio CD ripper and encoder for Linux	asunder	Audio	N
+audacious	pkgforge-dev/Audacious-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Lightweight and versatile audio player	audacious	Audio	N
+audacity	pkgforge-dev/Audacity-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Easy-to-use, multi-track audio editor and recorder	audacity	Audio	N
+audio-sharing	pkgforge-dev/Audio-Sharing-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Share audio between computers over network	audio-sharing	Audio	N
+augustus	pkgforge-dev/Augustus-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	An open source re-implementation of Caesar III	augustus	Game	N
+authenticator	pkgforge-dev/Authenticator-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Two-factor authentication codes generator	authenticator	Security	N
+awakened-poe-trade	pkgforge-dev/Awakened-POE-Trade-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Path of Exile app for price checking and trading	awakened-poe-trade	Utility	N
+azahar	pkgforge-dev/Azahar-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Nintendo 3DS emulator	azahar	Emulator	N
+banjorecomp	pkgforge-dev/BanjoRecomp-AppImage	.*(x86_64|amd64|64bit).*\.appimage	PC port of Banjo-Kazooie built with N64: Recompiled	banjorecomp	Game	N
+basiliskii	pkgforge-dev/BasiliskII-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Open source 68k Macintosh (Basilisk II) emulator	basiliskii	Emulator	N
+bettermediainfo	pkgforge-dev/BetterMediaInfo-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	A better GUI for MediaInfo media file metadata inspection	bettermediainfo	Utility	N
+bibletime	pkgforge-dev/BibleTime-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Powerful cross platform Bible study tool	bibletime	Education	N
+bigpemu	pkgforge-dev/BigPEmu-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Atari Jaguar emulator with high compatibility and enhancement features	bigpemu	Emulator	N
+bitwarden	pkgforge-dev/Bitwarden-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Secure and free password manager for all of your devices	bitwarden	Utility	N
+blender	pkgforge-dev/blender-AppImage	blender.*	A fully integrated 3D graphics creation suite	blender	3DGraphics	N
+bm64recomp	pkgforge-dev/BM64Recomp-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Static recompilation of the Nintendo 64 game Bomberman 64	bm64recomp	Game	N
+bmherorecomp	pkgforge-dev/BMHeroRecomp-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Static recompilation of Bomberman Hero for the Nintendo 64	bmherorecomp	Game	N
+brave-origin	pkgforge-dev/Brave-Origin-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A privacy-focused Brave browser variant with telemetry stripped out	brave-origin	Network	N
+bsys6	librewolf/bsys6	librewolf-.*_64-appimage\.AppImage	Mirror of https://librewolf.dev/librewolf/bsys6	bsys6	Utility	N
+bulky	pkgforge-dev/Bulky-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Bulk file and folder renamer that works across desktop environments	bulky	Utility	N
+cannonball	pkgforge-dev/Cannonball-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Enhanced OutRun arcade game engine, a C++ rewrite of the Sega original	cannonball	Game	N
+cartridges	pkgforge-dev/Cartridges-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Simple game launcher for your games	cartridges	Game	N
+catacombgl	pkgforge-dev/CatacombGL-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Source port with OpenGL graphics for the Catacomb 3-D game series	catacombgl	Game	N
+catfish	pkgforge-dev/Catfish-AppImage	.*(x86_64|amd64|64bit).*\.appimage	File-searching application for the XFCE desktop environment	catfish	Utility	N
+cdogs-sdl	pkgforge-dev/C-Dogs_SDL-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Classic overhead run-and-gun game	cdogs-sdl	Game	N
+cemu	pkgforge-dev/Cemu-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Wii U emulator	cemu	Emulator	N
+chipass	pkgforge-dev/ChiPass-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Cross-platform password manager forked from KeePassXC	chipass	Utility	N
+chrome	pkgforge-dev/Chrome-Appimage	.*(x86_64|amd64|64bit).*\.appimage	Google Chrome web browser	chrome	Network	N
+cine	pkgforge-dev/Cine-AppImage	.*(x86_64|amd64|64bit).*\.appimage	MPV-based video player for Linux	cine	Video	N
+clapper	pkgforge-dev/Clapper-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Modern media player built with GTK4 and GStreamer	clapper	AudioVideo	N
+classicimageviewer	pkgforge-dev/ClassicImageViewer-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	A simple and fast image viewer and editor for Linux, BSDs and MacOS	classicimageviewer	Graphics	N
+classicube	pkgforge-dev/ClassiCube-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A custom Minecraft Classic compatible client written in C from scratch	classicube	Game	N
+claude-code	pkgforge-dev/claude-code-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Agentic coding tool that lives in your terminal and understands your codebase	claude-code	Development	N
+claude-desktop	pkgforge-dev/Claude-Desktop-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Desktop application for Anthropic's Claude AI assistant	claude-desktop	Network	N
+claws-mail	pkgforge-dev/Claws-Mail-AppImage	.*(x86_64|amd64|64bit).*\.appimage	The user-friendly, lightweight, and fast GTK+ e-mail client and news reader	claws-mail	Network	N
+clementine	pkgforge-dev/Clementine-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Modern music player and library organizer	clementine	Audio	N
+clk	pkgforge-dev/CLK-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Latency-hating emulator of many 8- and 16-bit retro computers and consoles	clk	Emulator	N
+clonehero	pkgforge-dev/CloneHero-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Rhythm game supporting guitar controllers, drum kits, gamepads, and keyboards	clonehero	Game	N
+clownmdemu	pkgforge-dev/ClownMDEmu-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Sega Mega Drive/Genesis emulator with reference standalone frontend	clownmdemu	Emulator	N
+collaboraoffice	pkgforge-dev/CollaboraOffice-AppImage	.*(x86_64|amd64|64bit).*\.appimage	LibreOffice-based office suite for documents, spreadsheets and presentations	collaboraoffice	Office	N
+collision	pkgforge-dev/Collision-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Check hashes for your files	collision	Security	N
+commander-genius	pkgforge-dev/Commander-Genius-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Modern interpreter for the Commander Keen games	commander-genius	Game	N
+constrict	pkgforge-dev/Constrict-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Compress videos to target sizes	constrict	Video	N
+contour	pkgforge-dev/contour-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Modern and fast terminal emulator with GPU-accelerated rendering	contour	TerminalEmulator	N
+copyq	pkgforge-dev/CopyQ-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Clipboard manager with advanced features	copyq	Utility	N
+corsixth	pkgforge-dev/CorsixTH-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Open-source reimplementation of the Theme Hospital business simulation game	corsixth	Game	N
+crispy-doom	pkgforge-dev/Crispy-Doom-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Limit-removing enhanced-resolution Doom source port based on Chocolate Doom	crispy-doom	Game	N
+cromagrally	pkgforge-dev/CroMagRally-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Port of Cro-Mag Rally, a 2000 kart racing game by Pangea Software	cromagrally	Game	N
+cromite	pkgforge-dev/Cromite-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A privacy-focused Chromium-based browser	cromite	Network	N
+cuberite	pkgforge-dev/Cuberite-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A lightweight, fast and extensible game server for Minecraft	cuberite	Game	N
+cubyz	pkgforge-dev/Cubyz-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Voxel sandbox game with large render distance and procedurally generated content	cubyz	Game	N
+cursor	pkgforge-dev/Cursor-AppImage-enhanced	.*(x86_64|amd64|64bit).*\.appimage	The AI-first code editor	cursor	Development	N
+cursor-cli	pkgforge-dev/cursor-cli-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Command-line interface for Cursor editor	cursor-cli	Development	N
+d1x-rebirth	pkgforge-dev/D1X-Rebirth-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Source port of the Descent 1 engine from the DXX-Rebirth project	d1x-rebirth	Game	N
+d2x-rebirth	pkgforge-dev/D2X-Rebirth-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Source port of Descent 2 with enhanced graphics and modern OS support	d2x-rebirth	Game	N
+daggerfall-unity	pkgforge-dev/Daggerfall-Unity-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open source recreation of Daggerfall in the Unity engine	daggerfall-unity	Game	N
+darkplaces	pkgforge-dev/DarkPlaces-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Modernized Quake game engine with advanced graphics and rendering	darkplaces	Game	N
+deadbeef	pkgforge-dev/DeaDBeeF-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Modular audio player	deadbeef	Audio	N
+deepin-calculator	pkgforge-dev/Deepin-Calculator-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Calculator for the Deepin desktop	deepin-calculator	Calculator	N
+defold	pkgforge-dev/Defold-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Game engine for development of desktop, mobile and web games	defold	Development	N
+denise	pkgforge-dev/Denise-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Highly accurate C64 and Amiga emulator	denise	Emulator	N
+desmume	pkgforge-dev/DeSmuME-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Nintendo DS emulator	desmume	Emulator	N
+dethrace	pkgforge-dev/dethrace-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Reverse-engineered reimplementation of the 1997 game Carmageddon	dethrace	Game	N
+devilutionx	pkgforge-dev/DevilutionX-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Diablo build for modern operating systems	devilutionx	Game	N
+dhewm3	pkgforge-dev/dhewm3-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Doom 3 GPL source port based on id Tech 4 engine	dhewm3	Game	N
+diffpdf	pkgforge-dev/DiffPDF-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Compare two PDF files visually or textually	diffpdf	Utility	N
+dillo	pkgforge-dev/Dillo-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Lightweight multi-platform graphical web browser built on FLTK	dillo	Network	N
+discord	pkgforge-dev/Discord-AppImage	.*(x86_64|amd64|64bit).*\.appimage	All-in-one voice and text chat for gamers	discord	Chat	N
+dnzhrecomp	pkgforge-dev/DNZHRecomp-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Static recompilation of the Nintendo 64 game Duke Nukem: Zero Hour	dnzhrecomp	Game	N
+dolphin-emu	pkgforge-dev/Dolphin-emu-AppImage	.*(x86_64|amd64|64bit).*\.appimage	GameCube and Wii emulator	dolphin-emu	Emulator	N
+donkeykong64recomp	pkgforge-dev/DonkeyKong64Recomp-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Static recompilation of the Nintendo 64 game Donkey Kong 64	donkeykong64recomp	Game	N
+doom64exultra	pkgforge-dev/DOOM64EXUltra-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Fork of Doom64EX+ source port of Doom 64 with new features and fixes	doom64exultra	Game	N
+dorion	pkgforge-dev/Dorion-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Tiny alternative Discord client with smaller footprint, snappier startup and themes	dorion	Network	N
+dosbox-pure-unleashed	pkgforge-dev/DOSBox-Pure-Unleashed-AppImage	.*(x86_64|amd64|64bit).*\.appimage	DOSBox reimagined, with a friendly interface, ZIP loading and save states	dosbox-pure-unleashed	Emulator	N
+dosbox-x	pkgforge-dev/DOSBox-X-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Cross-platform DOS emulator, a fork of the DOSBox project	dosbox-x	Emulator	N
+dr-robotniks-ring-racers	pkgforge-dev/Dr-Robotniks-Ring-Racers-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Technical kart racing game by Kart Krew, successor to SRB2Kart	dr-robotniks-ring-racers	Game	N
+drally	pkgforge-dev/dRally-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open source game engine remake of Death Rally (1996)	drally	Game	N
+dreamm	pkgforge-dev/DREAMM-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Emulator and launcher for classic LucasArts SCUMM adventure games	dreamm	Emulator	N
+drum-machine	pkgforge-dev/Drum-Machine-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A drum machine application built with Python, GTK4 and libadwaita	drum-machine	Audio	N
+duckstation-gpl	pkgforge-dev/DuckStation-GPL-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Fast PlayStation 1 emulator, last GPL-licensed build	duckstation-gpl	Emulator	N
+dunst	pkgforge-dev/dunst-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Lightweight and customizable notification daemon	dunst	System	N
+dwarf-fortress	pkgforge-dev/Dwarf-Fortress-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Single-player fantasy construction and management roguelike by Bay 12 Games	dwarf-fortress	Game	N
+dwarf-fortress-legacy	pkgforge-dev/Dwarf-Fortress-Legacy-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Classic freeware version of the deep dwarven fortress simulation by Bay 12 Games	dwarf-fortress-legacy	Game	N
+easytag	pkgforge-dev/EasyTAG-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Simple application for viewing and editing tags in audio files	easytag	Audio	N
+ecwolf	pkgforge-dev/ECWolf-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Advanced source port for Wolfenstein 3D, Spear of Destiny and Super 3D Noah's Ark	ecwolf	Game	N
+eduke32	pkgforge-dev/EDuke32-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Advanced source port of Duke Nukem 3D	eduke32	Game	N
+elastic	pkgforge-dev/Elastic-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Elastic allows to design and export spring physics-based animations to use with libadwaita.	elastic	Development	N
+element-desktop	pkgforge-dev/Element-Desktop-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A glossy Matrix collaboration client for desktop	element-desktop	Network	N
+epsxe	pkgforge-dev/ePSXe-AppImage	.*(x86_64|amd64|64bit).*\.appimage	PlayStation emulator	epsxe	Emulator	N
+etlegacy	pkgforge-dev/ETLegacy-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open-source multiplayer FPS based on Wolfenstein: Enemy Territory	etlegacy	Game	N
+extension-manager	pkgforge-dev/Extension-Manager-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Manage GNOME Shell extensions	extension-manager	GNOME	N
+extremetuxracer	pkgforge-dev/ExtremeTuxRacer-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Downhill racing game starring Tux	extremetuxracer	Game	N
+exult	pkgforge-dev/Exult-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Engine to play Ultima 7 on modern operating systems using original game data	exult	Game	N
+eyedropper	pkgforge-dev/Eyedropper-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Pick and format colors	eyedropper	Graphics	N
+fabother-world	pkgforge-dev/Fabother-World-AppImage	.*(x86_64|amd64|64bit).*\.appimage	An interpreter for Another World (Out of this World)	fabother-world	Game	N
+featherpad	pkgforge-dev/FeatherPad-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Lightweight Qt plain-text editor with syntax highlighting and session support	featherpad	Utility	N
+ffmpeg	pkgforge-dev/FFmpeg-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Complete cross-platform solution to record, convert and stream audio and video	ffmpeg	AudioVideo	N
+filelight	pkgforge-dev/Filelight-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Visualize disk usage	filelight	FileTools	N
+firefox	pkgforge-dev/Firefox-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Mozilla Firefox web browser	firefox	Network	N
+flacon	pkgforge-dev/Flacon-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Extracts audio tracks from an audio CD image to separate files	flacon	Audio	N
+flashrom	pkgforge-dev/Flashrom-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Utility for detecting, reading, writing, verifying and erasing flash chips	flashrom	Utility	N
+flycast	pkgforge-dev/Flycast-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Multi-platform Sega Dreamcast, Naomi, and Atomiswave emulator	flycast	Emulator	N
+foobillardpp	pkgforge-dev/Foobillardpp-AppImage	.*(x86_64|amd64|64bit).*\.appimage	3D OpenGL billiard game with 8-ball, 9-ball, snooker and carambol	foobillardpp	Game	N
+foot	pkgforge-dev/foot-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Fast, lightweight and minimalistic Wayland terminal emulator	foot	System	N
+fooyin	pkgforge-dev/fooyin-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A customisable Qt music player for Linux	fooyin	Audio	N
+freac	pkgforge-dev/freac-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Free audio converter and CD ripper supporting many formats	freac	Audio	N
+freedink	pkgforge-dev/GNU-FreeDink-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Free reimplementation of the Dink Smallwood adventure game	freedink	Game	N
+freetube	pkgforge-dev/FreeTube-Appimage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	An open source desktop YouTube player built with privacy in mind	freetube	Video	N
+fretboard	pkgforge-dev/Fretboard-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Look up guitar chords	fretboard	Audio	N
+galculator	pkgforge-dev/Galculator-AppImage	.*(x86_64|amd64|64bit).*\.appimage	GTK 2 / GTK 3 based scientific calculator	galculator	Utility	N
+gamescope	pkgforge-dev/gamescope-AppImage	.*(x86_64|amd64|64bit).*\.appimage	SteamOS session compositing window manager (micro-compositor)	gamescope	System	N
+gapless	pkgforge-dev/Gapless-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Light-weight music player with gapless playback	gapless	Audio	N
+gcap2025	pkgforge-dev/GCAP2025-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Brazilian income tax auxiliary program for calculating capital gains (GCAP 2025)	gcap2025	Office	N
+gcap2026	pkgforge-dev/GCAP2026-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Brazilian Federal Revenue capital gains tax program GCAP 2026	gcap2026	Office	N
+gcstar	pkgforge-dev/GCstar-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Personal collection manager for movies, books, music, games and more	gcstar	Utility	N
+gearboy	pkgforge-dev/Gearboy-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Game Boy / Game Boy Color emulator written in C++	gearboy	Emulator	N
+gearcoleco	pkgforge-dev/Gearcoleco-AppImage	.*(x86_64|amd64|64bit).*\.appimage	ColecoVision emulator and debugger	gearcoleco	Emulator	N
+geargrafx	pkgforge-dev/Geargrafx-AppImage	.*(x86_64|amd64|64bit).*\.appimage	PC Engine / TurboGrafx-16 / SuperGrafx emulator and debugger	geargrafx	Emulator	N
+gearlever	pkgforge-dev/Gear-Lever-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Manage AppImages and more	gearlever	PackageManager	N
+gearlynx	pkgforge-dev/Gearlynx-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Atari Lynx emulator and debugger	gearlynx	Emulator	N
+gearsystem	pkgforge-dev/Gearsystem-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Sega Master System, Game Gear and SG-1000 emulator with debugger	gearsystem	Emulator	N
+ghostscript	pkgforge-dev/Ghostscript-AppImage	.*(x86_64|amd64|64bit).*\.appimage	PostScript and PDF interpreter	ghostscript	ConsoleOnly	Y
+ghostship	pkgforge-dev/Ghostship-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	A native PC port of Super Mario 64 from Harbour Masters	ghostship	Game	N
+ghostty	pkgforge-dev/ghostty-appimage	.*(x86_64|amd64|64bit).*\.appimage	Fast, native, feature-rich terminal emulator pushing modern features	ghostty	TerminalEmulator	N
+gimagereader	pkgforge-dev/gImageReader-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A Gtk/Qt front-end to tesseract-ocr	gimagereader	Utility	N
+gimp	pkgforge-dev/GIMP-and-PhotoGIMP-AppImage	.*(x86_64|amd64|64bit).*\.appimage	GNU Image Manipulation Program	gimp	Graphics	N
+github-desktop	pkgforge-dev/GitHub-Desktop-Plus-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Fork of GitHub Desktop with support for various Linux distributions	github-desktop	Development	N
+gnome-calculator	pkgforge-dev/Gnome-Calculator-AppImage	.*(x86_64|amd64|64bit).*\.appimage	GNOME Calculator	gnome-calculator	Calculator	N
+gnome-pomodoro	pkgforge-dev/gnome-pomodoro-appimage	.*(x86_64|amd64|64bit).*\.appimage	Time management utility for GNOME	gnome-pomodoro	Clock	N
+gnome-system-monitor	pkgforge-dev/Gnome-System-Monitor-AppImage	.*(x86_64|amd64|64bit).*\.appimage	View current processes and monitor system state	gnome-system-monitor	Monitor	N
+gnome-text-editor	pkgforge-dev/Gnome-Text-Editor-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Simple text editor for GNOME	gnome-text-editor	TextEditor	N
+gnome-web	pkgforge-dev/Gnome-Web-AppImage	.*(x86_64|amd64|64bit).*\.appimage	GNOME web browser based on the WebKit rendering engine	gnome-web	Network	N
+godot	pkgforge-dev/Godot-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Advanced cross-platform 2D and 3D game engine	godot	Development	N
+goldendict-ng	pkgforge-dev/GoldenDict-ng-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Advanced multi-format dictionary lookup program, the next generation GoldenDict	goldendict-ng	Utility	N
+gopher64	pkgforge-dev/Gopher64-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Highly compatible cross-platform Nintendo 64 emulator written in Rust	gopher64	Emulator	N
+gpodder	pkgforge-dev/gPodder-AppImage	.*(x86_64|amd64|64bit).*\.appimage	The gPodder podcast client and feed aggregator	gpodder	Audio	N
+gpu-screen-recorder	pkgforge-dev/gpu-screen-recorder-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Screen recorder with GPU acceleration	gpu-screen-recorder	Recorder	N
+gradia	pkgforge-dev/Gradia-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Make your screenshots ready to share with backgrounds and annotations	gradia	Graphics	N
+gram	pkgforge-dev/Gram-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Code editor forked from Zed, without AI or subscriptions	gram	Development	N
+graphs	pkgforge-dev/Graphs-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Plot and manipulate data	graphs	DataVisualization	N
+gthumb	pkgforge-dev/gThumb-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Image viewer and browser for the GNOME desktop	gthumb	Graphics	N
+gwenview	pkgforge-dev/Gwenview-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Image viewer by KDE	gwenview	Graphics	N
+haruna	pkgforge-dev/Haruna-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open source video player built with Qt/QML and libmpv	haruna	AudioVideo	N
+hatari	pkgforge-dev/Hatari-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Free Atari ST/STE/TT/Falcon emulator	hatari	Emulator	N
+helium-browser	pkgforge-dev/Helium-Browser-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Private browser based on Chromium with built-in ad blocking	helium-browser	Network	N
+hp-15c-simulator	pkgforge-dev/HP-15C-Simulator-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Simulator of the HP-15C RPN scientific programmable calculator	hp-15c-simulator	Calculator	N
+htop	pkgforge-dev/htop-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Interactive process viewer and system monitor	htop	System	N
+identity	pkgforge-dev/Identity-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Compare images and videos	identity	Graphics	N
+iloader	pkgforge-dev/iloader-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Install SideStore and other iOS apps and import pairing files with ease	iloader	Utility	N
+imagemagick	pkgforge-dev/ImageMagick-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Software suite to create, edit, convert and display images in 200+ formats	imagemagick	Graphics	N
+img2pdf	pkgforge-dev/img2pdf-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Lossless conversion of raster images to PDF	img2pdf	ConsoleOnly	Y
+impression	pkgforge-dev/Impression-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Create bootable drives	impression	System	N
+innoextract	pkgforge-dev/innoextract-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A tool to unpack installers created by Inno Setup	innoextract	Utility	N
+ioquake3	pkgforge-dev/ioquake3-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Community source port continuing id's Quake III Arena engine	ioquake3	Game	N
+iris	pkgforge-dev/Iris-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Sony PlayStation 2 emulator for Windows, Linux and macOS	iris	Game	N
+irpf2025	pkgforge-dev/IRPF2025-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Brazilian personal income tax (Receita Federal) declaration program for 2025	irpf2025	Finance	N
+irpf2026	pkgforge-dev/IRPF2026-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Brazilian Receita Federal IRPF 2026 personal income tax declaration program	irpf2026	Finance	N
+isle-portable	pkgforge-dev/isle-portable-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	A portable/cross-platform build of the LEGO Island (1997) decompilation	isle-portable	Game	N
+itgmania	pkgforge-dev/ITGmania-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A free, open source, and community-driven dance game	itgmania	Game	N
+itr2025	pkgforge-dev/ITR2025-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Brazilian Federal Revenue rural land tax (ITR) declaration program for 2025	itr2025	Finance	N
+joplin-desktop	pkgforge-dev/Joplin-Desktop-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Privacy-focused note taking app with sync capabilities	joplin-desktop	Office	N
+kaffeine	pkgforge-dev/kaffeine-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Media player for KDE	kaffeine	AudioVideo	N
+kate	pkgforge-dev/Kate-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Advanced text editor from KDE, with KWrite included	kate	Utility	N
+kblocks	pkgforge-dev/KBlocks-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Classic falling blocks (Tetris-like) game for KDE	kblocks	Game	N
+kcalc	pkgforge-dev/KCalc-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Calculator offering everything a scientific calculator does, and more	kcalc	Utility	N
+kdeconnect	pkgforge-dev/kdeconnect-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Integrate your devices	kdeconnect	Network	N
+kdenlive	pkgforge-dev/kdenlive-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Video editor	kdenlive	AudioVideo	N
+keepassxc	pkgforge-dev/KeePassXC-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Cross-platform community-driven port of the KeePass password manager	keepassxc	Security	N
+kega-fusion	pkgforge-dev/Kega-Fusion-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Emulator for classic Sega consoles (Genesis, Master System, Game Gear, SegaCD, 32X)	kega-fusion	Emulator	N
+keypunch	pkgforge-dev/Keypunch-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Practice your typing skills	keypunch	Education	N
+kicad	pkgforge-dev/KiCad-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Electronic design automation suite	kicad	Electronics	N
+kid3	pkgforge-dev/Kid3-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Efficient audio tag editor supporting a large variety of file formats	kid3	Audio	N
+kmahjongg	pkgforge-dev/KMahjongg-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A tile matching mahjong solitaire game for one or two players	kmahjongg	Game	N
+kmines	pkgforge-dev/KMines-AppImage	.*(x86_64|amd64|64bit).*\.appimage	KMines is the classic Minesweeper game	kmines	Game	N
+knights	pkgforge-dev/Knights-AppImage	.*(x86_64|amd64|64bit).*\.appimage	KDE chess board interface with support for the XBoard chess engine protocol	knights	Game	N
+kolourpaint	pkgforge-dev/KolourPaint-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Easy-to-use paint program for KDE	kolourpaint	Graphics	N
+kpatience	pkgforge-dev/KPatience-AppImage	.*(x86_64|amd64|64bit).*\.appimage	KPatience offers a selection of solitaire card games	kpatience	Game	N
+krita	pkgforge-dev/Krita-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Digital painting and illustration application	krita	Graphics	N
+kronos	pkgforge-dev/Kronos-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Sega Saturn emulator	kronos	Emulator	N
+kstars	pkgforge-dev/KStars-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Desktop planetarium and astronomy suite for KDE	kstars	Science	N
+ktorrent	pkgforge-dev/KTorrent-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Powerful BitTorrent client by KDE	ktorrent	Network	N
+ktouch	pkgforge-dev/KTouch-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Touch typing tutor	ktouch	Education	N
+ladybird	pkgforge-dev/ladybird-appimage	.*(x86_64|amd64|64bit).*\.appimage	Truly independent web browser	ladybird	Network	N
+libation	pkgforge-dev/Libation-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Audible audiobook library manager and downloader	libation	Audio	N
+librecad	pkgforge-dev/LibreCAD-AppImage	.*(x86_64|amd64|64bit).*\.appimage	2D CAD application	librecad	Construction	N
+librewolf	pkgforge-dev/LibreWolf-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	A custom version of Firefox, focused on privacy, security and freedom	librewolf	WebBrowser	N
+lighthouse	pkgforge-dev/Lighthouse-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	PC port of Banjo-Kazooie by Harbour Masters	lighthouse	Game	N
+lightzone	pkgforge-dev/LightZone-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open-source professional-grade digital photo editor and darkroom software	lightzone	Graphics	N
+linuxtoys	pkgforge-dev/LinuxToys-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A collection of user-friendly tools for Linux systems	linuxtoys	Utility	N
+lmms	pkgforge-dev/LMMS-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Cross-platform music production software (digital audio workstation)	lmms	Audio	N
+localsend	pkgforge-dev/localsend-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Share files to nearby devices	localsend	FileTransfer	N
+luanti	pkgforge-dev/Luanti-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open-source voxel game engine and platform for building games	luanti	Game	N
+lutris	pkgforge-dev/Lutris-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open source gaming platform	lutris	Game	N
+mame	pkgforge-dev/MAME-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Multiple Arcade Machine Emulator	mame	Emulator	N
+maniadrive	pkgforge-dev/ManiaDrive-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Arcade stunt car racing game with acrobatic tracks	maniadrive	Game	N
+mariokart64recomp	pkgforge-dev/MarioKart64Recomp-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Static recompilation of Nintendo 64's Mario Kart 64	mariokart64recomp	Game	N
+masterkey	pkgforge-dev/masterkey-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A GNOME/libadwaita password manager application	masterkey	Utility	N
+mate-calculator	pkgforge-dev/MATE-Calculator-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Calculator for MATE	mate-calculator	Calculator	N
+media-downloader	pkgforge-dev/Media-Downloader-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Qt GUI front end for yt-dlp, youtube-dl, aria2 and other downloaders	media-downloader	Network	N
+mednafen	pkgforge-dev/mednafen-appimage	.*(x86_64|amd64|64bit).*\.appimage	Multi-system emulator	mednafen	Emulator	N
+megaman64recomp	pkgforge-dev/MegaMan64Recomp-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Native PC port of Mega Man 64 via static recompilation of the N64 game	megaman64recomp	Game	N
+melonds	pkgforge-dev/melonDS-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Nintendo DS emulator focused on accuracy, features and portability	melonds	Emulator	N
+mesa	pkgforge-dev/MESA-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open source implementations of OpenGL, Vulkan and other graphics APIs	mesa	Graphics	N
+mgba	pkgforge-dev/mGBA-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	mGBA Game Boy Advance emulator	mgba	Emulator	N
+mini-vmac	pkgforge-dev/Mini-vMac-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Emulator of early Macintosh computers such as the Mac Plus and 128K	mini-vmac	Emulator	N
+mixxx	pkgforge-dev/Mixxx-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Free and open-source DJ mixing software for live performances	mixxx	Audio	N
+mousai	pkgforge-dev/Mousai-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Identify songs in seconds	mousai	Audio	N
+mpv	pkgforge-dev/mpv-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Free, open source, and cross-platform media player	mpv	AudioVideo	N
+myth-ii	pkgforge-dev/Myth-II-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Myth II: Soulblighter real-time tactics game with the Project Magma update	myth-ii	Game	N
+nblood	pkgforge-dev/NBlood-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Source port of Blood based on the EDuke32/Build engine	nblood	Game	N
+neko-project-ii-kai	pkgforge-dev/Neko-Project-II-Kai-AppImage	.*(x86_64|amd64|64bit).*\.appimage	NEC PC-9801 series emulator (Neko Project II Kai fork)	neko-project-ii-kai	Emulator	N
+neochat	pkgforge-dev/NeoChat-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A client for Matrix, the decentralized communication protocol	neochat	Network	N
+nestopia	pkgforge-dev/Nestopia-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Cross-platform NES/Famicom emulator with a GUI	nestopia	Emulator	N
+neverball	pkgforge-dev/Neverball-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Tilt the floor to roll a ball through obstacle courses before time runs out	neverball	Game	N
+newsflash	pkgforge-dev/NewsFlash-AppImage	.*(x86_64|amd64|64bit).*\.appimage	RSS reader	newsflash	Feed	N
+nfsiise	pkgforge-dev/NFSIISE-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Fork of the Need For Speed II SE cross-platform port with x86_64/arm64 support	nfsiise	Game	N
+nitrogen	pkgforge-dev/Nitrogen-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Background browser and setter for X11 windows	nitrogen	Utility	N
+nomacs	pkgforge-dev/Nomacs-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Lightweight, fast image viewer supporting many formats and RAW files	nomacs	Graphics	N
+nsz	pkgforge-dev/NSZ-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Nintendo Switch ROM compression tool	nsz	Archiving	N
+nugget-doom	pkgforge-dev/Nugget-Doom-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Doom source port forked from Woof! with additional features	nugget-doom	Game	N
+nxengine-evo	pkgforge-dev/NXEngine-evo-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Refactored and enhanced version of the NXEngine Cave Story game engine	nxengine-evo	Game	N
+obs-studio	pkgforge-dev/OBS-Studio-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Free and open source software for live streaming and screen recording	obs-studio	AudioVideoEditing	N
+obsidian	pkgforge-dev/Obsidian-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Powerful knowledge base and note-taking app on top of local Markdown files	obsidian	Office	N
+ocrmypdf	pkgforge-dev/OCRmyPDF-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Adds an OCR text layer to scanned PDF files, making them searchable	ocrmypdf	Utility	N
+octave	pkgforge-dev/GNU-Octave-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Scientific programming language for numerical computation	octave	Science	N
+odamex	pkgforge-dev/Odamex-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Online multiplayer Doom port focused on original gameplay with enhancements	odamex	Game	N
+okteta	pkgforge-dev/okteta-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Hex editor for KDE	okteta	Development	N
+omikuji	omikuji-launcher/omikuji	Omikuji-.*-anylinux-x86_64\.AppImage	Qt/QML based game launcher for Linux	omikuji	Game	N
+openboardview	pkgforge-dev/OpenBoardView-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Software for viewing .brd circuit board files	openboardview	Electronics	N
+openclaw	pkgforge-dev/OpenClaw-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Reimplementation of the Captain Claw (1997) platformer game	openclaw	Game	N
+opencode	pkgforge-dev/opencode-cli-AppImage	.*(x86_64|amd64|64bit).*\.appimage	AI coding agent built for the terminal	opencode	ConsoleOnly	Y
+opencode-desktop	pkgforge-dev/opencode-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	AI coding agent desktop client	opencode-desktop	Development	N
+opengothic	pkgforge-dev/OpenGothic-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open-source reimplementation of the Gothic 1/2 game engine	opengothic	Game	N
+openjazz	pkgforge-dev/OpenJazz-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Free reimplementation of the Jazz Jackrabbit platformer games	openjazz	Game	N
+openlara	pkgforge-dev/OpenLara-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Classic Tomb Raider open-source engine reimplementation	openlara	Game	N
+openloco	pkgforge-dev/OpenLoco-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open source re-implementation of Chris Sawyer's Locomotion	openloco	Game	N
+openmohaa	pkgforge-dev/OpenMoHAA-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open re-implementation of Medal of Honor: Allied Assault	openmohaa	Game	N
+openmsx	pkgforge-dev/openMSX-AppImage	.*(x86_64|amd64|64bit).*\.appimage	MSX home computer emulator that aims for perfection	openmsx	Emulator	N
+openra	pkgforge-dev/OpenRA-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Open source real-time strategy engine reimplementing classic Westwood RTS games	openra	Game	N
+openrct2	pkgforge-dev/OpenRCT2-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	An open source re-implementation of RollerCoaster Tycoon 2	openrct2	Game	N
+opensnitch	pkgforge-dev/OpenSnitch-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Interactive application firewall inspired by Little Snitch	opensnitch	Network	N
+openswe1r	pkgforge-dev/OpenSWE1R-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open-source port of the 1999 game Star Wars Episode 1: Racer	openswe1r	Game	N
+opentesarena	pkgforge-dev/OpenTESArena-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open-source re-implementation of The Elder Scrolls: Arena	opentesarena	Game	N
+openttd	pkgforge-dev/OpenTTD-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open source simulation game based upon Transport Tycoon Deluxe	openttd	Game	N
+opentyrian2000	pkgforge-dev/OpenTyrian2000-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open-source port of the DOS shoot-em-up Tyrian 2000	opentyrian2000	Game	N
+openxray	pkgforge-dev/OpenXRay-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Improved version of the X-Ray Engine from the S.T.A.L.K.E.R. game series	openxray	Game	N
+optiimage	pkgforge-dev/OptiImage-AppImage	.*(x86_64|amd64|64bit).*\.appimage	An image compressor that supports PNG, JPEG, WebP and SVG file types	optiimage	Graphics	N
+orcaslicer	pkgforge-dev/OrcaSlicer-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Open source slicer for FDM 3D printers, forked from Bambu Studio	orcaslicer	3DGraphics	N
+oversteer	pkgforge-dev/Oversteer-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Steering wheel configuration tool	oversteer	Game	N
+oxicord	pkgforge-dev/oxicord-appimage	.*(x86_64|amd64|64bit).*\.appimage	Vim-native Discord TUI for terminal enthusiasts	oxicord	Chat	N
+parabolic	pkgforge-dev/Parabolic-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Download web video and audio	parabolic	Network	N
+pattypan	pkgforge-dev/Pattypan-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Bulk upload tool for Wikimedia Commons	pattypan	Utility	N
+pavucontrol-qt	pkgforge-dev/pavucontrol-qt-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Qt port of volume control pavucontrol for PulseAudio	pavucontrol-qt	Audio	N
+pcexhumed	pkgforge-dev/PCExhumed-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Source port of PowerSlave/Exhumed built on EDuke32 Build engine technology	pcexhumed	Game	N
+pcsx-redux	pkgforge-dev/PCSX-Redux-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	PlayStation 1 emulator and debugger focused on development	pcsx-redux	Emulator	N
+pcsx2	pkgforge-dev/PCSX2-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Free and open-source PlayStation 2 emulator	pcsx2	Emulator	N
+pdf-arranger	pkgforge-dev/PDF-Arranger-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Small application to merge, split, rotate, crop and rearrange PDF pages	pdf-arranger	Office	N
+pdf-tricks	pkgforge-dev/PDF-Tricks-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Simple app for small manipulations in PDF files (split, merge, compress)	pdf-tricks	Office	N
+perfect-dark	pkgforge-dev/Perfect-Dark-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Work in progress port of the N64 game Perfect Dark to modern platforms	perfect-dark	Game	N
+phantom-satellite	pkgforge-dev/Phantom-Satellite-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Pale Moon fork supporting older and niche platforms without dropping modern ones	phantom-satellite	Network	N
+phoenix-x-server	pkgforge-dev/phoenix-x-server-AppImage	.*(x86_64|amd64|64bit).*\.appimage	X Server for Android	phoenix-x-server	System	N
+piglit	pkgforge-dev/Piglit-AppImage	.*(x86_64|amd64|64bit).*\.appimage	OpenGL, Vulkan and OpenCL implementation test suite and test-suite runner	piglit	Development	N
+pinta	pkgforge-dev/Pinta-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Simple drawing and image editing program	pinta	Graphics	N
+pixelpulse2	pkgforge-dev/Pixelpulse2-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Oscilloscope and logic analyzer application	pixelpulse2	Electronics	N
+planify	pkgforge-dev/Planify-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Task manager and to-do app for elementary OS and GNOME	planify	Office	N
+play	pkgforge-dev/Play-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Play! is a PlayStation 2 emulator for multiple platforms	play	Emulator	N
+playerctl	pkgforge-dev/playerctl-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Command-line utility for controlling media players	playerctl	Audio	N
+plus42	pkgforge-dev/Plus42-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Scientific programmable calculator, an enhanced HP-42S simulator	plus42	Calculator	N
+pokemmo	pkgforge-dev/PokeMMO-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Free MMO client for Pokemon games with online multiplayer and trading	pokemmo	Game	N
+polybar	pkgforge-dev/polybar-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Fast and easy-to-use status bar	polybar	System	N
+postal	pkgforge-dev/POSTAL-AppImage	.*(x86_64|amd64|64bit).*\.appimage	POSTAL (1997), the classic isometric shooter by Running With Scissors	postal	Game	N
+powermanga	pkgforge-dev/Powermanga-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Arcade vertical shoot 'em up with many weapons and power-ups	powermanga	Game	N
+prey2006	pkgforge-dev/Prey2006-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Prey 2006 SDK integrated with the Doom 3 GPL engine release	prey2006	Game	N
+primehack	pkgforge-dev/PrimeHack-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Dolphin fork giving Metroid Prime Trilogy mouselook and FPS controls	primehack	Emulator	N
+prismlauncher	pkgforge-dev/PrismLauncher-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	A custom Minecraft launcher to easily manage multiple Minecraft installations	prismlauncher	Game	N
+protontricks	pkgforge-dev/Protontricks-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Wrapper for running Winetricks commands for Proton-enabled games	protontricks	Utility	N
+prusaslicer	pkgforge-dev/PrusaSlicer-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Slicer that turns 3D models into G-code for 3D printers	prusaslicer	3DGraphics	N
+ptyxis	pkgforge-dev/Ptyxis-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Terminal for a container-oriented desktop	ptyxis	System	N
+puddletag	pkgforge-dev/puddletag-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Audio tag editor	puddletag	Audio	N
+pyglossary	pkgforge-dev/PyGlossary-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Tool for converting dictionary files and glossaries between various formats	pyglossary	Utility	N
+qarma	pkgforge-dev/qarma-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Qt-based clone of zenity for creating GUI dialog boxes	qarma	Utility	N
+qelectrotech	pkgforge-dev/QElectroTech-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Electric diagram editor	qelectrotech	Electronics	N
+qemu	pkgforge-dev/QEMU-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Generic and open source machine emulator and virtualizer	qemu	Emulator	N
+qimgv	pkgforge-dev/Qimgv-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Image viewer	qimgv	Graphics	N
+qmmp	pkgforge-dev/Qmmp-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Qt-based multimedia audio player with a Winamp/XMMS-style skinnable interface	qmmp	Audio	N
+qmplay2	pkgforge-dev/QMPlay2-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Qt-based media player, streamer and downloader supporting many formats	qmplay2	AudioVideo	N
+qownnotes	pkgforge-dev/QOwnNotes-AppImage	QOwnNotes-\.*-anylinux-(x86_64|amd64|64bit)\.AppImage	Plain-text file markdown note taking with Nextcloud/ownCloud integration	qownnotes	TextEditor	N
+qtcreator	pkgforge-dev/QtCreator-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Cross-platform C++/QML IDE for Qt application development	qtcreator	Development	N
+qterminal	pkgforge-dev/QTerminal-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Lightweight Qt-based terminal emulator for the LXQt desktop environment	qterminal	System	N
+quantumlauncher	pkgforge-dev/QuantumLauncher-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	A simple, powerful Minecraft launcher written in Rust	quantumlauncher	Game	N
+quickshell	pkgforge-dev/Quickshell-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Flexible QtQuick based desktop shell toolkit	quickshell	System	N
+raptor	pkgforge-dev/Raptor-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Source port of the classic vertical shooter Raptor: Call of the Shadows	raptor	Game	N
+readest	pkgforge-dev/Readest-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Modern, feature-rich ebook reader for avid readers	readest	Office	N
+reco	pkgforge-dev/Reco-AppImage	.*(x86_64|amd64|64bit).*\.appimage	An audio recorder focused on being concise and simple to use	reco	Audio	N
+rednukem	pkgforge-dev/Rednukem-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Source port for Duke Nukem 3D, Redneck Rampage and NAM (Build engine)	rednukem	Game	N
+redriver2	pkgforge-dev/REDRIVER2-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Reverse-engineered port of the PSX game Driver 2	redriver2	Game	N
+rewaita	pkgforge-dev/Rewaita-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Recolor GTK4/LibAdwaita apps to popular color schemes	rewaita	Settings	N
+rigelengine	pkgforge-dev/RigelEngine-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A modern re-implementation of the classic DOS game Duke Nukem II	rigelengine	Game	N
+rigs-of-rods	pkgforge-dev/Rigs-of-Rods-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open-source soft-body physics vehicle simulator	rigs-of-rods	Game	N
+riseup-vpn	pkgforge-dev/Riseup-VPN-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Easy, fast, and secure VPN client from riseup.net, based on LEAP/Bitmask	riseup-vpn	Network	N
+ristretto	pkgforge-dev/Ristretto-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Fast and lightweight image viewer for the Xfce desktop	ristretto	Graphics	N
+rmg	pkgforge-dev/RMG-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Rosalie's Mupen GUI - N64 emulator frontend	rmg	Emulator	N
+rnote	pkgforge-dev/Rnote-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Sketch and take handwritten notes	rnote	Graphics	N
+rocksndiamonds	pkgforge-dev/RocksnDiamonds-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Arcade puzzle game inspired by Boulder Dash, Emerald Mine, and Sokoban	rocksndiamonds	Game	N
+rofi	pkgforge-dev/rofi-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Window switcher, run dialog and dmenu replacement	rofi	System	N
+roller	pkgforge-dev/ROLLER-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Reverse-engineered reimplementation of the 1995 racing game Whiplash/Fatal Racing	roller	Game	N
+rquickshare	pkgforge-dev/rquickshare-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Rust implementation of NearbyShare/QuickShare from Android for Linux	rquickshare	FileTransfer	N
+rsdkv3	pkgforge-dev/RSDKv3-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Decompilation of the Retro Engine (RSDKv3), playable Sonic CD (2011)	rsdkv3	Game	N
+rsdkv4	pkgforge-dev/RSDKv4-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Decompilation of Sonic 1 & Sonic 2 (2013) and the Retro Engine (v4)	rsdkv4	Game	N
+ruffle	pkgforge-dev/Ruffle-AppImage	.*(x86_64|amd64|64bit).*\.appimage	An Adobe Flash Player emulator written in Rust	ruffle	Emulator	N
+rustdesk	pkgforge-dev/RustDesk-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Open-source remote desktop, a self-hosted alternative to TeamViewer	rustdesk	Network	N
+rvgl	pkgforge-dev/RVGL-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A modern port of the classic 1999 R/C car racing game Re-Volt	rvgl	Game	N
+sacdextractgui	pkgforge-dev/SACDExtractGUI-AppImage	.*(x86_64|amd64|64bit).*\.appimage	GUI for sacd_extract to extract audio from SACD ISO images	sacdextractgui	Audio	N
+sameboy	pkgforge-dev/SameBoy-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Accurate Game Boy and Game Boy Color emulator written in C	sameboy	Emulator	N
+sanicball	pkgforge-dev/Sanicball-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Extraordinarily fast Sonic-themed ball racing game made in Unity	sanicball	Game	N
+satty	pkgforge-dev/Satty-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Modern screenshot annotation tool built on GTK	satty	Graphics	N
+sayonara-player	pkgforge-dev/Sayonara-Player-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Small, fast and clean Qt audio player for Linux using GStreamer	sayonara-player	Audio	N
+scrcpy	pkgforge-dev/scrcpy-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Display and control Android devices	scrcpy	Network	N
+scummvm	pkgforge-dev/ScummVM-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Interpreter to run classic point-and-click adventure and RPG games	scummvm	Game	N
+sdlpop	pkgforge-dev/SDLPoP-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open-source port of the classic Prince of Persia game	sdlpop	Game	N
+secrets	pkgforge-dev/Secrets-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Manage your passwords	secrets	Security	N
+servo	pkgforge-dev/servo-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Parallel browser engine	servo	Network	N
+sheepshaver	pkgforge-dev/SheepShaver-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open source PowerPC Macintosh (SheepShaver) emulator	sheepshaver	Emulator	N
+shiru	pkgforge-dev/Shiru-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A personal anime library manager for watching and tracking your collection in real time	shiru	AudioVideo	N
+shockolate	pkgforge-dev/Shockolate-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Minimalist cross-platform System Shock source port	shockolate	Game	N
+shotwell	pkgforge-dev/Shotwell-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Photo manager and organizer for the GNOME desktop	shotwell	Graphics	N
+signal-desktop	pkgforge-dev/Signal-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Private, simple, and secure messenger	signal-desktop	Chat	N
+simitone	pkgforge-dev/Simitone-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Community re-implementation of The Sims 1, based on the FreeSO engine	simitone	Game	N
+simplex-chat	pkgforge-dev/SimpleX-Chat-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Private messaging network operating without any user identifiers	simplex-chat	Network	N
+simutrans	pkgforge-dev/Simutrans-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open-source transportation simulation game	simutrans	Game	N
+sirikali	pkgforge-dev/SiriKali-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Qt GUI front end to sshfs, cryfs, gocryptfs, securefs, fscrypt and encfs	sirikali	Utility	N
+skyemu	pkgforge-dev/SkyEmu-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Game Boy Advance, Game Boy, Game Boy Color, and Nintendo DS emulator	skyemu	Emulator	N
+slack	pkgforge-dev/Slack-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Team messaging and collaboration app for channels, chat, and file sharing	slack	Network	N
+snes9x	pkgforge-dev/Snes9x-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Portable Super Nintendo Entertainment System (SNES) emulator	snes9x	Emulator	N
+soh	pkgforge-dev/soh-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Ship of Harkinian: a PC port of The Legend of Zelda: Ocarina of Time	soh	Game	N
+solaar	pkgforge-dev/Solaar-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Linux device manager for Logitech devices (Unifying receivers, mice, keyboards)	solaar	Utility	N
+songrec	pkgforge-dev/SongRec-AppImage	.*(x86_64|amd64|64bit).*\.appimage	An open-source Shazam client for Linux, written in Rust	songrec	Audio	N
+sonic-3-air	pkgforge-dev/Sonic-3-AIR-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Fan-made widescreen remaster of Sonic 3 & Knuckles built on the Oxygen Engine	sonic-3-air	Game	N
+sound-space-plus	pkgforge-dev/sound-space-plus-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Rhythm game	sound-space-plus	Game	N
+spacecadetpinball	pkgforge-dev/spacecadetpinball-AppImage	.*(x86_64|amd64|64bit).*\.appimage	3D Pinball for Windows - Space Cadet	spacecadetpinball	ArcadeGame	N
+spaghettikart	pkgforge-dev/SpaghettiKart-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Native PC port of Mario Kart 64	spaghettikart	Game	N
+speedcrunch	pkgforge-dev/SpeedCrunch-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Fast and precise calculator	speedcrunch	Calculator	N
+spek	pkgforge-dev/Spek-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Acoustic spectrum analyser	spek	Audio	N
+srb2	pkgforge-dev/SRB2-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A 3D Sonic the Hedgehog fan game based off of the Doom Legacy engine	srb2	Game	N
+srb2kart	pkgforge-dev/SRB2Kart-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Kart racing game based on the 3D Sonic fangame Sonic Robo Blast 2	srb2kart	Game	N
+st	pkgforge-dev/st-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Simple terminal	st	System	N
+starfox64recomp	pkgforge-dev/Starfox64Recomp-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Static recompilation of the Nintendo 64 game Star Fox 64	starfox64recomp	Game	N
+stella	pkgforge-dev/Stella-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A multi-platform Atari 2600 VCS emulator	stella	Emulator	N
+stirling-pdf	pkgforge-dev/Stirling-PDF-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Locally hosted web application for PDF manipulation	stirling-pdf	Office	N
+stoat	pkgforge-dev/Stoat-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Desktop client for Stoat, an open-source user-first chat platform	stoat	Network	N
+strawberry	pkgforge-dev/strawberry-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Music player and music collection organizer	strawberry	Audio	N
+streamlink	pkgforge-dev/Streamlink-AppImage	.*(x86_64|amd64|64bit).*\.appimage	CLI utility that pipes video streams from various services into a video player	streamlink	AudioVideo	N
+super-zsnes	pkgforge-dev/SUPER-ZSNES-AppImage	.*(x86_64|amd64|64bit).*\.appimage	GPU-powered SNES emulator with hi-res Mode 7 and per-game enhancements	super-zsnes	Emulator	N
+supermariowar	pkgforge-dev/Supermariowar-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A fan-made multiplayer Super Mario Bros. style deathmatch game	supermariowar	Game	N
+supermodel	pkgforge-dev/Supermodel-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Official Sega Model 3 arcade machine emulator	supermodel	Emulator	N
+supertux	pkgforge-dev/SuperTux-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Classic 2D jump'n'run sidescroller game featuring Tux	supertux	Game	N
+supertuxkart	pkgforge-dev/SuperTuxKart-AppImage-Enhanced	.*(x86_64|amd64|64bit)\.appimage	Kart racing game featuring Tux and his friends	supertuxkart	Game	N
+sview	pkgforge-dev/sView-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Media player for 3D/2D content	sview	AudioVideo	N
+swiftynotes	pkgforge-dev/swiftynotes-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Native GTK markdown notes for Linux and macOS, written in Swift	swiftynotes	Utility	N
+system-monitoring-center	pkgforge-dev/system-monitoring-center-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Multi-featured system monitor	system-monitoring-center	Monitor	N
+tachoparser	pkgforge-dev/tachoparser-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Parser for tachograph files, supporting VU and driver card data	tachoparser	Utility	N
+tagger	pkgforge-dev/Tagger-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Music tag editor	tagger	Audio	N
+taisei-project	pkgforge-dev/Taisei-Project-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A free and open-source Touhou Project fangame (shoot-em-up)	taisei-project	Game	N
+taradino	pkgforge-dev/Taradino-AppImage	.*(x86_64|amd64|64bit).*\.appimage	SDL2 port of Rise of the Triad	taradino	Game	N
+tauon	pkgforge-dev/Tauon-AppImage	.*(x86_64|amd64|64bit).*\.appimage	The music player of today, a sleek and modern desktop audio player	tauon	Audio	N
+telegram-desktop	pkgforge-dev/Telegram-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Telegram Desktop messaging app	telegram-desktop	Network	N
+themix-gui	pkgforge-dev/Themix-GUI-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Theme designer for GTK, Qt and icon themes	themix-gui	Settings	N
+tokodon	pkgforge-dev/Tokodon-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Mastodon client for Plasma and Plasma Mobile	tokodon	Network	N
+torzu	pkgforge-dev/Torzu-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Nintendo Switch emulator	torzu	Emulator	N
+touchhle	pkgforge-dev/TouchHLE-AppImage	.*(x86_64|amd64|64bit).*\.appimage	High-level iOS emulator	touchhle	Emulator	N
+transmission-qt	pkgforge-dev/transmission-qt-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Fast, easy, and free BitTorrent client (Qt interface)	transmission-qt	FileTransfer	N
+trelby	pkgforge-dev/Trelby-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Free, multiplatform, feature-rich screenwriting program	trelby	Office	N
+tutanota-desktop	pkgforge-dev/Tutanota-Desktop-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Secure email client	tutanota-desktop	Email	N
+tux-football	pkgforge-dev/Tux-Football-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Arcade-style 2D soccer game featuring Tux	tux-football	Game	N
+tuxpuck	pkgforge-dev/Tuxpuck-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Air hockey game and Shufflepuck Cafe clone featuring Tux	tuxpuck	Game	N
+uad-ng	pkgforge-dev/uad-ng-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Universal Android Debloater Next Generation	uad-ng	System	N
+unityhub	pkgforge-dev/UnityHub-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Manage Unity editor installations and projects with Unity Hub	unityhub	Development	N
+unleashedrecomp	pkgforge-dev/UnleashedRecomp-AppImage	.*(x86_64|amd64|64bit).*\.appimage	An unofficial PC port of the Xbox 360 version of Sonic Unleashed	unleashedrecomp	ActionGame	N
+varia	pkgforge-dev/Varia-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Download manager	varia	Network	N
+vcmi	pkgforge-dev/vcmi-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open-source engine for Heroes of Might and Magic III	vcmi	Game	N
+veracrypt	pkgforge-dev/VeraCrypt-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Disk encryption software	veracrypt	Security	N
+vibeprint-studio	pkgforge-dev/Vibeprint-Studio-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Automatically layout and print images in an ICC-aware environment	vibeprint-studio	Graphics	N
+viber	pkgforge-dev/Viber-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Free calls and messages	viber	InstantMessaging	N
+vice	pkgforge-dev/VICE-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Versatile Commodore Emulator for C64, C128, VIC20, PET and more	vice	Emulator	N
+video-trimmer	pkgforge-dev/Video-Trimmer-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Cut out fragments of video without re-encoding	video-trimmer	AudioVideo	N
+virt-manager	pkgforge-dev/virt-manager-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Virtual machine manager	virt-manager	Emulator	N
+visual-studio-code	pkgforge-dev/Visual-Studio-Code-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Code editor with debugging, Git control and extensions by Microsoft	visual-studio-code	Development	N
+visualboyadvance-m	pkgforge-dev/VisualBoyAdvance-M-AppImage	.*(x86_64|amd64|64bit).*\.appimage	The continuing development of the legendary VBA Game Boy Advance emulator	visualboyadvance-m	Emulator	N
+vita3k	pkgforge-dev/Vita3K-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Experimental PlayStation Vita emulator	vita3k	Emulator	N
+vokoscreenng	pkgforge-dev/vokoscreenNG-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Powerful screencast creator to record the screen, an area or a window	vokoscreenng	AudioVideo	N
+vypresschat	pkgforge-dev/VypressChat-AppImage	.*(x86_64|amd64|64bit).*\.appimage	LAN instant messenger for office and home networks	vypresschat	Network	N
+warp	pkgforge-dev/Warp-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Fast and secure file transfer	warp	FileTransfer	N
+webamp-desktop	pkgforge-dev/Webamp-Desktop-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Desktop build of the Winamp 2.9 reimplementation Webamp	webamp-desktop	Audio	N
+webcamoid	pkgforge-dev/Webcamoid-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Webcam suite	webcamoid	AudioVideo	N
+webcord	pkgforge-dev/WebCord-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	A Discord and SpaceBar Electron-based client implemented without the Discord API	webcord	Network	N
+whatsdesk	pkgforge-dev/WhatsDesk-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Unofficial WhatsApp desktop client built with Electron	whatsdesk	Network	N
+whatsie	pkgforge-dev/WhatSie-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Fast lightweight WhatsApp client based on Qt WebEngine	whatsie	Network	N
+winboat	pkgforge-dev/WinBoat-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Run Windows apps on Linux with seamless integration	winboat	System	N
+wine	pkgforge-dev/wine-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Compatibility layer to run Windows applications on POSIX systems	wine	System	N
+wipeout-rewrite	pkgforge-dev/wipEout-Rewrite-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A re-implementation of the 1995 PSX game wipEout	wipeout-rewrite	Game	N
+xclock	pkgforge-dev/xclock-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Classic X11 analog and digital clock application from X.Org	xclock	Utility	N
+xemu	pkgforge-dev/xemu-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Original Xbox emulator for Windows, macOS, and Linux	xemu	Emulator	N
+xenia-canary	pkgforge-dev/xenia-canary-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Xbox 360 emulator (canary build)	xenia-canary	Emulator	N
+xeyes	pkgforge-dev/xeyes-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Classic X11 demo with googly eyes that follow the mouse cursor	xeyes	Amusement	N
+xiphos	pkgforge-dev/Xiphos-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Bible study tool using SWORD modules for reading, study, and research	xiphos	Education	N
+xoreos	pkgforge-dev/xoreos-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A reimplementation of BioWare's Aurora engine (NWN, KotOR, etc.)	xoreos	Game	N
+xournalpp	pkgforge-dev/xournalpp-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Handwriting notetaking software with PDF annotation support	xournalpp	Office	N
+xsnow	pkgforge-dev/Xsnow-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Let it snow, with Santa and trees, on your desktop	xsnow	Amusement	N
+yamagi-quake-ii	pkgforge-dev/Yamagi-Quake-II-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Enhanced Quake II source port with modern features and bug fixes	yamagi-quake-ii	Game	N
+ymir	pkgforge-dev/Ymir-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Sega Saturn emulator	ymir	Emulator	N
+yt-dlp	pkgforge-dev/yt-dlp-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A feature-rich command-line audio/video downloader	yt-dlp	AudioVideo	N
+zapzap	pkgforge-dev/ZapZap-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	WhatsApp desktop application written in PyQt6 + PyQt6-WebEngine	zapzap	Network	N
+zed	pkgforge-dev/Zed-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A high-performance, multiplayer code editor from the creators of Atom and Tree-sitter	zed	Development	N
+zelda64recomp	pkgforge-dev/Zelda64Recomp-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Static recompilation of The Legend of Zelda: Majora's Mask to run natively on PC	zelda64recomp	Game	N
+zen-browser	pkgforge-dev/Zen-Browser-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	A Firefox-based browser focused on privacy and a calm browsing experience	zen-browser	Network	N
+zenity-gtk3	pkgforge-dev/Zenity-GTK3-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Display graphical dialog boxes from shell scripts (GTK3 version)	zenity-gtk3	Development	N
+zod-engine	pkgforge-dev/Zod-Engine-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open source remake of the 1996 strategy game Z	zod-engine	Game	N
+zsnes	pkgforge-dev/ZSNES-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A maintained fork of ZSNES, a Super Nintendo (SNES) emulator	zsnes	Emulator	N
