@@ -3,7 +3,7 @@
 
 set -e
 
-OUTPUT_FILE="packages.tsv"
+OUTPUT_FILE=${MOSS_OUTPUT_FILE:-"packages.tsv"}
 
 # Determinar qué aplicaciones indexar
 INTERACTIVE=0
@@ -166,8 +166,11 @@ process_meta_file() {
     done < "$_pm_file"
 }
 
-process_meta_file "meta/tar.list" "tar"
-process_meta_file "meta/appimages.list" "appimage"
+BUILD_TAR=${BUILD_TAR:-1}
+BUILD_APPIMAGE=${BUILD_APPIMAGE:-1}
+
+[ "$BUILD_TAR" -eq 1 ] && process_meta_file "meta/tar.list" "tar"
+[ "$BUILD_APPIMAGE" -eq 1 ] && process_meta_file "meta/appimages.list" "appimage"
 
 [ -f "${OUTPUT_FILE}.bak" ] && rm -f "${OUTPUT_FILE}.bak"
 

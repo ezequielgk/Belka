@@ -2,11 +2,11 @@ name: Actualizar Índice de Paquetes
 
 on:
   schedule:
-    - cron: '0 3 * * 0' # Todos los domingos a las 03:00 AM UTC
-  workflow_dispatch:    # Permite ejecución manual desde la pestaña Actions
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
     inputs:
       apps_to_index:
-        description: 'Apps a actualizar (separadas por espacio, ej: "moss jq"). Deja en "ALL" para todas.'
+        description: 'Apps a actualizar (separadas por espacio). Deja en "ALL" para todas.'
         required: false
         default: 'ALL'
 
@@ -14,41 +14,88 @@ permissions:
   contents: write
 
 jobs:
-  build-and-push:
+  update-lists:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout del repositorio
-        uses: actions/checkout@v4
-
-
+      - uses: actions/checkout@v4
       - name: Auto-importar nuevos paquetes
         run: |
           if [ -s meta/next.list ]; then
             python3 scripts/add-app.py
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add meta/tar.list meta/appimages.list meta/next.list
+            if ! git diff --staged --quiet; then
+              git commit -m "chore: auto-importar nuevos paquetes desde next.list 🤖"
+              git push
+            fi
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Ejecutar script indexador
+  build-tar:
+    needs: update-lists
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Construir Tarballs
         run: |
           APPS="${{ github.event.inputs.apps_to_index }}"
-          if [ -z "$APPS" ]; then
-            APPS="ALL"
-          fi
-          ./scripts/build-repo.sh $APPS
+          [ -z "$APPS" ] && APPS="ALL"
+          MOSS_OUTPUT_FILE="packages_tar.tsv" BUILD_APPIMAGE=0 ./scripts/build-repo.sh $APPS
         env:
-          # Para evitar Rate Limits si se consulta mucho la API sin autenticación
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tsv-tar
+          path: packages_tar.tsv
 
-      - name: Commit y push de los cambios en packages.tsv
+  build-appimage:
+    needs: update-lists
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Construir AppImages
         run: |
+          APPS="${{ github.event.inputs.apps_to_index }}"
+          [ -z "$APPS" ] && APPS="ALL"
+          MOSS_OUTPUT_FILE="packages_appimage.tsv" BUILD_TAR=0 ./scripts/build-repo.sh $APPS
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tsv-appimage
+          path: packages_appimage.tsv
+
+  merge-and-push:
+    needs: [build-tar, build-appimage]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/download-artifact@v4
+        with:
+          name: tsv-tar
+      - uses: actions/download-artifact@v4
+        with:
+          name: tsv-appimage
+      - name: Fusionar y hacer Push
+        run: |
+          printf '# nombre\tversion\turl\tsha256\tdescripcion\texec\tcategoria\tterminal\ttipo\n' > packages.tsv
+          grep -v "^#" packages_tar.tsv >> packages.tsv || true
+          grep -v "^#" packages_appimage.tsv >> packages.tsv || true
+          
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add packages.tsv meta/tar.list meta/appimages.list meta/next.list
+          git add packages.tsv
           
-          # Verifica silenciosamente si hubo algún cambio real en el archivo
           if ! git diff --staged --quiet; then
-            git commit -m "chore: actualizar índice de paquetes automático 🤖"
+            git commit -m "chore: actualizar índice de paquetes automático (parallelized) 🤖"
             git pull --rebase origin main
             git push
           else
