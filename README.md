@@ -12,37 +12,21 @@ Opcionales: `gpg` (verificación de firmas), `mktemp` (incluye un fallback nativ
 
 ## Instalación
 
-Moss sigue un enfoque de "cero instalación" (estilo `nvm` o `oh-my-zsh`). Al basarse en componentes nativos, basta con clonar el repositorio y enlazar el ejecutable. Esto permite que las actualizaciones futuras sean instantáneas.
+Moss cuenta con un script de instalación rápida (bootstrap) que descarga la última versión, la instala en un entorno aislado y configura automáticamente tu `PATH` para bash, zsh o fish.
 
-**Prerrequisitos:** Debes tener `git` instalado en tu sistema.
-
-Copia y pega el siguiente bloque en tu terminal:
+Ejecuta el siguiente comando en tu terminal:
 
 ```bash
-# 1. Clonar el repositorio en tu espacio local
-git clone https://github.com/ezequielgk/Moss.git ~/.local/opt/moss
-
-# 2. Asegurar que exista el directorio de binarios locales
-mkdir -p ~/.local/bin
-
-# 3. Crear el enlace simbólico del ejecutable
-ln -s ~/.local/opt/moss/bin/moss ~/.local/bin/moss
+curl -sL https://raw.githubusercontent.com/ezequielgk/Moss/main/install.sh | bash
 ```
 
 **Configuración del PATH:**
-Asegúrate de que `~/.local/bin` esté incluido en la variable de entorno `$PATH` de tu shell. Si no lo está, añade la siguiente línea a tu archivo `~/.bashrc` o `~/.zshrc`:
-```bash
-export PATH="$HOME/.local/bin:$PATH"
-```
+El instalador añadirá automáticamente la ruta segura `~/.local/moss/bin` a tu configuración de terminal (ej. `~/.bashrc`, `~/.zshrc`, o `~/.config/fish/config.fish`). Una vez instalado, asegúrate de **reiniciar tu terminal** o ejecutar el comando `source` que te indicará el instalador al finalizar.
 
 ### Actualización de Moss
-Gracias a este método de instalación directo desde la fuente, actualizar tu gestor de paquetes a la última versión es tan simple como descargar los últimos cambios de git:
+Debido a que `moss` se administra a sí mismo como si fuera cualquier otro paquete, actualizar el gestor a la ultimísima versión es tan simple como hacer:
 ```bash
-cd ~/.local/opt/moss && git pull
-```
-Para que tu terminal encuentre las apps instaladas por Moss directamente por su nombre, debes asegurarte de agregar este directorio seguro a tu archivo `~/.bashrc` o `~/.zshrc`:
-```bash
-export PATH="$HOME/.local/moss/bin:$PATH"
+moss upgrade
 ```
 ## Arquitectura de Instalación y Sandboxing
 
