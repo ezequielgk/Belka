@@ -157,3 +157,4 @@ hyperfine	sharkdp/hyperfine	hyperfine-v.*-(x86_64|amd64|64bit)-unknown-linux-mus
 kotofetch	hxpe-dev/kotofetch	kotofetch-v.*x86_64.*linux.*\.tar\.gz	A simple and fast system fetch tool	kotofetch	ConsoleOnly	Y
 umbrella-fetch	ezequielgk/Umbrella-Fetch	umbrella-fetch-v.*x86_64.*linux.*\.tar\.gz	System fetch tool themed around Resident Evil	umbrella-fetch	ConsoleOnly	Y
 pfetch	dylanaraps/pfetch	TARBALL	A pretty system information tool written in POSIX sh	pfetch	ConsoleOnly	Y
+legcord	Legcord/Legcord	Legcord-.*-linux-x64\.tar\.gz	A lightweight, customizable Discord client	legcord	Network	N
