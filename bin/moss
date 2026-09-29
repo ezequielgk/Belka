@@ -461,9 +461,34 @@ moss_index_load() {
 # Retorna:
 #   0 y puebla variables globales si lo encuentra, 1 si no
 moss_index_lookup() {
-    _moss_l_line=$(awk -F "$MOSS_TAB" -v n="$1" \
-        '$1 !~ /^#/ && $1 == n { print; exit }' "$_moss_index_file")
-    [ -n "$_moss_l_line" ] || return 1
+    _moss_l_lines=$(awk -F "$MOSS_TAB" -v n="$1" '$1 !~ /^#/ && $1 == n { print }' "$_moss_index_file")
+    [ -n "$_moss_l_lines" ] || return 1
+
+    _moss_l_count=$(printf '%s\n' "$_moss_l_lines" | wc -l | tr -dc '0-9')
+    _moss_l_line=$(printf '%s\n' "$_moss_l_lines" | head -n 1)
+    
+    if [ "$_moss_l_count" -gt 1 ]; then
+        if [ "$MOSS_ASSUME_YES" -eq 0 ] && [ -t 0 ]; then
+            printf "Múltiples formatos encontrados para '%s':\n" "$1" >&2
+            _moss_i=1
+            while IFS= read -r _line; do
+                _t=$(printf '%s\n' "$_line" | awk -F'\t' '{print $9}')
+                [ -z "$_t" ] && _t="tar"
+                printf "  %d) %s\n" "$_moss_i" "$_t" >&2
+                _moss_i=$((_moss_i + 1))
+            done << EOF
+$_moss_l_lines
+EOF
+            printf "Selecciona una opción [1]: " >&2
+            read -r _moss_ans </dev/tty || _moss_ans=1
+            [ -z "$_moss_ans" ] && _moss_ans=1
+            _moss_l_line=$(printf '%s\n' "$_moss_l_lines" | sed -n "${_moss_ans}p")
+            [ -z "$_moss_l_line" ] && _moss_l_line=$(printf '%s\n' "$_moss_l_lines" | head -n 1)
+        else
+            moss_log WARN "Multiples formatos de $1 encontrados; auto-seleccionando el primero (modo no interactivo)"
+        fi
+    fi
+
     MOSS_L_VERSION='' MOSS_L_URL='' MOSS_L_SHA='' MOSS_L_DESC='' MOSS_L_EXEC='' MOSS_L_SIG='' MOSS_L_CAT='' MOSS_L_TERM='' MOSS_L_TYPE=''
     IFS=$MOSS_TAB read -r _moss_l_name MOSS_L_VERSION MOSS_L_URL MOSS_L_SHA MOSS_L_DESC MOSS_L_EXEC MOSS_L_CAT MOSS_L_TERM MOSS_L_TYPE << EOF
 $_moss_l_line
@@ -992,7 +1017,7 @@ moss_resolve_pkg() {
         _moss_res_base=$(basename "$1")
         MOSS_R_NAME=$(printf '%s' "$_moss_res_base" | sed \
             's/\.tar\.gz$//; s/\.tar\.xz$//; s/\.tar\.bz2$//; s/\.tar\.zst$//;
-             s/\.tgz$//; s/\.txz$//; s/\.tbz2$//')
+             s/\.tgz$//; s/\.txz$//; s/\.tbz2$//; s/\.AppImage$//i; s/\.zip$//i')
         [ -n "$MOSS_R_NAME" ] || MOSS_R_NAME=$_moss_res_base
         MOSS_R_VERSION=local
         MOSS_R_URL=$1
@@ -1001,6 +1026,10 @@ moss_resolve_pkg() {
         MOSS_R_EXEC=''
         MOSS_R_CAT='Utility'
         MOSS_R_TERM='N'
+        MOSS_R_TYPE='tar'
+        case "$1" in
+            *.AppImage|*.appimage) MOSS_R_TYPE='appimage' ;;
+        esac
         MOSS_R_LOCAL=$1
         return 0
     fi
@@ -1009,7 +1038,7 @@ moss_resolve_pkg() {
             _moss_res_base=$(basename "$1")
             MOSS_R_NAME=$(printf '%s' "$_moss_res_base" | sed \
                 's/\.tar\.gz$//; s/\.tar\.xz$//; s/\.tar\.bz2$//; s/\.tar\.zst$//;
-                 s/\.tgz$//; s/\.txz$//; s/\.tbz2$//')
+                 s/\.tgz$//; s/\.txz$//; s/\.tbz2$//; s/\.AppImage$//i; s/\.zip$//i')
             [ -n "$MOSS_R_NAME" ] || MOSS_R_NAME=$_moss_res_base
             MOSS_R_VERSION=direct
             MOSS_R_URL=$1
@@ -1018,6 +1047,10 @@ moss_resolve_pkg() {
             MOSS_R_EXEC=''
             MOSS_R_CAT='Utility'
             MOSS_R_TERM='N'
+            MOSS_R_TYPE='tar'
+            case "$1" in
+                *.AppImage|*.appimage) MOSS_R_TYPE='appimage' ;;
+            esac
             MOSS_R_LOCAL=''
             return 0
             ;;
