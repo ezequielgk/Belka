@@ -44,7 +44,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add packages.tsv meta/apps.list meta/next.list
+          git add packages.tsv meta/tar.list meta/appimages.list meta/next.list
           
           # Verifica silenciosamente si hubo algún cambio real en el archivo
           if ! git diff --staged --quiet; then
