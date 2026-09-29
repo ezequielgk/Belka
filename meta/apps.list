@@ -197,10 +197,11 @@ helm	helm/helm	helm-.*-amd64\.tar\.gz\.asc	The Kubernetes Package Manager	helm	D
 cargo-binstall	cargo-bins/cargo-binstall	cargo-binstall-x86_64-unknown-linux-gnu\.full\.tgz	Binary installation for rust projects	cargo-binstall	Utility	Y
 wasmtime	bytecodealliance/wasmtime	wasmtime-.*-linux-c-api\.tar\.xz	A lightweight WebAssembly runtime that is fast, secure, and standards-compliant	wasmtime	Network	Y
 flannel	flannel-io/flannel	flannel-.*-amd64\.tar\.gz	flannel is a network fabric for containers, designed for Kubernetes	flannel	Development	Y
-istio	istio/istio	istio-.*-amd64\.tar\.gz	Connect, secure, control, and observe services.	istio	Network	Yfaugus-launcher	Faugus/faugus-launcher	REEMPLAZAME	A simple and lightweight app for running Windows games using UMU-Launcher	faugus-launcher	Utility	Y
-openmw	OpenMW/openmw	openmw-.*-64Bit-debug\.tar\.gz	OpenMW is an open-source open-world RPG game engine that supports playing Morrowind. Main repo and issue tracker can be found here: https://gitlab.com/OpenMW/openmw/	openmw	Development	Y
+istio	istio/istio	istio-.*-amd64\.tar\.gz	Connect, secure, control, and observe services.	istio	Network	Y
+faugus-launcher	Faugus/faugus-launcher	Faugus-.*-x86_64\.AppImage	A simple and lightweight app for running Windows games using UMU-Launcher	faugus-launcher	Utility	N
+openmw	OpenMW/openmw	openmw-.*-64Bit.*\.tar\.gz	OpenMW is an open-source open-world RPG game engine that supports playing Morrowind. Main repo and issue tracker can be found here: https://gitlab.com/OpenMW/openmw/	openmw	Development	Y
 openrct2	OpenRCT2/OpenRCT2	OpenRCT2-.*-bookworm-x86_64\.tar\.gz	An open source re-implementation of RollerCoaster Tycoon 2 🎢	openrct2	Utility	Y
 splitux	splitux-gg/splitux	splitux-.*-x86_64\.tar\.gz	Local co-op split-screen launcher for Linux	splitux	Utility	Y
 melee-pc	999sian/melee-pc	TARBALL	Native PC port of Super Smash Bros. Melee (NTSC-U 1.02), built from doldecomp/melee on aurora. No game data; bring your own disc.	melee-pc	Utility	Y
 gba-emulator	amyanger/gba-emulator	gba_emulator-.*-x86_64\.tar\.gz	A Game Boy Advance emulator written in C, targeting Pokemon Emerald. ARM7TDMI CPU interpreter with scanline-based PPU and SDL2 frontend.	gba-emulator	System	Y
-linapple	linappleii/linapple	linapple-headless-v3\.0-beta-3-linux-x86_64\.tar\.gz	Apple 2e emulator	linapple	System	Y
+linapple	linappleii/linapple	linapple-.*-linux-x86_64\.tar\.gz	Apple 2e emulator	linapple	System	Y
