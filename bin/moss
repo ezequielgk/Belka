@@ -1292,15 +1292,23 @@ moss_cmd_update() {
     fi
 
     if [ "$#" -eq 0 ]; then
-        _moss_cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/moss/index"
-        mkdir -p "$_moss_cache_dir"
+        case ${MOSS_INDEX_URL:-} in
+            ''|*'<user>'*)
+                moss_log ERROR "indice no configurado: define MOSS_INDEX_URL en ~/.config/moss/config"
+                return 1
+                ;;
+        esac
+        if ! moss_index_source_is_url; then
+            moss_log INFO "fuente de indice local; nada que sincronizar"
+            return 0
+        fi
         
         moss_log INFO "Sincronizando repositorios..."
-        if curl -sL "$MOSS_INDEX_URL" -o "$_moss_cache_dir/packages.tsv"; then
-            moss_log INFO "Repositorio actualizado"
+        if moss_index_refresh; then
+            moss_log INFO "Repositorio actualizado -> $(moss_index_cache_file)"
             return 0
         else
-            moss_log ERROR "Error al sincronizar el repositorio"
+            moss_log ERROR "Error al sincronizar el repositorio: $MOSS_INDEX_URL"
             return 1
         fi
     fi
@@ -1478,49 +1486,7 @@ moss_cmd_rollback() {
     exit $MOSS_EX_OK
 }
 
-# Comando principal 'sync': fuerza la descarga de los datos remotos frescos.
-#
-# Argumentos:
-#   $@ - Argumentos del usuario CLI
-# Globales:
-#   Ninguna
-# Retorna:
-#   0 en exito, aborta en fallo
-moss_cmd_sync() {
-    moss_normargs "$@"
-    _moss_an_saveifs=$IFS
-    IFS='
-'
-    set -f
-    set -- $MOSS_NORMED
-    set +f
-    IFS=$_moss_an_saveifs
-    OPTIND=1
-    while getopts ':hqv' _moss_opt; do
-        case $_moss_opt in
-            h) moss_usage; return 0 ;;
-            q) MOSS_LOG_LEVEL=1 ;;
-            v) MOSS_LOG_LEVEL=3 ;;
-            :) moss_die $MOSS_EX_USAGE "falta argumento para -$OPTARG" ;;
-            *) moss_die $MOSS_EX_USAGE "opcion invalida: -$OPTARG" ;;
-        esac
-    done
-    moss_state_init || exit $MOSS_EX_DEP
-    case ${MOSS_INDEX_URL:-} in
-        ''|*'<user>'*)
-            moss_die $MOSS_EX_USAGE "indice no configurado: define MOSS_INDEX_URL en ~/.config/moss/config"
-            ;;
-    esac
-    if ! moss_index_source_is_url; then
-        moss_log INFO "fuente de indice local; nada que sincronizar"
-        exit $MOSS_EX_OK
-    fi
-    if moss_index_refresh; then
-        moss_log INFO "indice sincronizado -> $(moss_index_cache_file)"
-        exit $MOSS_EX_OK
-    fi
-    moss_die $MOSS_EX_DOWNLOAD "fallo la sincronizacion del indice: $MOSS_INDEX_URL"
-}
+
 
 # Lista unicamente los ID de los paquetes que se encuentran instalados.
 #
@@ -1918,7 +1884,7 @@ CONSULTA Y MANTENIMIENTO:
   info <nombre>            Muestra información de índice + estado local
   verify <nombre>          Verifica el checksum (sha256) de los archivos locales
   rollback <nombre>        Revierte un paquete a su versión instalada anterior
-  sync                     Fuerza la re-descarga del índice al caché
+
 
 OPCIONES GLOBALES:
   -s, --system             Instala a nivel sistema (/usr/local, /var/lib/moss)
@@ -2004,7 +1970,7 @@ moss_main() {
         info|show)           moss_cmd_info "$@" ;;
         verify|check)        moss_cmd_verify "$@" ;;
         rollback)            moss_cmd_rollback "$@" ;;
-        sync)                moss_cmd_sync "$@" ;;
+
         help)                moss_usage; exit 0 ;;
         *)
             moss_log ERROR "subcomando desconocido: $_moss_sub"
