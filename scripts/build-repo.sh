@@ -65,7 +65,7 @@ repo_fetch_latest_release() {
         *codeberg.org*)
             _repo_path=$(printf '%s\n' "$_repo_url" | sed -n 's|.*codeberg\.org/\([^/]\+/[^/]\+\).*|\1|p')
             _api="https://codeberg.org/api/v1/repos/${_repo_path}/releases/latest"
-            _resp=$(curl -sL "$_api")
+            _resp=$(curl -sL --max-time 10 --retry 3 "$_api")
             _version=$(printf '%s\n' "$_resp" | jq -r 'if .tag_name != null then .tag_name | sub("^v"; "") else empty end')
             if [ "$_pattern" = "TARBALL" ]; then
                 _dl_url=$(printf '%s\n' "$_resp" | jq -r '.tarball_url')
@@ -77,7 +77,7 @@ repo_fetch_latest_release() {
             _repo_path=$(printf '%s\n' "$_repo_url" | sed -n 's|.*gitlab\.com/\(.*\)|\1|p')
             _url_enc=$(printf '%s\n' "$_repo_path" | sed 's|/|%2F|g')
             _api="https://gitlab.com/api/v4/projects/${_url_enc}/releases/permalink/latest"
-            _resp=$(curl -sL "$_api")
+            _resp=$(curl -sL --max-time 10 --retry 3 "$_api")
             _version=$(printf '%s\n' "$_resp" | jq -r 'if .tag_name != null then .tag_name | sub("^v"; "") else empty end')
             if [ "$_pattern" = "TARBALL" ]; then
                 _dl_url=$(printf '%s\n' "$_resp" | jq -r '.assets.sources[] | select(.format == "tar.gz") | .url' | head -n 1)
@@ -90,9 +90,9 @@ repo_fetch_latest_release() {
             _repo_path=$(printf '%s\n' "$_repo_url" | sed 's|.*github\.com/||')
             _api="https://api.github.com/repos/${_repo_path}/releases/latest"
             if [ -n "$GITHUB_TOKEN" ]; then
-                _resp=$(curl -sL -H "Authorization: Bearer $GITHUB_TOKEN" "$_api")
+                _resp=$(curl -sL --max-time 10 --retry 3 -H "Authorization: Bearer $GITHUB_TOKEN" "$_api")
             else
-                _resp=$(curl -sL "$_api")
+                _resp=$(curl -sL --max-time 10 --retry 3 "$_api")
             fi
             _version=$(printf '%s\n' "$_resp" | jq -r 'if .tag_name != null then .tag_name | sub("^v"; "") else empty end')
             if [ "$_pattern" = "TARBALL" ]; then
