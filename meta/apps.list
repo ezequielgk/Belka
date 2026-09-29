@@ -172,7 +172,7 @@ trivy	aquasecurity/trivy	trivy_\.*_Linux-64bit\.deb	Find vulnerabilities, miscon
 grype	anchore/grype	grype_\.*_linux_amd64\.tar\.gz	A vulnerability scanner for container images and filesystems	grype	System	Y
 syft	anchore/syft	syft_\.*_linux_amd64\.tar\.gz	CLI tool and library for generating a Software Bill of Materials from container images and filesystems	syft	System	Y
 kube-bench	aquasecurity/kube-bench	kube-bench_\.*_linux_amd64\.tar\.gz	Checks whether Kubernetes is deployed according to security best practices as defined in the CIS Kubernetes Benchmark	kube-bench	Development	Y
-kube-linter	stackrox/kube-linter	REEMPLAZAME	KubeLinter is a static analysis tool that checks Kubernetes YAML files and Helm charts to ensure the applications represented in them adhere to best practices.	kube-linter	Development	Y
+kube-linter	stackrox/kube-linter	kube-linter-linux\.tar\.gz	KubeLinter is a static analysis tool that checks Kubernetes YAML files and Helm charts to ensure the applications represented in them adhere to best practices.	kube-linter	Development	Y
 oras	oras-project/oras	oras_\.*_linux_amd64\.tar\.gz	OCI registry client - managing content like artifacts, images, packages	oras	Utility	Y
 gopass	gopasspw/gopass	gopass-\.*-amd64\.tar\.gz	The slightly more awesome standard unix password manager for teams	gopass	Utility	Y
 frp	fatedier/frp	frp_\.*_linux_amd64\.tar\.gz	A fast reverse proxy to help you expose a local server behind a NAT or firewall to the internet.	frp	Network	Y
@@ -180,4 +180,4 @@ amass	OWASP/Amass	amass_linux_amd64\.tar\.gz	In-depth attack surface mapping and
 k6	grafana/k6	k6-\.*-amd64\.tar\.gz	A modern load testing tool, using Go and JavaScript	k6	Utility	Y
 grpcui	fullstorydev/grpcui	grpcui_\.*_linux_x86_64\.tar\.gz	An interactive web UI for gRPC, along the lines of postman	grpcui	Network	Y
 kubectx	ahmetb/kubectx	kubectx_\.*_linux_x86_64\.tar\.gz	Faster way to switch between clusters and namespaces in kubectl	kubectx	Utility	Y
-s5cmd	peak/s5cmd	TARBALL	Parallel S3 and local filesystem execution tool.	s5cmd	System	Y
+s5cmd	peak/s5cmd	s5cmd_.*_Linux-64bit\.tar\.gz	Parallel S3 and local filesystem execution tool.	s5cmd	System	Y
