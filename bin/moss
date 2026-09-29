@@ -464,12 +464,13 @@ moss_index_lookup() {
     _moss_l_line=$(awk -F "$MOSS_TAB" -v n="$1" \
         '$1 !~ /^#/ && $1 == n { print; exit }' "$_moss_index_file")
     [ -n "$_moss_l_line" ] || return 1
-    MOSS_L_VERSION='' MOSS_L_URL='' MOSS_L_SHA='' MOSS_L_DESC='' MOSS_L_EXEC='' MOSS_L_SIG='' MOSS_L_CAT='' MOSS_L_TERM=''
-    IFS=$MOSS_TAB read -r _moss_l_name MOSS_L_VERSION MOSS_L_URL MOSS_L_SHA MOSS_L_DESC MOSS_L_EXEC MOSS_L_CAT MOSS_L_TERM MOSS_L_SIG << EOF
+    MOSS_L_VERSION='' MOSS_L_URL='' MOSS_L_SHA='' MOSS_L_DESC='' MOSS_L_EXEC='' MOSS_L_SIG='' MOSS_L_CAT='' MOSS_L_TERM='' MOSS_L_TYPE=''
+    IFS=$MOSS_TAB read -r _moss_l_name MOSS_L_VERSION MOSS_L_URL MOSS_L_SHA MOSS_L_DESC MOSS_L_EXEC MOSS_L_CAT MOSS_L_TERM MOSS_L_TYPE << EOF
 $_moss_l_line
 EOF
     [ -z "$MOSS_L_CAT" ] || [ "$MOSS_L_CAT" = "-" ] && MOSS_L_CAT="Utility"
     [ -z "$MOSS_L_TERM" ] || [ "$MOSS_L_TERM" = "-" ] && MOSS_L_TERM="N"
+    [ -z "$MOSS_L_TYPE" ] && MOSS_L_TYPE="tar"
     return 0
 }
 
@@ -483,7 +484,7 @@ EOF
 #   0 si es valido, 1 si no se puede leer
 moss_manifest_read() {
     MOSS_M_NAME='' MOSS_M_VERSION='' MOSS_M_URL='' MOSS_M_SHA='' MOSS_M_PREFIX=''
-    MOSS_M_TARBALL='' MOSS_M_DATE=''
+    MOSS_M_TARBALL='' MOSS_M_DATE='' MOSS_M_TYPE=''
     [ -f "$1" ] || return 1
     while IFS='=' read -r _moss_r_key _moss_r_val; do
         case $_moss_r_key in
@@ -493,6 +494,7 @@ moss_manifest_read() {
             sha256)       MOSS_M_SHA=$_moss_r_val ;;
             prefix)       MOSS_M_PREFIX=$_moss_r_val ;;
             tarball)      MOSS_M_TARBALL=$_moss_r_val ;;
+            type)         MOSS_M_TYPE=$_moss_r_val ;;
             installed_at) MOSS_M_DATE=$_moss_r_val ;;
         esac
     done < "$1"
@@ -503,7 +505,7 @@ moss_manifest_read() {
 # Argumentos:
 #   $1 - Ruta de destino
 # Globales:
-#   MOSS_P_NAME, MOSS_P_VERSION, MOSS_P_URL, MOSS_P_SHA, MOSS_P_PREFIX, MOSS_P_TARBALL
+#   MOSS_P_NAME, MOSS_P_VERSION, MOSS_P_URL, MOSS_P_SHA, MOSS_P_PREFIX, MOSS_P_TARBALL, MOSS_P_TYPE
 # Retorna:
 #   0 si tiene exito, 1 si no
 moss_write_manifest() {
@@ -514,55 +516,40 @@ moss_write_manifest() {
         printf 'sha256=%s\n' "$5"
         printf 'prefix=%s\n' "$6"
         printf 'tarball=%s\n' "$7"
+        printf 'type=%s\n' "$8"
         printf 'installed_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     } > "$1"
 }
 
-# Extrae el paquete descargado segun su formato.
-# Soporta tarballs, zip, bz2 individuales y binarios crudos.
+# Extrae el paquete descargado segun su formato (tar o appimage).
 #
 # Argumentos:
-#   $1 - Ruta al archivo descargado
-#   $2 - Directorio temporal de destino (staging)
-# Globales:
-#   Ninguna
+#   $1 - Tipo (tar | appimage)
+#   $2 - Ruta al archivo descargado
+#   $3 - Directorio temporal de destino (staging)
+#   $4 - Nombre del paquete original
 # Retorna:
-#   0 en exito, 1 si falta una herramienta de extraccion
+#   0 en exito, 1 si falla o falta comando
 moss_extract() {
-    if tar -xf "$1" -C "$2" 2>/dev/null; then
+    [ "$1" = "appimage" ] && {
+        _moss_ai_tgt="$3/$4.AppImage"
+        cp "$2" "$_moss_ai_tgt"
+        chmod +x "$_moss_ai_tgt"
         return 0
-    fi
-    case $1 in
-        *.tar.gz|*.tgz)   tar -xzf "$1" -C "$2" ;;
-        *.tar.xz|*.txz)   tar -xJf "$1" -C "$2" ;;
-        *.tar.bz2|*.tbz2) tar -xjf "$1" -C "$2" ;;
-        *.zip)
-            if command -v unzip >/dev/null 2>&1; then
-                unzip -q "$1" -d "$2"
-            else
-                moss_log ERROR "comando 'unzip' no encontrado"
-                return 1
-            fi
+    }
+    tar -xf "$2" -C "$3" 2>/dev/null && return 0
+    case $2 in
+        *.tar.gz|*.tgz)   tar -xzf "$2" -C "$3" ;;
+        *.tar.xz|*.txz)   tar -xJf "$2" -C "$3" ;;
+        *.tar.bz2|*.tbz2) tar -xjf "$2" -C "$3" ;;
+        *.zip)            unzip -q "$2" -d "$3" || return 1 ;;
+        *.bz2)            
+            bunzip2 -c "$2" > "$3/$(basename "$2" .bz2)"
+            chmod +x "$3/$(basename "$2" .bz2)"
             ;;
-        *.bz2)
-            if command -v bunzip2 >/dev/null 2>&1; then
-                _moss_ex_bn=$(basename "$1" .bz2)
-                bunzip2 -c "$1" > "$2/$_moss_ex_bn"
-                chmod +x "$2/$_moss_ex_bn"
-            else
-                moss_log ERROR "comando 'bunzip2' no encontrado"
-                return 1
-            fi
-            ;;
-        *.AppImage|*.appimage|*.deb|*.rpm|*.exe|*.msi)
-            moss_log ERROR "formato de paquete no soportado: $(basename "$1")"
-            return 1
-            ;;
-        *)
-            _moss_ex_bn=$(basename "$1")
-            cp "$1" "$2/$_moss_ex_bn"
-            chmod +x "$2/$_moss_ex_bn"
-            return 0
+        *)                
+            cp "$2" "$3/$(basename "$2")"
+            chmod +x "$3/$(basename "$2")"
             ;;
     esac
 }
@@ -743,6 +730,7 @@ moss_perform_install() {
     _moss_p_exec_override=$7
     _moss_p_cat=${8:-Utility}
     _moss_p_term=${9:-N}
+    _moss_p_type=${10:-tar}
 
     moss_log INFO "Instalando paquete: $_moss_p_name"
 
@@ -804,38 +792,27 @@ moss_perform_install() {
     _moss_p_staging=$MOSS_TMPDIR/staging.$$
     rm -rf "$_moss_p_staging"
     mkdir -p "$_moss_p_staging" || return $MOSS_EX_INSTALL
-    if ! moss_extract "$_moss_p_src" "$_moss_p_staging"; then
+
+    if ! moss_extract "$_moss_p_type" "$_moss_p_src" "$_moss_p_staging" "$_moss_p_name"; then
         moss_log ERROR "no se pudo extraer $_moss_p_src"
         return $MOSS_EX_INSTALL
     fi
-    moss_normalize_staging "$_moss_p_staging"
+
+    [ "$_moss_p_type" = "tar" ] && moss_normalize_staging "$_moss_p_staging"
 
     _moss_p_list=$MOSS_TMPDIR/files.$$
     moss_build_filelist "$_moss_p_staging" "$_moss_p_list"
-    if [ ! -s "$_moss_p_list" ]; then
-        moss_log WARN "$_moss_p_name: el tarball no contiene archivos regulares"
-    fi
-
-    _moss_p_filecount=$(wc -l < "$_moss_p_list" | tr -dc '0-9')
-    _moss_p_opt_staging="$MOSS_TMPDIR/sandbox.$$"
     
-    if [ "$_moss_p_filecount" -gt 100 ]; then
-        moss_log INFO "paquete masivo detectado ($_moss_p_filecount archivos), activando sandbox en opt/$_moss_p_name"
-        mkdir -p "$_moss_p_opt_staging/opt/$_moss_p_name"
-        
-        for _moss_sb_f in "$_moss_p_staging"/* "$_moss_p_staging"/.[!.]*; do
-            [ -e "$_moss_sb_f" ] || continue
-            mv "$_moss_sb_f" "$_moss_p_opt_staging/opt/$_moss_p_name/"
-        done
-    else
-        moss_log INFO "paquete normal detectado ($_moss_p_filecount archivos), instalando en pkg/$_moss_p_name"
-        mkdir -p "$_moss_p_opt_staging/pkg/$_moss_p_name"
-        
-        for _moss_sb_f in "$_moss_p_staging"/* "$_moss_p_staging"/.[!.]*; do
-            [ -e "$_moss_sb_f" ] || continue
-            mv "$_moss_sb_f" "$_moss_p_opt_staging/pkg/$_moss_p_name/"
-        done
-    fi
+    _moss_p_opt_staging="$MOSS_TMPDIR/sandbox.$$"
+    _moss_tgt_dir="pkg/tar/$_moss_p_name"
+    [ "$_moss_p_type" = "appimage" ] && _moss_tgt_dir="pkg/appimage/$_moss_p_name"
+    
+    mkdir -p "$_moss_p_opt_staging/$_moss_tgt_dir"
+    
+    for _moss_sb_f in "$_moss_p_staging"/* "$_moss_p_staging"/.[!.]*; do
+        [ -e "$_moss_sb_f" ] || continue
+        mv "$_moss_sb_f" "$_moss_p_opt_staging/$_moss_tgt_dir/"
+    done
     
     rm -rf "$_moss_p_staging"
     mv "$_moss_p_opt_staging" "$_moss_p_staging"
@@ -894,7 +871,7 @@ moss_perform_install() {
     fi
 
     moss_write_manifest "$_moss_p_state/manifest" "$_moss_p_name" "$_moss_p_version" \
-        "$_moss_p_url" "$_moss_p_sha" "$MOSS_PREFIX" "$(basename "$_moss_p_src")"
+        "$_moss_p_url" "$_moss_p_sha" "$MOSS_PREFIX" "$(basename "$_moss_p_src")" "$_moss_p_type"
     
     moss_log STEP "Configurando ejecutable y enlaces..."
     _moss_desk_dir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
@@ -977,12 +954,10 @@ $_moss_cand"
             
             cat <<EOF > "$_moss_desk_file"
 [Desktop Entry]
-Version=1.0
-Name=${MOSS_P_APP_NAME:-$_moss_p_name}
-Comment=Instalado via moss
-Exec="$_moss_exec_path" %U
-Terminal=$_moss_term_val
 Type=Application
+Name=${MOSS_P_APP_NAME:-$_moss_p_name}
+Exec="$MOSS_PREFIX/bin/$_moss_bin_name"
+Terminal=$_moss_term_val
 Categories=${_moss_p_cat};
 EOF
             printf '%s\n' "$_moss_desk_file" >> "$_moss_p_state/files"
@@ -1060,6 +1035,7 @@ moss_resolve_pkg() {
     MOSS_R_EXEC=$MOSS_L_EXEC
     MOSS_R_CAT=$MOSS_L_CAT
     MOSS_R_TERM=$MOSS_L_TERM
+    MOSS_R_TYPE=$MOSS_L_TYPE
     MOSS_R_LOCAL=''
     return 0
 }
@@ -1107,7 +1083,7 @@ moss_cmd_install() {
     [ "$_moss_i_rc" -ne 0 ] && exit "$_moss_i_rc"
 
     moss_perform_install "$MOSS_R_NAME" "$MOSS_R_VERSION" "$MOSS_R_URL" \
-        "$MOSS_R_SHA" "$MOSS_R_SIG" "$MOSS_R_LOCAL" "${MOSS_OPT_EXEC:-$MOSS_R_EXEC}" "$MOSS_R_CAT" "$MOSS_R_TERM"
+        "$MOSS_R_SHA" "$MOSS_R_SIG" "$MOSS_R_LOCAL" "${MOSS_OPT_EXEC:-$MOSS_R_EXEC}" "$MOSS_R_CAT" "$MOSS_R_TERM" "$MOSS_R_TYPE"
     exit $?
 }
 
@@ -1214,7 +1190,7 @@ moss_update_one() {
 
     _moss_u_force=$MOSS_FORCE
     MOSS_FORCE=1
-    moss_perform_install "$1" "$MOSS_L_VERSION" "$MOSS_L_URL" "$MOSS_L_SHA" "$MOSS_L_SIG" ''
+    moss_perform_install "$1" "$MOSS_L_VERSION" "$MOSS_L_URL" "$MOSS_L_SHA" "$MOSS_L_SIG" '' '' "$MOSS_L_CAT" "$MOSS_L_TERM" "$MOSS_L_TYPE"
     _moss_u_rc=$?
     if [ "$_moss_u_rc" -eq 0 ]; then
         MOSS_FORCE=$_moss_u_force
@@ -1239,11 +1215,11 @@ moss_update_one() {
         fi
     fi
     if [ -n "$_moss_u_src" ] &&
-       moss_perform_install "$1" "$MOSS_M_VERSION" "$MOSS_M_URL" "$MOSS_M_SHA" '' "$_moss_u_src"; then
+       moss_perform_install "$1" "$MOSS_M_VERSION" "$MOSS_M_URL" "$MOSS_M_SHA" '' "$_moss_u_src" '' "$MOSS_M_CAT" "$MOSS_M_TERM" "$MOSS_M_TYPE"; then
         moss_log INFO "se revirtio automaticamente a $1 $MOSS_M_VERSION"
         moss_write_manifest "$_moss_u_state/manifest.bak" "$1" "$MOSS_L_VERSION" \
             "$MOSS_L_URL" "$MOSS_L_SHA" "$MOSS_PREFIX" \
-            "$MOSS_L_SHA-$(basename "$MOSS_L_URL")"
+            "$MOSS_L_SHA-$(basename "$MOSS_L_URL")" "$MOSS_L_TYPE"
     else
         mv "$_moss_u_state/manifest.bak" "$_moss_u_state/manifest"
         [ -f "$_moss_u_state/files.bak" ] && mv "$_moss_u_state/files.bak" "$_moss_u_state/files"
@@ -1464,7 +1440,7 @@ moss_cmd_rollback() {
     MOSS_FORCE=1
     MOSS_DRY_RUN=0
     moss_perform_install "$_moss_rb_name" "$_moss_rb_version" "$_moss_rb_url" \
-        "$_moss_rb_sha" '' "$_moss_rb_src"
+        "$_moss_rb_sha" '' "$_moss_rb_src" '' "$_moss_rb_cat" "$_moss_rb_term" "$_moss_rb_type"
     _moss_rb_rc=$?
     MOSS_FORCE=$_moss_rb_force
     MOSS_DRY_RUN=$_moss_rb_dry

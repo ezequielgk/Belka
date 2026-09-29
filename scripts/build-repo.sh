@@ -3,7 +3,6 @@
 
 set -e
 
-META_FILE="meta/apps.list"
 OUTPUT_FILE="packages.tsv"
 
 # Determinar qué aplicaciones indexar
@@ -20,12 +19,15 @@ elif [ "$INTERACTIVE" -eq 1 ]; then
         [nN]*)
             _i=1
             printf '\nAplicaciones disponibles:\n' >&2
-            while read -r name _; do
-                case "$name" in \#*|"") continue ;; esac
-                printf ' %d) %s\n' "$_i" "$name" >&2
-                eval "_app_${_i}=\$name"
-                _i=$((_i + 1))
-            done < "$META_FILE"
+            for f in meta/tar.list meta/appimages.list; do
+                [ -f "$f" ] || continue
+                while read -r name _; do
+                    case "$name" in \#*|"") continue ;; esac
+                    printf ' %d) %s\n' "$_i" "$name" >&2
+                    eval "_app_${_i}=\$name"
+                    _i=$((_i + 1))
+                done < "$f"
+            done
             printf '\nIntroduce los números a indexar (separados por espacio): ' >&2
             read -r nums </dev/tty
             for n in $nums; do
@@ -47,14 +49,8 @@ fi
 > "$OUTPUT_FILE"
 
 # Agregar cabecera inicial (opcional, pero buena practica)
-printf '# nombre\tversion\turl\tsha256\tdescripcion\texec\tcategoria\tterminal\n' > "$OUTPUT_FILE"
+printf '# nombre\tversion\turl\tsha256\tdescripcion\texec\tcategoria\tterminal\ttipo\n' > "$OUTPUT_FILE"
 
-# Resuelve dinámicamente la última versión y URL de descarga desde GitHub, Codeberg o GitLab
-# Argumentos:
-#   $1 - URL o identificador del repositorio
-#   $2 - Patrón de búsqueda del asset (regex) o la palabra clave "TARBALL"
-# Retorna:
-#   Cadena formateada con la versión y la URL separadas por una tabulación
 repo_fetch_latest_release() {
     _repo_url="$1"
     _pattern="$2"
@@ -106,69 +102,67 @@ repo_fetch_latest_release() {
     fi
 }
 
-# Configurar el separador interno de campos (IFS) para usar estrictamente Tabulaciones
 IFS="$(printf '\t')"
 
-while read -r name repo pattern desc exec_bin _app_cat _app_term; do
-    # Ignorar lineas vacias y comentarios
-    case "$name" in
-        \#*|"") continue ;;
-    esac
+process_meta_file() {
+    _pm_file=$1
+    _pm_type=$2
+    [ -f "$_pm_file" ] || return 0
 
-    [ -z "$_app_cat" ] || [ "$_app_cat" = "-" ] && _app_cat="Utility"
-    [ -z "$_app_term" ] || [ "$_app_term" = "-" ] && _app_term="N"
+    while IFS="$(printf '\t')" read -r name repo pattern desc exec_bin _app_cat _app_term; do
+        case "$name" in \#*|"") continue ;; esac
 
-    if [ "$SELECTED_APPS" != "ALL" ]; then
-        case "$SELECTED_APPS" in
-            *" $name "*) ;; # Proceder con la red
-            *)
-                if [ -f "${OUTPUT_FILE}.bak" ] && grep -q "^${name}	" "${OUTPUT_FILE}.bak"; then
-                    grep "^${name}	" "${OUTPUT_FILE}.bak" >> "$OUTPUT_FILE"
-                    printf '  -> Preservado (sin cambios): %s\n' "$name" >&2
-                else
-                    printf '  -> Omitido (no existía previamente): %s\n' "$name" >&2
-                fi
-                continue
-                ;;
-        esac
-    fi
+        [ -z "$_app_cat" ] || [ "$_app_cat" = "-" ] && _app_cat="Utility"
+        [ -z "$_app_term" ] || [ "$_app_term" = "-" ] && _app_term="N"
 
-    printf 'Procesando %s (%s)...\n' "$name" "$repo" >&2
-    
-    # Prevenir "Secondary Rate Limit" de GitHub al consultar decenas de paquetes
-    sleep 1
+        if [ "$SELECTED_APPS" != "ALL" ]; then
+            case "$SELECTED_APPS" in
+                *" $name "*) ;;
+                *)
+                    if [ -f "${OUTPUT_FILE}.bak" ] && grep -q "^${name}	" "${OUTPUT_FILE}.bak"; then
+                        grep "^${name}	" "${OUTPUT_FILE}.bak" >> "$OUTPUT_FILE"
+                        printf '  -> Preservado (sin cambios): %s\n' "$name" >&2
+                    else
+                        printf '  -> Omitido (no existía previamente): %s\n' "$name" >&2
+                    fi
+                    continue
+                    ;;
+            esac
+        fi
 
-    _release_data=$(repo_fetch_latest_release "$repo" "$pattern")
-    
-    if [ -z "$_release_data" ]; then
-        printf 'Error: No se pudo obtener la version o el asset de %s\n' "$repo" >&2
-        continue
-    fi
-    
-    version=$(printf '%s\n' "$_release_data" | awk -F'\t' '{print $1}')
-    dl_url=$(printf '%s\n' "$_release_data" | awk -F'\t' '{print $2}')
+        printf 'Procesando %s (%s)...\n' "$name" "$repo" >&2
+        sleep 1
 
-    printf '  -> Descargando %s para calcular sha256...\n' "$dl_url" >&2
-    
-    tmp_file="/tmp/moss_asset_$name.$$"
-    
-    # 3. Descargar temporalmente a /tmp y abortar linea si falla
-    if ! curl -sL "$dl_url" -o "$tmp_file"; then
-        printf 'Error al descargar %s\n' "$dl_url" >&2
+        _release_data=$(repo_fetch_latest_release "$repo" "$pattern")
+        
+        if [ -z "$_release_data" ]; then
+            printf 'Error: No se pudo obtener la version o el asset de %s\n' "$repo" >&2
+            continue
+        fi
+        
+        version=$(printf '%s\n' "$_release_data" | awk -F'\t' '{print $1}')
+        dl_url=$(printf '%s\n' "$_release_data" | awk -F'\t' '{print $2}')
+
+        printf '  -> Descargando %s para calcular sha256...\n' "$dl_url" >&2
+        tmp_file="/tmp/moss_asset_$name.$$"
+        
+        if ! curl -sL "$dl_url" -o "$tmp_file"; then
+            printf 'Error al descargar %s\n' "$dl_url" >&2
+            rm -f "$tmp_file"
+            continue
+        fi
+
+        hash=$(sha256sum "$tmp_file" | awk '{print $1}')
         rm -f "$tmp_file"
-        continue
-    fi
 
-    # 4. Calcular sha256sum
-    hash=$(sha256sum "$tmp_file" | awk '{print $1}')
-    rm -f "$tmp_file"
+        printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$name" "$version" "$dl_url" "$hash" "$desc" "$exec_bin" "$_app_cat" "$_app_term" "$_pm_type" >> "$OUTPUT_FILE"
+        printf '  -> Listo: %s v%s\n' "$name" "$version" >&2
 
-    # 5. Agregar la linea procesada a packages.tsv usando tabulaciones
-    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$name" "$version" "$dl_url" "$hash" "$desc" "$exec_bin" "$_app_cat" "$_app_term" >> "$OUTPUT_FILE"
-    
-    printf '  -> Listo: %s v%s\n' "$name" "$version" >&2
+    done < "$_pm_file"
+}
 
-done < "$META_FILE"
+process_meta_file "meta/tar.list" "tar"
+process_meta_file "meta/appimages.list" "appimage"
 
 [ -f "${OUTPUT_FILE}.bak" ] && rm -f "${OUTPUT_FILE}.bak"
 
