@@ -33,6 +33,7 @@ jobs:
           # Verifica silenciosamente si hubo algún cambio real en el archivo
           if ! git diff --staged --quiet; then
             git commit -m "chore: actualizar índice de paquetes automático 🤖"
+            git pull --rebase origin main
             git push
           else
             echo "No hubo cambios en las versiones. Saltando commit."
