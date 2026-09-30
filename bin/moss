@@ -1884,8 +1884,12 @@ moss_cmd_verify() {
 
     if [ -f "$_moss_v_state/files" ]; then
         while IFS= read -r _moss_v_f; do
-            [ -e "$MOSS_M_PREFIX/$_moss_v_f" ] ||
-                moss_die $MOSS_EX_VERIFY "falta archivo instalado: $MOSS_M_PREFIX/$_moss_v_f"
+            case "$_moss_v_f" in
+                /*) _moss_check_p="$_moss_v_f" ;;
+                *)  _moss_check_p="$MOSS_M_PREFIX/$_moss_v_f" ;;
+            esac
+            [ -e "$_moss_check_p" ] ||
+                moss_die $MOSS_EX_VERIFY "falta archivo instalado: $_moss_check_p"
         done < "$_moss_v_state/files"
     fi
 
