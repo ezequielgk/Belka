@@ -1,6 +1,6 @@
 #!/bin/sh
 
-MOSS_VERSION=1.2.2
+MOSS_VERSION=1.2.3
 PROG_NAME=moss
 
 MOSS_PREFIX=${MOSS_PREFIX:-}
@@ -1002,11 +1002,14 @@ $_moss_cand"
             _moss_term_val="false"
             [ "$MOSS_OPT_TERM" = "1" ] && _moss_term_val="true"
             
+            _moss_d_name="${MOSS_P_APP_NAME:-$_moss_p_name}"
+            _moss_d_name="$(awk 'BEGIN{print toupper(substr(ARGV[1],1,1)) substr(ARGV[1],2)}' "$_moss_d_name")"
+            
             cat <<EOF > "$_moss_desk_file"
 [Desktop Entry]
 Type=Application
-Name=${MOSS_P_APP_NAME:-$_moss_p_name}
-Exec="$MOSS_PREFIX/bin/$_moss_bin_name"
+Name=$_moss_d_name
+Exec="$MOSS_PREFIX/bin/${_moss_bin_name%.AppImage}"
 Terminal=$_moss_term_val
 Categories=${_moss_p_cat};
 EOF
@@ -1016,12 +1019,14 @@ EOF
             command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$_moss_desk_dir"
         fi
         
+        _moss_sym_name="${_moss_bin_name%.AppImage}"
+        
         mkdir -p "$MOSS_PREFIX/bin"
         _moss_rel_target="../${_moss_exec_path#"$MOSS_PREFIX/"}"
-        _moss_symlink="$MOSS_PREFIX/bin/$_moss_bin_name"
+        _moss_symlink="$MOSS_PREFIX/bin/$_moss_sym_name"
         ln -sf "$_moss_rel_target" "$_moss_symlink"
-        printf 'bin/%s\n' "$_moss_bin_name" >> "$_moss_p_state/files"
-        moss_log INFO "enlace symlink creado: bin/$_moss_bin_name -> $_moss_rel_target"
+        printf 'bin/%s\n' "$_moss_sym_name" >> "$_moss_p_state/files"
+        moss_log INFO "enlace symlink creado: bin/$_moss_sym_name -> $_moss_rel_target"
     fi
 
     moss_log SUCCESS "Paquete '$_moss_p_name' instalado y listo para usar."
