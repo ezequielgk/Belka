@@ -1458,8 +1458,7 @@ moss_cmd_upgrade() {
 
     if [ -n "$_moss_up_failed" ]; then
         moss_log ERROR "fallaron:$_moss_up_failed"
-        _moss_up_fcount=$(printf '%s
-' $_moss_up_failed | wc -w)
+        _moss_up_fcount=$(printf '%s\n' "$_moss_up_failed" | wc -w)
         moss_log INFO "resumen: actualizados=$_moss_up_ok fallidos=$_moss_up_fcount"
         return $MOSS_EX_INSTALL
     fi
