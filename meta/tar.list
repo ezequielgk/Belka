@@ -117,6 +117,7 @@ lazydocker	jesseduffield/lazydocker	lazydocker_.*_Linux_(x86_64|amd64|64bit)\.ta
 lazygit	jesseduffield/lazygit	lazygit_.*_linux_(x86_64|amd64|64bit)\.tar\.gz	Simple terminal UI for git commands	lazygit	ConsoleOnly	Y
 legcord	Legcord/Legcord	Legcord-.*-linux-x64\.tar\.gz	A lightweight, customizable Discord client	legcord	Network	N
 lf	gokcehan/lf	lf-linux-(x86_64|amd64|64bit)\.tar\.gz	Terminal file manager	lf	ConsoleOnly	Y
+librewolf	https://codeberg.org/librewolf/bsys6	librewolf-.*_64-package\.tar\.xz	Mirror of https://librewolf.dev/librewolf/bsys6	librewolf	Utility	N
 lima	lima-vm/lima	lima-.*-x86_64\.tar\.gz	Linux virtual machines, with a focus on running containers	lima	Utility	Y
 limine	https://github.com/limine-bootloader/limine	limine-binary\.tar\.gz	Modern, secure, portable, multiprotocol bootloader and boot manager.	limine	Utility	Y
 linapple	linappleii/linapple	linapple-.*-linux-x86_64\.tar\.gz	Apple 2e emulator	linapple	System	Y
