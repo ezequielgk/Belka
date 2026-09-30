@@ -92,4 +92,7 @@ README.md                    # Este archivo
 ```
 
 ## Limitaciones Conocidas
-- **Alpine Linux / musl libc**: `moss` y sus dependencias (`busybox sh`, `awk`, `tar`) son 100% compatibles con Alpine y `musl`. Sin embargo, la gran mayoría de los paquetes distribuidos como **AppImage** están compilados contra `glibc` y no funcionarán de forma nativa en un entorno puramente `musl` a menos que se instale soporte de compatibilidad como `gcompat`. Esto no es un bug de Moss, sino una restricción del binario en sí.
+
+- **BusyBox (sh/awk/tar)**: Probado localmente contra los applets genéricos de BusyBox (`busybox sh -n`, `busybox awk`, `busybox tar`) corriendo sobre la libc del sistema de desarrollo (glibc). Se comprobó que no hay errores de sintaxis, la extracción de `.tar.gz` y `.tar.xz` funciona sin problemas, y el ciclo de `install` y `upgrade` corre a la perfección con las implementaciones provistas por BusyBox.
+- **musl libc (Alpine u otra distro musl pura)**: **Todavía no validado** en un entorno aislado. Las pruebas exitosas de BusyBox no confirman compatibilidad total con `musl` de forma absoluta, ya que BusyBox fue corrido sobre la libc del host. Queda pendiente testear la ejecución del script dentro de un contenedor Alpine real puro.
+- **AppImage en musl puro**: La gran mayoría de los paquetes distribuidos como AppImage están compilados dinámicamente contra `glibc` y no funcionarán de forma nativa en un entorno puramente `musl` sin instalar una capa de compatibilidad como `gcompat`. Esto no es un bug de Moss, sino una restricción estricta de la arquitectura del archivo AppImage.
