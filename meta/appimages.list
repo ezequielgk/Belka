@@ -203,7 +203,7 @@ ktouch	pkgforge-dev/KTouch-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Touch typ
 ladybird	pkgforge-dev/ladybird-appimage	.*(x86_64|amd64|64bit).*\.appimage	Truly independent web browser	ladybird	Network	N
 libation	pkgforge-dev/Libation-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Audible audiobook library manager and downloader	libation	Audio	N
 librecad	pkgforge-dev/LibreCAD-AppImage	.*(x86_64|amd64|64bit).*\.appimage	2D CAD application	librecad	Construction	N
-LibreWolf	https://codeberg.org/librewolf/bsys6	librewolf-.*_64-appimage\.AppImage	Mirror of https://librewolf.dev/librewolf/bsys6	bsys6	Utility	N
+libreWolf	https://codeberg.org/librewolf/bsys6	librewolf-.*_64-appimage\.AppImage	Mirror of https://librewolf.dev/librewolf/bsys6	bsys6	Utility	N
 lighthouse	pkgforge-dev/Lighthouse-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	PC port of Banjo-Kazooie by Harbour Masters	lighthouse	Game	N
 lightzone	pkgforge-dev/LightZone-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Open-source professional-grade digital photo editor and darkroom software	lightzone	Graphics	N
 linuxtoys	pkgforge-dev/LinuxToys-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A collection of user-friendly tools for Linux systems	linuxtoys	Utility	N
