@@ -363,7 +363,7 @@ srb2	pkgforge-dev/SRB2-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A 3D Sonic th
 srb2kart	pkgforge-dev/SRB2Kart-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Kart racing game based on the 3D Sonic fangame Sonic Robo Blast 2	srb2kart	Game	N
 st	pkgforge-dev/st-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Simple terminal	st	System	N
 starfox64recomp	pkgforge-dev/Starfox64Recomp-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Static recompilation of the Nintendo 64 game Star Fox 64	starfox64recomp	Game	N
-steam-appimage	https://github.com/ivan-hc/Steam-appimage	Steam-.*.87-3-anylinux-x86_64\.AppImage	Unofficial Steam AppImage built using Runimage.	steam-appimage	Utility	N
+steam   https://github.com/ivan-hc/Steam-appimage	Steam-.*.87-3-anylinux-x86_64\.AppImage	Unofficial Steam AppImage built using Runimage.	steam-appimage	Utility	N
 stella	pkgforge-dev/Stella-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A multi-platform Atari 2600 VCS emulator	stella	Emulator	N
 stirling-pdf	pkgforge-dev/Stirling-PDF-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Locally hosted web application for PDF manipulation	stirling-pdf	Office	N
 stoat	pkgforge-dev/Stoat-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Desktop client for Stoat, an open-source user-first chat platform	stoat	Network	N
