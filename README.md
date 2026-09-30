@@ -90,3 +90,6 @@ packages.tsv                 # Índice compilado automáticamente por el Bot (en
 tests/run_tests.sh           # Batería de pruebas unitarias
 README.md                    # Este archivo
 ```
+
+## Limitaciones Conocidas
+- **Alpine Linux / musl libc**: `moss` y sus dependencias (`busybox sh`, `awk`, `tar`) son 100% compatibles con Alpine y `musl`. Sin embargo, la gran mayoría de los paquetes distribuidos como **AppImage** están compilados contra `glibc` y no funcionarán de forma nativa en un entorno puramente `musl` a menos que se instale soporte de compatibilidad como `gcompat`. Esto no es un bug de Moss, sino una restricción del binario en sí.

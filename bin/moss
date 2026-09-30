@@ -783,7 +783,7 @@ moss_perform_install() {
         if [ ! -f "$_moss_p_cache" ]; then
             _moss_p_size=""
             if command -v curl >/dev/null 2>&1; then
-                _moss_p_bytes=$(curl -sI "$_moss_p_url" 2>/dev/null | awk 'BEGIN{IGNORECASE=1} /^content-length:/ {print $2; exit}' | tr -d '\r')
+                _moss_p_bytes=$(curl -sI "$_moss_p_url" 2>/dev/null | awk '{ line = tolower($0) } line ~ /^content-length:/ {print $2; exit}' | tr -d '\r')
                 if [ -n "$_moss_p_bytes" ] && [ "$_moss_p_bytes" -gt 0 ] 2>/dev/null; then
                     if [ "$_moss_p_bytes" -gt 1048576 ]; then
                         _moss_p_size=" ($((_moss_p_bytes / 1048576)) MB)"
