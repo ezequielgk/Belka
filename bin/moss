@@ -1894,10 +1894,10 @@ moss_cmd_verify() {
     fi
 
     if [ "$MOSS_JSON" -eq 1 ]; then
-        printf '{"name":"%s","version":"%s","ok":true}\n' \
-            "$(moss_jesc "$MOSS_M_NAME")" "$(moss_jesc "$MOSS_M_VERSION")"
+        printf '{"name":"%s","version":"%s","checksum":"%s","ok":true}\n' \
+            "$(moss_jesc "$MOSS_M_NAME")" "$(moss_jesc "$MOSS_M_VERSION")" "$(moss_jesc "$_moss_v_got")"
     else
-        moss_log INFO "verificacion correcta: $_moss_v_name $MOSS_M_VERSION"
+        moss_log INFO "verificacion correcta: $_moss_v_name $MOSS_M_VERSION ($_moss_v_got)"
     fi
     exit $MOSS_EX_OK
 }
