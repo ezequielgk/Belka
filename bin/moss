@@ -1517,6 +1517,16 @@ moss_cmd_upgrade() {
         moss_progress "$_moss_up_curr" "$_moss_up_tot" "$_pkg procesado."
     done
 
+    if [ "$MOSS_FORMAT_JSON" -eq 1 ]; then
+        _moss_up_fcount=0
+        [ -n "$_moss_up_failed" ] && _moss_up_fcount=$(printf '%s\n' "$_moss_up_failed" | wc -w)
+        printf '{"status":"%s","updated":%d,"failed":%d,"failed_packages":[%s]}\n' \
+            "$([ -z "$_moss_up_failed" ] && echo "success" || echo "error")" \
+            "$_moss_up_ok" "$_moss_up_fcount" \
+            "$(for f in $_moss_up_failed; do printf '"%s",' "$f"; done | sed 's/,$//')"
+        [ -n "$_moss_up_failed" ] && return $MOSS_EX_INSTALL || return 0
+    fi
+
     if [ -n "$_moss_up_failed" ]; then
         moss_log ERROR "fallaron:$_moss_up_failed"
         _moss_up_fcount=$(printf '%s\n' "$_moss_up_failed" | wc -w)
