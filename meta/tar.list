@@ -23,6 +23,7 @@ binsider	orhun/binsider	binsider-.*-x86_64-unknown-linux-musl\.tar\.gz	Herramien
 bluetuith	bluetuith-org/bluetuith	.*Linux_(x86_64|amd64|64bit)\.tar\.gz	A TUI bluetooth manager for Linux	bluetuith	ConsoleOnly	Y
 bore	ekzhang/bore	.*(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A command line tool for making tunnels to localhost	bore	Network	Y
 bottom	ClementTsang/bottom	x86_64-unknown-linux-gnu.tar.gz	Monitor de sistema gráfico multiplataforma y personalizable para terminal	btm	System	Y
+brave-browser	https://github.com/brave/brave-browser	brave-browser-.*\.zip	Brave browser for Android, iOS, Linux, macOS, Windows.	brave-browser	Network	N
 broot	Canop/broot	broot_.*\.zip	A new way to see and navigate directory trees	broot	ConsoleOnly	Y
 btop	aristocratos/btop	btop-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Modern and colorful command line resource monitor that shows usage and stats	btop	ConsoleOnly	Y
 buf	bufbuild/buf	buf-Linux-x86_64\.tar\.gz	The best way of working with Protocol Buffers.	buf	Utility	Y
