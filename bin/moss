@@ -29,6 +29,7 @@ MOSS_EX_DEP=6
 MOSS_TAB=$(printf '\t')
 
 case $0 in */*) _moss_self=$0 ;; *) _moss_self=$(command -v "$0") ;; esac
+_moss_self=${_moss_self:-$0}
 
 # Imprime mensajes en la consola con diferentes niveles de severidad.
 #
@@ -1426,7 +1427,7 @@ moss_cmd_upgrade() {
         case $_moss_opt in
             h) moss_usage; return 0 ;;
             y) MOSS_ASSUME_YES=1 ;;
-            j) MOSS_FORMAT_JSON=1 ;;
+            j) MOSS_JSON=1 ;;
             :) moss_die $MOSS_EX_USAGE "falta argumento para -$OPTARG" ;;
             *) moss_die $MOSS_EX_USAGE "opcion invalida: -$OPTARG" ;;
         esac
@@ -1517,7 +1518,7 @@ moss_cmd_upgrade() {
         moss_progress "$_moss_up_curr" "$_moss_up_tot" "$_pkg procesado."
     done
 
-    if [ "$MOSS_FORMAT_JSON" -eq 1 ]; then
+    if [ "$MOSS_JSON" -eq 1 ]; then
         _moss_up_fcount=0
         [ -n "$_moss_up_failed" ] && _moss_up_fcount=$(printf '%s\n' "$_moss_up_failed" | wc -w)
         printf '{"status":"%s","updated":%d,"failed":%d,"failed_packages":[%s]}\n' \
