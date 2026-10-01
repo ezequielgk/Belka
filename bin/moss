@@ -28,6 +28,8 @@ MOSS_EX_DEP=6
 
 MOSS_TAB=$(printf '\t')
 
+case $0 in */*) _moss_self=$0 ;; *) _moss_self=$(command -v "$0") ;; esac
+
 # Imprime mensajes en la consola con diferentes niveles de severidad.
 #
 # Argumentos:
@@ -162,6 +164,10 @@ moss_load_config() {
         esac
         _moss_c_key=${_moss_c_line%%=*}
         _moss_c_val=${_moss_c_line#*=}
+        _moss_c_val=${_moss_c_val#\'}
+        _moss_c_val=${_moss_c_val%\'}
+        _moss_c_val=${_moss_c_val#\"}
+        _moss_c_val=${_moss_c_val%\"}
         [ "$_moss_c_key" = "$_moss_c_line" ] && continue
         case $_moss_c_key in
             MOSS_PREFIX)     MOSS_PREFIX=$_moss_c_val ;;
@@ -252,9 +258,9 @@ moss_download() {
     case $1 in
         http://*|https://*)
             if command -v curl >/dev/null 2>&1; then
-                curl -# -fSL -o "$2" "$1"
+                curl -# -fSL --connect-timeout 10 --max-time 300 -o "$2" "$1"
             elif command -v wget >/dev/null 2>&1; then
-                wget -q --show-progress -O "$2" "$1"
+                wget -q --show-progress --timeout=10 --read-timeout=300 -O "$2" "$1"
             else
                 moss_log ERROR "se necesita curl o wget para descargar $1"
                 return $MOSS_EX_DEP
@@ -404,10 +410,10 @@ moss_index_load() {
             if [ -f "$_moss_cfg_dir/config" ]; then
                 _moss_tmp_cfg="$_moss_cfg_dir/config.$$"
                 grep -v "^MOSS_INDEX_URL=" "$_moss_cfg_dir/config" > "$_moss_tmp_cfg" 2>/dev/null || :
-                printf "MOSS_INDEX_URL='%s'\n" "$_moss_new_url" >> "$_moss_tmp_cfg"
+                printf "MOSS_INDEX_URL=%s\n" "$_moss_new_url" >> "$_moss_tmp_cfg"
                 mv "$_moss_tmp_cfg" "$_moss_cfg_dir/config"
             else
-                printf "MOSS_INDEX_URL='%s'\n" "$_moss_new_url" > "$_moss_cfg_dir/config"
+                printf "MOSS_INDEX_URL=%s\n" "$_moss_new_url" > "$_moss_cfg_dir/config"
             fi
             moss_log INFO "Configuracion guardada en $_moss_cfg_dir/config"
             ;;
@@ -463,7 +469,8 @@ moss_index_load() {
 moss_index_lookup() {
     _moss_l_name="$1"
     _moss_pref_type="$2"
-    _moss_l_lines=$(awk -F "$MOSS_TAB" -v n="$_moss_l_name" '$1 !~ /^#/ && $1 == n { print }' "$_moss_index_file")
+    _moss_silent="$3"
+    _moss_l_lines=$(awk -F "$MOSS_TAB" -v n="$_moss_l_name" '{sub(/\r$/, "")} $1 !~ /^#/ && $1 == n { print }' "$_moss_index_file")
     [ -n "$_moss_l_lines" ] || return 1
 
     if [ -n "$_moss_pref_type" ]; then
@@ -480,7 +487,7 @@ moss_index_lookup() {
 ' "$_moss_l_lines" | head -n 1)
     
     if [ "$_moss_l_count" -gt 1 ]; then
-        if [ "$MOSS_ASSUME_YES" -eq 0 ] && [ -t 0 ]; then
+        if [ "$MOSS_ASSUME_YES" -eq 0 ] && [ "$_moss_silent" != 1 ] && [ -t 0 ]; then
             printf "Múltiples formatos encontrados para '%s':\n" "$1" >&2
             _moss_i=1
             while IFS= read -r _line; do
@@ -502,7 +509,7 @@ EOF
     fi
 
     MOSS_L_VERSION='' MOSS_L_URL='' MOSS_L_SHA='' MOSS_L_DESC='' MOSS_L_EXEC='' MOSS_L_SIG='' MOSS_L_CAT='' MOSS_L_TERM='' MOSS_L_TYPE=''
-    IFS=$MOSS_TAB read -r _moss_l_name MOSS_L_VERSION MOSS_L_URL MOSS_L_SHA MOSS_L_DESC MOSS_L_EXEC MOSS_L_CAT MOSS_L_TERM MOSS_L_TYPE << EOF
+    IFS=$MOSS_TAB read -r _moss_l_name MOSS_L_VERSION MOSS_L_URL MOSS_L_SHA MOSS_L_DESC MOSS_L_EXEC MOSS_L_CAT MOSS_L_TERM MOSS_L_TYPE MOSS_L_SIG << EOF
 $_moss_l_line
 EOF
     [ -z "$MOSS_L_CAT" ] || [ "$MOSS_L_CAT" = "-" ] && MOSS_L_CAT="Utility"
@@ -574,6 +581,10 @@ moss_extract() {
         chmod +x "$_moss_ai_tgt"
         return 0
     }
+    tar -tf "$2" 2>/dev/null | grep -E '(^|/)\.\.(/|$)|^/' >/dev/null && {
+        moss_log ERROR "tar contiene rutas inseguras: $2"
+        return 1
+    }
     tar -xf "$2" -C "$3" 2>/dev/null && return 0
     case $2 in
         *.tar.gz|*.tgz)   tar -xzf "$2" -C "$3" ;;
@@ -585,8 +596,8 @@ moss_extract() {
             chmod +x "$3/$(basename "$2" .bz2)"
             ;;
         *)                
-            cp "$2" "$3/$(basename "$2")"
-            chmod +x "$3/$(basename "$2")"
+            moss_log ERROR "formato de archivo no soportado: $2"
+            return 1
             ;;
     esac
 }
@@ -635,7 +646,7 @@ moss_check_conflicts() {
     _moss_k_n=0
     _moss_k_any=0
     while IFS= read -r _moss_k_f; do
-        if [ -e "$MOSS_PREFIX/$_moss_k_f" ]; then
+        if [ -e "$MOSS_PREFIX/$_moss_k_f" ] || [ -L "$MOSS_PREFIX/$_moss_k_f" ]; then
             _moss_k_any=1
             if [ "$_moss_k_n" -lt 20 ]; then
                 moss_log WARN "existe: $MOSS_PREFIX/$_moss_k_f"
@@ -720,8 +731,18 @@ moss_remove_pkg() {
             _moss_rm_curr=0
             LC_ALL=C sort -r "$_moss_rm_d/files" | while IFS= read -r _moss_rm_f; do
                 case "$_moss_rm_f" in
-                    /*) _moss_rm_tgt="$_moss_rm_f" ;;
-                    *)  _moss_rm_tgt="$_moss_rm_prefix/$_moss_rm_f" ;;
+                    /*) 
+                        case "$_moss_rm_f" in
+                            "$MOSS_PREFIX"/*|"$MOSS_STATE_DIR"/*|"$HOME/.local/share/applications"/*|"/usr/share/applications"/*|"${XDG_DATA_HOME:-$HOME/.local/share}/applications"/*) _moss_rm_tgt="$_moss_rm_f" ;;
+                            *) moss_log ERROR "ruta absoluta invalida en files: $_moss_rm_f"; continue ;;
+                        esac
+                        ;;
+                    *)  
+                        case "$_moss_rm_f" in
+                            *..*) moss_log ERROR "ruta relativa invalida en files: $_moss_rm_f"; continue ;;
+                        esac
+                        _moss_rm_tgt="$_moss_rm_prefix/$_moss_rm_f" 
+                        ;;
                 esac
                 
                 [ "$MOSS_LOG_LEVEL" -ge 3 ] && moss_log DEBUG "eliminando: $_moss_rm_tgt"
@@ -857,7 +878,7 @@ moss_perform_install() {
     
     mkdir -p "$_moss_p_opt_staging/$_moss_tgt_dir"
     
-    for _moss_sb_f in "$_moss_p_staging"/* "$_moss_p_staging"/.[!.]*; do
+    for _moss_sb_f in "$_moss_p_staging"/* "$_moss_p_staging"/.[!.]* "$_moss_p_staging"/..?*; do
         [ -e "$_moss_sb_f" ] || continue
         mv "$_moss_sb_f" "$_moss_p_opt_staging/$_moss_tgt_dir/"
     done
@@ -931,7 +952,7 @@ moss_perform_install() {
         _moss_file=${_moss_raw_file#./}
         
         case "$_moss_file" in
-            *.so | *.so.* | *.pak | *.dat | *.bin | *.html | *.txt | *.json | */node_modules/*)
+            *.so | *.so.* | *.pak | *.dat | *.html | *.txt | *.json | */node_modules/*)
                 continue
                 ;;
         esac
@@ -999,6 +1020,12 @@ $_moss_cand"
             mkdir -p "$_moss_desk_dir" 2>/dev/null
             _moss_desk_file="$_moss_desk_dir/moss-$_moss_p_name.desktop"
             
+            if [ "$MOSS_FORCE" -eq 0 ] && { [ -e "$_moss_desk_file" ] || [ -L "$_moss_desk_file" ]; }; then
+                moss_log ERROR "conflicto con acceso directo existente: $_moss_desk_file (usa --force)"
+                moss_remove_pkg "$_moss_p_name" >/dev/null 2>&1
+                return $MOSS_EX_CONFLICT
+            fi
+            
             _moss_term_val="false"
             [ "$MOSS_OPT_TERM" = "1" ] && _moss_term_val="true"
             
@@ -1024,6 +1051,13 @@ EOF
         mkdir -p "$MOSS_PREFIX/bin"
         _moss_rel_target="../${_moss_exec_path#"$MOSS_PREFIX/"}"
         _moss_symlink="$MOSS_PREFIX/bin/$_moss_sym_name"
+        
+        if [ "$MOSS_FORCE" -eq 0 ] && { [ -e "$_moss_symlink" ] || [ -L "$_moss_symlink" ]; }; then
+            moss_log ERROR "conflicto con ejecutable existente: $_moss_symlink (usa --force)"
+            moss_remove_pkg "$_moss_p_name" >/dev/null 2>&1
+            return $MOSS_EX_CONFLICT
+        fi
+        
         ln -sf "$_moss_rel_target" "$_moss_symlink"
         printf 'bin/%s\n' "$_moss_sym_name" >> "$_moss_p_state/files"
         moss_log INFO "enlace symlink creado: bin/$_moss_sym_name -> $_moss_rel_target"
@@ -1059,6 +1093,9 @@ moss_resolve_pkg() {
         case "$1" in
             *.AppImage|*.appimage) MOSS_R_TYPE='appimage' ;;
         esac
+        case "$MOSS_R_NAME" in
+            */*|*..*|.*) moss_log ERROR "nombre de paquete invalido: $MOSS_R_NAME"; return $MOSS_EX_USAGE ;;
+        esac
         MOSS_R_LOCAL=$1
         return 0
     fi
@@ -1080,6 +1117,9 @@ moss_resolve_pkg() {
             case "$1" in
                 *.AppImage|*.appimage) MOSS_R_TYPE='appimage' ;;
             esac
+            case "$MOSS_R_NAME" in
+                */*|*..*|.*) moss_log ERROR "nombre de paquete invalido: $MOSS_R_NAME"; return $MOSS_EX_USAGE ;;
+            esac
             MOSS_R_LOCAL=''
             return 0
             ;;
@@ -1093,6 +1133,10 @@ moss_resolve_pkg() {
     MOSS_R_VERSION=$MOSS_L_VERSION
     MOSS_R_URL=$MOSS_L_URL
     MOSS_R_SHA=$MOSS_L_SHA
+    case "$MOSS_R_NAME" in
+        */*|*..*|.*) moss_log ERROR "nombre de paquete invalido: $MOSS_R_NAME"; return $MOSS_EX_USAGE ;;
+    esac
+
     MOSS_R_SIG=$MOSS_L_SIG
     MOSS_R_EXEC=$MOSS_L_EXEC
     MOSS_R_CAT=$MOSS_L_CAT
@@ -1190,7 +1234,15 @@ moss_cmd_remove() {
         _moss_rm_resolved=""
         if [ -h "$MOSS_PREFIX/bin/$_moss_rm_name" ]; then
             _moss_rm_target=$(readlink "$MOSS_PREFIX/bin/$_moss_rm_name")
-            _moss_rm_resolved=$(printf '%s\n' "$_moss_rm_target" | awk -F/ '{print $3}')
+            _moss_rm_resolved=$(printf '%s\n' "$_moss_rm_target" | sed -n 's#.*/pkg/[^/]*/\([^/]*\)/.*#\1#p')
+            if [ -z "$_moss_rm_resolved" ]; then
+                _moss_rm_resolved=$(printf '%s\n' "$_moss_rm_target" | sed -n 's#.*/pkg/[^/]*/\([^/]*\)$#\1#p')
+            fi
+            
+            if [ -z "$_moss_rm_resolved" ]; then
+                moss_die $MOSS_EX_USAGE "symlink con formato desconocido: $_moss_rm_target"
+            fi
+
             if [ -n "$_moss_rm_resolved" ] && [ -f "$MOSS_STATE_DIR/$_moss_rm_resolved/manifest" ]; then
                 moss_log INFO "resolviendo binario '$_moss_rm_name' al paquete '$_moss_rm_resolved'"
                 _moss_rm_name="$_moss_rm_resolved"
@@ -1322,7 +1374,7 @@ moss_cmd_update() {
         export MOSS_P_APP_NAME="${_moss_prev_name:-$1}"
         export MOSS_IS_LOCAL_UPDATE=1
         
-        "$0" install -f "$2"
+        "$_moss_self" install -f "$2"
         return $?
     fi
 
@@ -1370,10 +1422,11 @@ moss_cmd_upgrade() {
     set +f
     IFS=$_moss_an_saveifs
     OPTIND=1
-    while getopts ':hy' _moss_opt; do
+    while getopts ':hyj' _moss_opt; do
         case $_moss_opt in
             h) moss_usage; return 0 ;;
             y) MOSS_ASSUME_YES=1 ;;
+            j) MOSS_FORMAT_JSON=1 ;;
             :) moss_die $MOSS_EX_USAGE "falta argumento para -$OPTARG" ;;
             *) moss_die $MOSS_EX_USAGE "opcion invalida: -$OPTARG" ;;
         esac
@@ -1393,7 +1446,7 @@ moss_cmd_upgrade() {
         _moss_p_ver="$MOSS_M_VERSION"
         
         if moss_index_lookup "$_moss_p_name" "$MOSS_M_TYPE"; then
-            if [ "$_moss_p_ver" != "$MOSS_L_VERSION" ]; then
+            if [ "$(moss_version_gt "$MOSS_L_VERSION" "$_moss_p_ver")" = "1" ]; then
                 _moss_up_pkgs="$_moss_up_pkgs $_moss_p_name"
                 _moss_up_tot=$((_moss_up_tot + 1))
             fi
@@ -1412,7 +1465,10 @@ moss_cmd_upgrade() {
 
     if [ "${MOSS_ASSUME_YES:-0}" -ne 1 ]; then
         printf '¿Desea continuar con la actualización? [S/n] '
-        read -r _moss_ans </dev/tty
+        if ! read -r _moss_ans </dev/tty; then
+            moss_log ERROR "no hay terminal interactiva; usa -y para confirmar automaticamente"
+            return $MOSS_EX_USAGE
+        fi
         case "$_moss_ans" in
             [Nn]*)
                 moss_log INFO "Actualización cancelada por el usuario."
@@ -1619,7 +1675,7 @@ moss_cmd_list() {
             [ "$_moss_ls_first" -eq 0 ] && printf ','
             _moss_ls_first=0
             _moss_ls_avail=''
-            if [ "$_moss_ls_idx" -eq 1 ] && moss_index_lookup "$MOSS_M_NAME" 2>/dev/null; then
+            if [ "$_moss_ls_idx" -eq 1 ] && moss_index_lookup "$MOSS_M_NAME" "" 1 2>/dev/null; then
                 _moss_ls_avail=$(printf ',"available_version":"%s"' "$(moss_jesc "$MOSS_L_VERSION")")
             fi
             printf '{"name":"%s","version":"%s","installed_at":"%s","prefix":"%s","type":"%s"%s}' \
@@ -1790,7 +1846,7 @@ moss_cmd_info() {
         _moss_in_inst=1
     fi
     _moss_in_idx=0
-    if moss_index_load && moss_index_lookup "$_moss_in_name"; then
+    if moss_index_load && moss_index_lookup "$_moss_in_name" "" 1; then
         _moss_in_idx=1
     fi
     if [ "$_moss_in_inst" -eq 0 ] && [ "$_moss_in_idx" -eq 0 ]; then
