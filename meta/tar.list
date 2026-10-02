@@ -206,6 +206,7 @@ yj	sclevine/yj	yj-linux-(x86_64|amd64|64bit)	Convert between YAML, TOML, JSON, a
 youtube-music	pear-devs/pear-desktop	youtube-music.*\.tar\.gz	Cliente de escritorio para YouTube Music	youtube-music	AudioVideo	N
 yq	mikefarah/yq	yq_linux_amd64\.tar\.gz	Procesador de YAML, JSON, XML y otros formatos	yq	Development	Y
 yt-dlp	yt-dlp/yt-dlp	yt-dlp_linux$	Descargador de videos y audio desde multiples sitios	yt-dlp	Network	Y
+zed	https://github.com/zed-industries/zed	zed-linux-x86_64\.tar\.gz	Code at the speed of thought – Zed is a high-performance, multiplayer code editor from the creators of Atom and Tree-sitter.	zed	Audio	N
 zellij	zellij-org/zellij	zellij-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	A terminal workspace with batteries included	zellij	ConsoleOnly	Y
 zen-browser	zen-browser/desktop	zen.linux-x86_64.tar.xz	un navegador basado en firefox y centrado en estetica	zen-bin	Network	N
 zerotierone-static	https://github.com/rafalb8/ZeroTierOne-Static	zerotier-one-x86_64\.tar\.gz	Static Zerotier-One binaries	zerotierone-static	Utility	Y
