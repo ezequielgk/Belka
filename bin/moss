@@ -1,6 +1,6 @@
 #!/bin/sh
 
-MOSS_VERSION=1.2.3
+MOSS_VERSION=1.2.4
 PROG_NAME=moss
 
 MOSS_PREFIX=${MOSS_PREFIX:-}
@@ -1581,6 +1581,7 @@ moss_cmd_rollback() {
     _moss_rb_url=$MOSS_M_URL
     _moss_rb_sha=$MOSS_M_SHA
     _moss_rb_tarball=$MOSS_M_TARBALL
+    _moss_rb_type=$MOSS_M_TYPE
 
     _moss_rb_cache=$MOSS_CACHE_DIR/$_moss_rb_tarball
     if [ -f "$_moss_rb_cache" ] && [ -n "$_moss_rb_sha" ] &&
