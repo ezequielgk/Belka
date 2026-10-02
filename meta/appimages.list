@@ -359,6 +359,7 @@ spacecadetpinball	pkgforge-dev/spacecadetpinball-AppImage	.*(x86_64|amd64|64bit)
 spaghettikart	pkgforge-dev/SpaghettiKart-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Native PC port of Mario Kart 64	spaghettikart	Game	N
 speedcrunch	pkgforge-dev/SpeedCrunch-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Fast and precise calculator	speedcrunch	Calculator	N
 spek	pkgforge-dev/Spek-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Acoustic spectrum analyser	spek	Audio	N
+spotifast	https://github.com/crmne/spotifast	spotifast-.*_64\.AppImage	Spotify, native and fast. One lightweight Rust app for your whole library, local playback, and Spotify Connect on Linux, macOS, and Windows.	spotifast	Utility	N
 srb2	pkgforge-dev/SRB2-AppImage	.*(x86_64|amd64|64bit).*\.appimage	A 3D Sonic the Hedgehog fan game based off of the Doom Legacy engine	srb2	Game	N
 srb2kart	pkgforge-dev/SRB2Kart-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Kart racing game based on the 3D Sonic fangame Sonic Robo Blast 2	srb2kart	Game	N
 st	pkgforge-dev/st-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Simple terminal	st	System	N

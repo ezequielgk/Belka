@@ -14,6 +14,7 @@ amp	jmacdonald/amp	amp-(x86_64|amd64|64bit)-unknown-linux-musl	A complete text e
 appimagetool	pkgforge-dev/appimagetool	appimagetool-(x86_64|amd64|64bit)-linux	Rust implementation of appimagetool for the Anylinux-AppImages project	appimagetool	ConsoleOnly	Y
 arduino-cli	arduino/arduino-cli	.*Linux_(x86_64|amd64|64bit)\.tar\.gz	Arduino command line interface	arduino-cli	Development	Y
 atuin	atuinsh/atuin	atuin-x86_64-unknown-linux-musl\.tar\.gz	Shell history moderno con búsqueda y sincronización	atuin	Utility	Y
+audiosource	https://github.com/ezequielgk/audiosource	audiosource-linux\.tar\.gz	:microphone: Use an Android device as a USB microphone	audiosource	Utility	N
 aws-nuke	ekristen/aws-nuke	.*linux-(x86_64|amd64|64bit)\.tar\.gz	Remove all the resources from an AWS account	aws-nuke	Development	Y
 b3sum	BLAKE3-team/BLAKE3	b3sum_linux_x64_bin	Command line utility for calculating BLAKE3 hashes	b3sum	ConsoleOnly	Y
 bandwhich	imsnif/bandwhich	bandwhich-v.*-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	Terminal bandwidth utilization tool	bandwhich	ConsoleOnly	Y
@@ -168,6 +169,7 @@ soar	pkgforge/soar	soar-(x86_64|amd64|64bit)-linux\.tar\.gz	Fast, modern, bloat-
 soft-serve	charmbracelet/soft-serve	soft-serve_.*_Linux_(x86_64|amd64|64bit)\.tar\.gz	The mighty, self-hostable Git server for the command line	soft-serve	ConsoleOnly	Y
 sops	getsops/sops	sops-v.*\.linux\.(x86_64|amd64|64bit)	Simple and flexible tool for managing secrets	sops	ConsoleOnly	Y
 splitux	splitux-gg/splitux	splitux-.*-x86_64\.tar\.gz	Local co-op split-screen launcher for Linux	splitux	Utility	Y
+spotifast	https://github.com/crmne/spotifast	spotifast-v.*_64-unknown-linux-gnu\.tar\.gz	Spotify, native and fast. One lightweight Rust app for your whole library, local playback, and Spotify Connect on Linux, macOS, and Windows.	spotifast	Utility	N
 starship	starship/starship	starship-(x86_64|amd64|64bit)-unknown-linux-musl\.tar\.gz	The minimal, blazing-fast, and infinitely customizable prompt for any shell	starship	ConsoleOnly	Y
 stern	stern/stern	stern_.*_linux_amd64\.tar\.gz	⎈ Multi pod and container log tailing for Kubernetes -- Friendly fork of https://github.com/wercker/stern	stern	Development	Y
 sttr	abhimanyu003/sttr	sttr_Linux_(x86_64|amd64|64bit)\.tar\.gz	CLI app to perform various operations on strings	sttr	ConsoleOnly	Y
