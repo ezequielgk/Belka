@@ -388,6 +388,7 @@ torzu	pkgforge-dev/Torzu-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Nintendo Sw
 touchhle	pkgforge-dev/TouchHLE-AppImage	.*(x86_64|amd64|64bit).*\.appimage	High-level iOS emulator	touchhle	Emulator	N
 transmission-qt	pkgforge-dev/transmission-qt-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Fast, easy, and free BitTorrent client (Qt interface)	transmission-qt	FileTransfer	N
 trelby	pkgforge-dev/Trelby-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Free, multiplatform, feature-rich screenwriting program	trelby	Office	N
+trinity-launcher	https://github.com/Trinity-LA/Trinity-Launcher	Trinity_Launcher-x86_64\.AppImage	UI for minecraft bedrock linux	trinity-launcher	Utility	N
 tutanota-desktop	pkgforge-dev/Tutanota-Desktop-AppImage-Enhanced	.*(x86_64|amd64|64bit).*\.appimage	Secure email client	tutanota-desktop	Email	N
 tux-football	pkgforge-dev/Tux-Football-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Arcade-style 2D soccer game featuring Tux	tux-football	Game	N
 tuxpuck	pkgforge-dev/Tuxpuck-AppImage	.*(x86_64|amd64|64bit).*\.appimage	Air hockey game and Shufflepuck Cafe clone featuring Tux	tuxpuck	Game	N
