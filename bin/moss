@@ -752,7 +752,7 @@ moss_remove_pkg() {
                 case "$_moss_rm_f" in
                     /*) 
                         case "$_moss_rm_f" in
-                            "$MOSS_PREFIX"/*|"$MOSS_STATE_DIR"/*|"$HOME/.local/share/applications"/*|"/usr/share/applications"/*|"${XDG_DATA_HOME:-$HOME/.local/share}/applications"/*) _moss_rm_tgt="$_moss_rm_f" ;;
+                            "$MOSS_PREFIX"/*|"$MOSS_STATE_DIR"/*|"$HOME/.local/share/applications"/*|"/usr/share/applications"/*|"${XDG_DATA_HOME:-$HOME/.local/share}/applications"/*|"$HOME/.local/share/icons"/*|"/usr/share/icons"/*|"${XDG_DATA_HOME:-$HOME/.local/share}/icons"/*) _moss_rm_tgt="$_moss_rm_f" ;;
                             *) moss_log ERROR "ruta absoluta invalida en files: $_moss_rm_f"; continue ;;
                         esac
                         ;;
@@ -797,6 +797,107 @@ moss_remove_pkg() {
 #   MOSS_P_NAME, MOSS_P_VERSION, MOSS_P_URL, MOSS_P_SHA, MOSS_P_LOCAL, MOSS_P_SIG, MOSS_P_EXEC
 # Retorna:
 #   0 en exito total de instalacion, exit >0 en cualquier falla critica
+# Extrae metadatos graficos (.desktop e icono) de un paquete.
+#
+# Argumentos:
+#   $1 - Tipo (tar o appimage)
+#   $2 - Nombre del paquete
+#   $3 - Archivo fuente (tarball o appimage)
+#   $4 - Directorio staging
+#   $5 - Si el sha256 fue verificado (1 o 0)
+# Globales:
+#   MOSS_TMPDIR, MOSS_MD_DESKTOP, MOSS_MD_ICON
+# Retorna:
+#   0
+moss_extract_metadata() {
+    MOSS_MD_DESKTOP=""
+    MOSS_MD_ICON=""
+    _moss_em_type=$1
+    _moss_em_name=$2
+    _moss_em_src=$3
+    _moss_em_staging=$4
+    _moss_em_verified=$5
+
+    _moss_em_md_dir=$MOSS_TMPDIR/metadata.$$
+    mkdir -p "$_moss_em_md_dir"
+
+    if [ "$_moss_em_type" = "tar" ]; then
+        _moss_em_desk=$(find "$_moss_em_staging" -name "*.desktop" -type f 2>/dev/null | awk '{ print length($0), $0 }' | sort -n | cut -d' ' -f2- | head -n 1)
+        if [ -n "$_moss_em_desk" ]; then
+            MOSS_MD_DESKTOP=$_moss_em_desk
+        fi
+
+        for _moss_em_p in ".DirIcon" "$_moss_em_name.svg" "$_moss_em_name.png" "*.svg" "*.png"; do
+            _moss_em_icons=$(find "$_moss_em_staging" -name "$_moss_em_p" -type f 2>/dev/null)
+            if [ -n "$_moss_em_icons" ]; then
+                _moss_em_valid_icons=$(printf '%s\n' "$_moss_em_icons" | grep -v -E '/node_modules/|/doc/|/docs/|/help/')
+                if [ -n "$_moss_em_valid_icons" ]; then
+                    _moss_em_best=$(printf '%s\n' "$_moss_em_valid_icons" | grep -E '/share/icons/|/usr/share/icons/|^'"$_moss_em_staging"'/[^/]+$' | head -n 1)
+                    if [ -n "$_moss_em_best" ]; then
+                        MOSS_MD_ICON=$_moss_em_best
+                        break
+                    else
+                        MOSS_MD_ICON=$(printf '%s\n' "$_moss_em_valid_icons" | head -n 1)
+                        break
+                    fi
+                fi
+            fi
+        done
+
+    elif [ "$_moss_em_type" = "appimage" ]; then
+        _moss_em_has_unsquash=0
+        command -v unsquashfs >/dev/null 2>&1 && _moss_em_has_unsquash=1
+        
+        _moss_em_use_fallback=0
+        if [ "$_moss_em_has_unsquash" -eq 0 ]; then
+            if [ "$_moss_em_verified" -eq 1 ]; then
+                _moss_em_use_fallback=1
+            else
+                moss_log WARN "metadata grafica omitida: AppImage sin verificar (instala unsquashfs para habilitarla)"
+                return 0
+            fi
+        fi
+
+        if [ "$_moss_em_use_fallback" -eq 1 ]; then
+            chmod +x "$_moss_em_src"
+            ( cd "$_moss_em_md_dir" && "$_moss_em_src" --appimage-extract "*.desktop" >/dev/null 2>&1 || : )
+            ( cd "$_moss_em_md_dir" && "$_moss_em_src" --appimage-extract ".DirIcon" >/dev/null 2>&1 || : )
+            ( cd "$_moss_em_md_dir" && "$_moss_em_src" --appimage-extract "*.svg" >/dev/null 2>&1 || : )
+            ( cd "$_moss_em_md_dir" && "$_moss_em_src" --appimage-extract "*.png" >/dev/null 2>&1 || : )
+            
+            _moss_em_ai_root="$_moss_em_md_dir/squashfs-root"
+        else
+            _moss_em_toc=$(unsquashfs -l "$_moss_em_src" 2>/dev/null)
+            
+            _moss_em_paths=$(printf '%s\n' "$_moss_em_toc" | sed 's|^[^/]*/||')
+            
+            _moss_em_desk_path=$(printf '%s\n' "$_moss_em_paths" | grep '\.desktop$' | head -n 1)
+            
+            _moss_em_icon_path=$(printf '%s\n' "$_moss_em_paths" | grep '^\.DirIcon$' | head -n 1)
+            [ -z "$_moss_em_icon_path" ] && _moss_em_icon_path=$(printf '%s\n' "$_moss_em_paths" | grep '\.svg$' | head -n 1)
+            [ -z "$_moss_em_icon_path" ] && _moss_em_icon_path=$(printf '%s\n' "$_moss_em_paths" | grep '\.png$' | head -n 1)
+
+            _moss_em_extract_args=""
+            [ -n "$_moss_em_desk_path" ] && _moss_em_extract_args="$_moss_em_extract_args $_moss_em_desk_path"
+            [ -n "$_moss_em_icon_path" ] && _moss_em_extract_args="$_moss_em_extract_args $_moss_em_icon_path"
+
+            _moss_em_ai_root="$_moss_em_md_dir/squashfs-root"
+            if [ -n "$_moss_em_extract_args" ]; then
+                unsquashfs -d "$_moss_em_ai_root" -f "$_moss_em_src" $_moss_em_extract_args >/dev/null 2>&1 || :
+            fi
+        fi
+
+        if [ -d "$_moss_em_ai_root" ]; then
+            MOSS_MD_DESKTOP=$(find "$_moss_em_ai_root" -name "*.desktop" -type f 2>/dev/null | head -n 1)
+            for _moss_em_p in ".DirIcon" "*.svg" "*.png"; do
+                MOSS_MD_ICON=$(find "$_moss_em_ai_root" -name "$_moss_em_p" 2>/dev/null | head -n 1)
+                [ -n "$MOSS_MD_ICON" ] && break
+            done
+        fi
+    fi
+    return 0
+}
+
 moss_perform_install() {
     _moss_p_name=$1
     _moss_p_version=$2
@@ -808,6 +909,7 @@ moss_perform_install() {
     _moss_p_cat=${8:-Utility}
     _moss_p_term=${9:-N}
     _moss_p_type=${10:-tar}
+    _moss_p_sha_verified=0
 
     moss_log INFO "Instalando paquete: $_moss_p_name"
 
@@ -855,6 +957,7 @@ moss_perform_install() {
             return $MOSS_EX_VERIFY
         fi
         moss_log DEBUG "checksum ok: $_moss_p_got"
+        _moss_p_sha_verified=1
     else
         moss_log WARN "$_moss_p_name: sin checksum en el indice; no se verifica integridad"
     fi
@@ -963,8 +1066,16 @@ moss_perform_install() {
         "$_moss_p_url" "$_moss_p_sha" "$MOSS_PREFIX" "$(basename "$_moss_p_src")" "$_moss_p_type"
     
     moss_log STEP "Configurando ejecutable y enlaces..."
+    moss_extract_metadata "$_moss_p_type" "$_moss_p_name" "$_moss_p_src" "$_moss_p_staging" "$_moss_p_sha_verified"
+
     _moss_desk_dir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
-    [ "$MOSS_SYSTEM" -eq 1 ] && _moss_desk_dir="/usr/share/applications"
+    _moss_icons_svg_dir="${XDG_DATA_HOME:-$HOME/.local/share}/icons/hicolor/scalable/apps"
+    _moss_icons_png_dir="${XDG_DATA_HOME:-$HOME/.local/share}/icons/hicolor/512x512/apps"
+    if [ "$MOSS_SYSTEM" -eq 1 ]; then
+        _moss_desk_dir="/usr/share/applications"
+        _moss_icons_svg_dir="/usr/share/icons/hicolor/scalable/apps"
+        _moss_icons_png_dir="/usr/share/icons/hicolor/512x512/apps"
+    fi
     
     _moss_candidates=""
     _moss_cand_count=0
@@ -1046,24 +1157,76 @@ $_moss_cand"
                 return $MOSS_EX_CONFLICT
             fi
             
+            _moss_has_md=0
+            if [ -n "$MOSS_MD_ICON" ]; then
+                case "$MOSS_MD_ICON" in
+                    *.svg)
+                        mkdir -p "$_moss_icons_svg_dir" 2>/dev/null
+                        cp "$MOSS_MD_ICON" "$_moss_icons_svg_dir/$_moss_p_name.svg" 2>/dev/null
+                        printf '%s\n' "$_moss_icons_svg_dir/$_moss_p_name.svg" >> "$_moss_p_state/files"
+                        _moss_has_md=1
+                        ;;
+                    *)
+                        mkdir -p "$_moss_icons_png_dir" 2>/dev/null
+                        cp "$MOSS_MD_ICON" "$_moss_icons_png_dir/$_moss_p_name.png" 2>/dev/null
+                        printf '%s\n' "$_moss_icons_png_dir/$_moss_p_name.png" >> "$_moss_p_state/files"
+                        _moss_has_md=1
+                        ;;
+                esac
+            fi
+
             _moss_term_val="false"
             [ "$MOSS_OPT_TERM" = "1" ] && _moss_term_val="true"
             
             _moss_d_name="${MOSS_P_APP_NAME:-$_moss_p_name}"
             _moss_d_name="$(awk 'BEGIN{print toupper(substr(ARGV[1],1,1)) substr(ARGV[1],2)}' "$_moss_d_name")"
             
-            cat <<EOF > "$_moss_desk_file"
+            if [ -n "$MOSS_MD_DESKTOP" ]; then
+                _moss_orig_name=$(sed -n 's/^Name=//p' "$MOSS_MD_DESKTOP" | head -n 1)
+                [ -n "$_moss_orig_name" ] && _moss_d_name="$_moss_orig_name"
+                
+                awk -v exec="$MOSS_PREFIX/bin/${_moss_bin_name%.AppImage}" -v term="$_moss_term_val" -v name="$_moss_d_name" -v icon="$_moss_p_name" '
+                    BEGIN { exec_done=0; term_done=0; name_done=0; icon_done=0 }
+                    /^Exec=/ { print "Exec=" exec; exec_done=1; next }
+                    /^Terminal=/ { print "Terminal=" term; term_done=1; next }
+                    /^Name=/ { print "Name=" name; name_done=1; next }
+                    /^Icon=/ { print "Icon=" icon; icon_done=1; next }
+                    { print }
+                    END {
+                        if (!exec_done) print "Exec=" exec
+                        if (!term_done) print "Terminal=" term
+                        if (!name_done) print "Name=" name
+                        if (!icon_done) print "Icon=" icon
+                    }
+                ' "$MOSS_MD_DESKTOP" > "$_moss_desk_file"
+                _moss_has_md=1
+            else
+                cat <<EOF2 > "$_moss_desk_file"
 [Desktop Entry]
 Type=Application
 Name=$_moss_d_name
 Exec="$MOSS_PREFIX/bin/${_moss_bin_name%.AppImage}"
 Terminal=$_moss_term_val
 Categories=${_moss_p_cat};
-EOF
+EOF2
+                if [ -n "$MOSS_MD_ICON" ]; then
+                    echo "Icon=$_moss_p_name" >> "$_moss_desk_file"
+                fi
+            fi
+
             printf '%s\n' "$_moss_desk_file" >> "$_moss_p_state/files"
-            moss_log INFO "acceso directo creado: $_moss_desk_file"
+            if [ "$_moss_has_md" -eq 1 ]; then
+                moss_log INFO "metadata grafica integrada (icono y/o .desktop)"
+            else
+                moss_log INFO "acceso directo creado: $_moss_desk_file"
+            fi
             
             command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$_moss_desk_dir"
+            _moss_icon_cache_dir="${XDG_DATA_HOME:-$HOME/.local/share}/icons/hicolor"
+            [ "$MOSS_SYSTEM" -eq 1 ] && _moss_icon_cache_dir="/usr/share/icons/hicolor"
+            if [ "$_moss_has_md" -eq 1 ]; then
+                command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -q "$_moss_icon_cache_dir" >/dev/null 2>&1 || :
+            fi
         fi
         
         _moss_sym_name="${_moss_bin_name%.AppImage}"
