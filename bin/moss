@@ -1083,7 +1083,7 @@ moss_perform_install() {
         _moss_file=${_moss_raw_file#./}
         
         case "$_moss_file" in
-            *.so | *.so.* | *.pak | *.dat | *.html | *.txt | *.json | */node_modules/*)
+            *.so | *.so.* | *.pak | *.dat | *.html | *.txt | *.json | *.exe | *.dll | *.bat | */node_modules/*)
                 continue
                 ;;
         esac
