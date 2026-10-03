@@ -258,12 +258,12 @@ moss_sha256() {
 moss_download() {
     case $1 in
         http://*|https://*)
-            if command -v curl >/dev/null 2>&1; then
-                curl -# -fSL --connect-timeout 10 --max-time 300 -o "$2" "$1"
-            elif command -v wget >/dev/null 2>&1; then
+            if command -v wget >/dev/null 2>&1; then
                 wget -q --show-progress --timeout=10 --read-timeout=300 -O "$2" "$1"
+            elif command -v curl >/dev/null 2>&1; then
+                curl -# -fSL --connect-timeout 10 --max-time 300 -o "$2" "$1"
             else
-                moss_log ERROR "se necesita curl o wget para descargar $1"
+                moss_log ERROR "se necesita wget o curl para descargar $1"
                 return $MOSS_EX_DEP
             fi
             ;;
