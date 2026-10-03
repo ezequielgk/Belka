@@ -586,6 +586,24 @@ moss_extract() {
         moss_log ERROR "tar contiene rutas inseguras: $2"
         return 1
     }
+    LC_ALL=C tar -tvf "$2" 2>/dev/null | awk '
+        /^l/ && / -> / {
+            n = split($0, parts, " -> ")
+            tgt = parts[n]
+            gsub(/^[ \t]+|[ \t]+$/, "", tgt)
+            if (tgt ~ /^\// || tgt ~ /(^|\/)\.\.(\/|$)/) bad = 1
+        }
+        /^h/ && / link to / {
+            n = split($0, parts, " link to ")
+            tgt = parts[n]
+            gsub(/^[ \t]+|[ \t]+$/, "", tgt)
+            if (tgt ~ /^\// || tgt ~ /(^|\/)\.\.(\/|$)/) bad = 1
+        }
+        END { exit(bad ? 1 : 0) }
+    ' || {
+        moss_log ERROR "tar contiene enlaces inseguros: $2"
+        return 1
+    }
     tar -xf "$2" -C "$3" 2>/dev/null && return 0
     case $2 in
         *.tar.gz|*.tgz)   tar -xzf "$2" -C "$3" ;;
@@ -1285,7 +1303,10 @@ moss_update_one() {
         MOSS_U_RESULT=failed
         return 1
     fi
-    if ! moss_index_lookup "$1" "${MOSS_OPT_TYPE:-}"; then
+    if ! moss_index_lookup "$1" "${MOSS_OPT_TYPE:-$MOSS_M_TYPE}"; then
+        # Se requiere el fallback a MOSS_M_TYPE porque moss_cmd_upgrade no
+        # fuerza un tipo; asi evitamos que actualice al tipo equivocado si
+        # el paquete tiene multi-formato en el indice (ej. appimage y tar).
         moss_log WARN "$1 no esta en el indice; se omite"
         MOSS_U_RESULT=skipped
         return 0
@@ -1333,9 +1354,7 @@ moss_update_one() {
     if [ -n "$_moss_u_src" ] &&
        moss_perform_install "$1" "$MOSS_M_VERSION" "$MOSS_M_URL" "$MOSS_M_SHA" '' "$_moss_u_src" '' "$MOSS_M_CAT" "$MOSS_M_TERM" "$MOSS_M_TYPE"; then
         moss_log INFO "se revirtio automaticamente a $1 $MOSS_M_VERSION"
-        moss_write_manifest "$_moss_u_state/manifest.bak" "$1" "$MOSS_L_VERSION" \
-            "$MOSS_L_URL" "$MOSS_L_SHA" "$MOSS_PREFIX" \
-            "$MOSS_L_SHA-$(basename "$MOSS_L_URL")" "$MOSS_L_TYPE"
+        # BUG CORREGIDO: Se elimina la sobreescritura de manifest.bak con la nueva version fallida; esto era un bug ya que impedia el rollback manual posterior.
     else
         mv "$_moss_u_state/manifest.bak" "$_moss_u_state/manifest"
         [ -f "$_moss_u_state/files.bak" ] && mv "$_moss_u_state/files.bak" "$_moss_u_state/files"
@@ -1355,6 +1374,29 @@ moss_update_one() {
 # Retorna:
 #   0
 moss_cmd_update() {
+    moss_normargs "$@"
+    _moss_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $MOSS_NORMED
+    set +f
+    IFS=$_moss_an_saveifs
+    OPTIND=1
+    while getopts ':hsqvnj' _moss_opt; do
+        case $_moss_opt in
+            h) moss_usage; return 0 ;;
+            s) MOSS_SYSTEM=1 ;;
+            q) MOSS_LOG_LEVEL=1 ;;
+            v) MOSS_LOG_LEVEL=3 ;;
+            n) MOSS_DRY_RUN=1 ;;
+            j) MOSS_JSON=1 ;;
+            :) moss_die $MOSS_EX_USAGE "falta argumento para -$OPTARG" ;;
+            *) moss_die $MOSS_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+
     moss_state_init || return 1
     if [ "$#" -eq 2 ] && [ -f "$2" ]; then
         if [ ! -d "$MOSS_STATE_DIR/$1" ]; then
@@ -1374,8 +1416,16 @@ moss_cmd_update() {
         export MOSS_R_NAME="$1"
         export MOSS_P_APP_NAME="${_moss_prev_name:-$1}"
         export MOSS_IS_LOCAL_UPDATE=1
+        export MOSS_SYSTEM MOSS_LOG_LEVEL MOSS_DRY_RUN MOSS_JSON
         
-        "$_moss_self" install -f "$2"
+        _moss_upd_args="-f"
+        [ "$MOSS_SYSTEM" -eq 1 ] && _moss_upd_args="$_moss_upd_args -s"
+        [ "$MOSS_DRY_RUN" -eq 1 ] && _moss_upd_args="$_moss_upd_args -n"
+        [ "$MOSS_LOG_LEVEL" -eq 1 ] && _moss_upd_args="$_moss_upd_args -q"
+        [ "$MOSS_LOG_LEVEL" -eq 3 ] && _moss_upd_args="$_moss_upd_args -v"
+        [ "$MOSS_JSON" -eq 1 ] && _moss_upd_args="$_moss_upd_args -j"
+
+        "$_moss_self" install $_moss_upd_args "$2"
         return $?
     fi
 
@@ -1423,11 +1473,14 @@ moss_cmd_upgrade() {
     set +f
     IFS=$_moss_an_saveifs
     OPTIND=1
-    while getopts ':hyj' _moss_opt; do
+    while getopts ':hyjnqv' _moss_opt; do
         case $_moss_opt in
             h) moss_usage; return 0 ;;
             y) MOSS_ASSUME_YES=1 ;;
             j) MOSS_JSON=1 ;;
+            n) MOSS_DRY_RUN=1 ;;
+            q) MOSS_LOG_LEVEL=1 ;;
+            v) MOSS_LOG_LEVEL=3 ;;
             :) moss_die $MOSS_EX_USAGE "falta argumento para -$OPTARG" ;;
             *) moss_die $MOSS_EX_USAGE "opcion invalida: -$OPTARG" ;;
         esac
@@ -1439,78 +1492,77 @@ moss_cmd_upgrade() {
 
     _moss_up_pkgs=""
     _moss_up_tot=0
-    for _moss_s_dir in "$MOSS_STATE_DIR"/*; do
-        [ -d "$_moss_s_dir" ] || continue
-        _moss_p_name=$(basename "$_moss_s_dir")
-        
-        moss_manifest_read "$_moss_s_dir/manifest" 2>/dev/null || continue
-        _moss_p_ver="$MOSS_M_VERSION"
-        
-        if moss_index_lookup "$_moss_p_name" "$MOSS_M_TYPE"; then
-            if [ "$(moss_version_gt "$MOSS_L_VERSION" "$_moss_p_ver")" = "1" ]; then
-                _moss_up_pkgs="$_moss_up_pkgs $_moss_p_name"
-                _moss_up_tot=$((_moss_up_tot + 1))
+    _moss_up_failed=""
+
+    if [ $# -eq 0 ]; then
+        for _moss_s_dir in "$MOSS_STATE_DIR"/*; do
+            [ -d "$_moss_s_dir" ] || continue
+            _moss_p_name=$(basename "$_moss_s_dir")
+            
+            moss_manifest_read "$_moss_s_dir/manifest" 2>/dev/null || continue
+            _moss_p_ver="$MOSS_M_VERSION"
+            
+            if moss_index_lookup "$_moss_p_name" "$MOSS_M_TYPE"; then
+                if [ "$(moss_version_gt "$MOSS_L_VERSION" "$_moss_p_ver")" = "1" ]; then
+                    _moss_up_pkgs="$_moss_up_pkgs $_moss_p_name"
+                    _moss_up_tot=$((_moss_up_tot + 1))
+                fi
             fi
+        done
+
+        if [ "$_moss_up_tot" -eq 0 ]; then
+            moss_log INFO "Todos los paquetes estan actualizados."
+            return 0
         fi
-    done
 
-    if [ "$_moss_up_tot" -eq 0 ]; then
-        moss_log INFO "Todos los paquetes estan actualizados."
-        return 0
-    fi
-
-    printf 'Se actualizarán los siguientes %d paquetes:
+        printf 'Se actualizarán los siguientes %d paquetes:
   %s
 
 ' "$_moss_up_tot" "$_moss_up_pkgs"
 
-    if [ "${MOSS_ASSUME_YES:-0}" -ne 1 ]; then
-        printf '¿Desea continuar con la actualización? [S/n] '
-        if ! read -r _moss_ans </dev/tty; then
-            moss_log ERROR "no hay terminal interactiva; usa -y para confirmar automaticamente"
-            return $MOSS_EX_USAGE
+        if [ "${MOSS_ASSUME_YES:-0}" -ne 1 ]; then
+            printf '¿Desea continuar con la actualización? [S/n] '
+            if ! read -r _moss_ans </dev/tty; then
+                moss_log ERROR "no hay terminal interactiva; usa -y para confirmar automaticamente"
+                return $MOSS_EX_USAGE
+            fi
+            case "$_moss_ans" in
+                [Nn]*)
+                    moss_log INFO "Actualización cancelada por el usuario."
+                    return 0
+                    ;;
+            esac
         fi
-        case "$_moss_ans" in
-            [Nn]*)
-                moss_log INFO "Actualización cancelada por el usuario."
-                return 0
-                ;;
-        esac
+    else
+        for _moss_p_name in "$@"; do
+            case "$_moss_p_name" in
+                -*) moss_usage >&2; return $MOSS_EX_USAGE ;;
+            esac
+            if [ ! -f "$MOSS_STATE_DIR/$_moss_p_name/manifest" ]; then
+                moss_log ERROR "no esta instalado: $_moss_p_name"
+                _moss_up_failed="$_moss_up_failed $_moss_p_name"
+                continue
+            fi
+            _moss_up_pkgs="$_moss_up_pkgs $_moss_p_name"
+            _moss_up_tot=$((_moss_up_tot + 1))
+        done
+        if [ "$_moss_up_tot" -eq 0 ]; then
+            return $MOSS_EX_INSTALL
+        fi
     fi
 
     _moss_up_curr=0
     _moss_up_ok=0
-    _moss_up_failed=""
     moss_progress "$_moss_up_curr" "$_moss_up_tot" "Calculando..."
 
     for _pkg in $_moss_up_pkgs; do
         moss_progress "$_moss_up_curr" "$_moss_up_tot" "Actualizando $_pkg..."
 
-        _moss_up_state="$MOSS_STATE_DIR/$_pkg"
-        moss_manifest_read "$_moss_up_state/manifest"
-
-        if ! moss_index_lookup "$_pkg" "$MOSS_M_TYPE"; then
-            moss_log WARN "$_pkg: no encontrado en el indice para el formato instalado ($MOSS_M_TYPE); se omite"
-            _moss_up_failed="$_moss_up_failed $_pkg"
-            _moss_up_curr=$((_moss_up_curr + 1))
-            continue
-        fi
-
-        cp "$_moss_up_state/manifest" "$_moss_up_state/manifest.bak" 2>/dev/null
-        [ -f "$_moss_up_state/files" ] && cp "$_moss_up_state/files" "$_moss_up_state/files.bak"
-
-        _moss_up_saved_force=$MOSS_FORCE
-        MOSS_FORCE=1
-        moss_perform_install "$_pkg" "$MOSS_L_VERSION" "$MOSS_L_URL" "$MOSS_L_SHA" "$MOSS_L_SIG" '' "$MOSS_L_EXEC" "$MOSS_L_CAT" "$MOSS_L_TERM" "$MOSS_L_TYPE"
-        _moss_up_rc=$?
-        MOSS_FORCE=$_moss_up_saved_force
-
-        if [ "$_moss_up_rc" -eq 0 ]; then
+        moss_update_one "$_pkg"
+        
+        if [ "$MOSS_U_RESULT" = "updated" ]; then
             _moss_up_ok=$((_moss_up_ok + 1))
-        else
-            moss_log ERROR "fallo al actualizar $_pkg (rc=$_moss_up_rc); revirtiendo al estado anterior"
-            mv "$_moss_up_state/manifest.bak" "$_moss_up_state/manifest" 2>/dev/null
-            [ -f "$_moss_up_state/files.bak" ] && mv "$_moss_up_state/files.bak" "$_moss_up_state/files"
+        elif [ "$MOSS_U_RESULT" = "failed" ]; then
             _moss_up_failed="$_moss_up_failed $_pkg"
         fi
 
@@ -2026,7 +2078,7 @@ COMANDOS PRINCIPALES:
   install <nombre|URL|tar> Instala desde índice remoto, URL o archivo local
   remove <nombre|bin>      Desinstala un paquete del sistema
   update                   Sincroniza repositorios y detecta actualizaciones
-  upgrade                  Instala las actualizaciones de paquetes disponibles
+  upgrade [paquete...]       Instala las actualizaciones de paquetes disponibles
   update <nombre> <tar>    Actualiza un paquete usando un tarball local
 CONSULTA Y MANTENIMIENTO:
   list                     Lista los paquetes instalados y sus versiones
@@ -2043,10 +2095,10 @@ OPCIONES GLOBALES:
   -t, --terminal           Marca el archivo .desktop para abrirse en terminal (solo install)
   -n, --dry-run            Simula la instalación sin modificar el sistema
       --offline            Usa el caché del índice aunque esté vencido
-  -q, --quiet              Silencia la salida, mostrando solo errores
-  -v, --verbose            Aumenta el nivel de detalle en los logs
+  -q, --quiet              Silencia la salida, mostrando solo errores (global)
+  -v, --verbose            Aumenta el nivel de detalle en los logs (global)
   -f, --force              Sobrescribe conflictos o reinstala si ya existe
-  -j, --json               Formatea la salida en JSON (list, search, info, update)
+  -j, --json               Formatea la salida en JSON (list, search, info, update, upgrade)
       --index <URL>        Usa un índice personalizado (file:// o https://)
   -h, --help               Muestra este menú de ayuda
   -V, --version            Imprime la versión actual
