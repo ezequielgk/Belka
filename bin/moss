@@ -810,13 +810,14 @@ moss_remove_pkg() {
 # Retorna:
 #   0
 moss_extract_metadata() {
-    MOSS_MD_DESKTOP=""
-    MOSS_MD_ICON=""
     _moss_em_type=$1
     _moss_em_name=$2
     _moss_em_src=$3
     _moss_em_staging=$4
-    _moss_em_verified=$5
+    _moss_em_verified=${5:-0}
+
+    MOSS_MD_DESKTOP=""
+    MOSS_MD_ICON=""
 
     _moss_em_md_dir=$MOSS_TMPDIR/metadata.$$
     mkdir -p "$_moss_em_md_dir"
@@ -827,17 +828,20 @@ moss_extract_metadata() {
             MOSS_MD_DESKTOP=$_moss_em_desk
         fi
 
-        for _moss_em_p in ".DirIcon" "$_moss_em_name.svg" "$_moss_em_name.png" "*.svg" "*.png"; do
-            _moss_em_icons=$(find "$_moss_em_staging" -name "$_moss_em_p" -type f 2>/dev/null)
+        for _moss_em_p in ".DirIcon" "$_moss_em_name.svg" "$_moss_em_name.png" "$_moss_em_name*.svg" "$_moss_em_name*.png" "$_moss_em_name*.xpm" "*.svg" "*.png" "*.xpm"; do
+            _moss_em_icons=$(find "$_moss_em_staging" -name "$_moss_em_p" 2>/dev/null)
             if [ -n "$_moss_em_icons" ]; then
-                _moss_em_valid_icons=$(printf '%s\n' "$_moss_em_icons" | grep -v -E '/node_modules/|/doc/|/docs/|/help/')
+                _moss_em_valid_icons=$(printf '%s
+' "$_moss_em_icons" | grep -v -E '/node_modules/|/doc/|/docs/|/help/')
                 if [ -n "$_moss_em_valid_icons" ]; then
-                    _moss_em_best=$(printf '%s\n' "$_moss_em_valid_icons" | grep -E '/share/icons/|/usr/share/icons/|^'"$_moss_em_staging"'/[^/]+$' | head -n 1)
+                    _moss_em_best=$(printf '%s
+' "$_moss_em_valid_icons" | awk -F/ '{print NF, $0}' | sort -n | grep -E '/share/icons/|/pixmaps/|/share/pixmaps/' | cut -d' ' -f2- | head -n 1)
+                    if [ -z "$_moss_em_best" ]; then
+                        _moss_em_best=$(printf '%s
+' "$_moss_em_valid_icons" | awk -F/ '{print NF, $0}' | sort -n | cut -d' ' -f2- | head -n 1)
+                    fi
                     if [ -n "$_moss_em_best" ]; then
                         MOSS_MD_ICON=$_moss_em_best
-                        break
-                    else
-                        MOSS_MD_ICON=$(printf '%s\n' "$_moss_em_valid_icons" | head -n 1)
                         break
                     fi
                 fi
@@ -849,33 +853,51 @@ moss_extract_metadata() {
         command -v unsquashfs >/dev/null 2>&1 && _moss_em_has_unsquash=1
         
         _moss_em_use_fallback=0
-        if [ "$_moss_em_has_unsquash" -eq 0 ]; then
-            if [ "$_moss_em_verified" -eq 1 ]; then
-                _moss_em_use_fallback=1
-            else
-                moss_log WARN "metadata grafica omitida: AppImage sin verificar (instala unsquashfs para habilitarla)"
-                return 0
+        _moss_em_unsq_args=""
+        _moss_em_toc=""
+
+        if [ "$_moss_em_has_unsquash" -eq 1 ]; then
+            _moss_em_toc=$(unsquashfs -l "$_moss_em_src" 2>/dev/null)
+            if [ $? -ne 0 ] || [ -z "$_moss_em_toc" ]; then
+                _moss_em_off=$(grep -abo 'hsqs' "$_moss_em_src" | tail -n 1 | cut -d: -f1)
+                if [ -n "$_moss_em_off" ]; then
+                    _moss_em_toc=$(unsquashfs -o "$_moss_em_off" -l "$_moss_em_src" 2>/dev/null)
+                    if [ $? -ne 0 ] || [ -z "$_moss_em_toc" ]; then
+                        _moss_em_use_fallback=1
+                    else
+                        _moss_em_unsq_args="-o $_moss_em_off"
+                    fi
+                else
+                    _moss_em_use_fallback=1
+                fi
             fi
+        else
+            _moss_em_use_fallback=1
         fi
 
         if [ "$_moss_em_use_fallback" -eq 1 ]; then
-            chmod +x "$_moss_em_src"
-            ( cd "$_moss_em_md_dir" && "$_moss_em_src" --appimage-extract "*.desktop" >/dev/null 2>&1 || : )
-            ( cd "$_moss_em_md_dir" && "$_moss_em_src" --appimage-extract ".DirIcon" >/dev/null 2>&1 || : )
-            ( cd "$_moss_em_md_dir" && "$_moss_em_src" --appimage-extract "*.svg" >/dev/null 2>&1 || : )
-            ( cd "$_moss_em_md_dir" && "$_moss_em_src" --appimage-extract "*.png" >/dev/null 2>&1 || : )
-            
-            _moss_em_ai_root="$_moss_em_md_dir/squashfs-root"
+            if [ "$_moss_em_verified" -eq 0 ]; then
+                moss_log WARN "metadata grafica omitida: AppImage sin verificar (unsquashfs/offset fallo)"
+            else
+                moss_log DEBUG "metadata: via appimage-extract (unsquashfs fallo o no detecto offset)"
+                chmod +x "$_moss_em_src"
+                ( cd "$_moss_em_md_dir" && "$_moss_em_src" --appimage-extract >/dev/null 2>&1 || : )
+                
+                _moss_em_ai_root="$_moss_em_md_dir/squashfs-root"
+            fi
         else
-            _moss_em_toc=$(unsquashfs -l "$_moss_em_src" 2>/dev/null)
+            _moss_em_paths=$(printf '%s
+' "$_moss_em_toc" | sed 's|^[^/]*/||')
             
-            _moss_em_paths=$(printf '%s\n' "$_moss_em_toc" | sed 's|^[^/]*/||')
+            _moss_em_desk_path=$(printf '%s
+' "$_moss_em_paths" | grep '\.desktop$' | head -n 1)
             
-            _moss_em_desk_path=$(printf '%s\n' "$_moss_em_paths" | grep '\.desktop$' | head -n 1)
-            
-            _moss_em_icon_path=$(printf '%s\n' "$_moss_em_paths" | grep '^\.DirIcon$' | head -n 1)
-            [ -z "$_moss_em_icon_path" ] && _moss_em_icon_path=$(printf '%s\n' "$_moss_em_paths" | grep '\.svg$' | head -n 1)
-            [ -z "$_moss_em_icon_path" ] && _moss_em_icon_path=$(printf '%s\n' "$_moss_em_paths" | grep '\.png$' | head -n 1)
+            _moss_em_icon_path=$(printf '%s
+' "$_moss_em_paths" | grep '^\.DirIcon$' | head -n 1)
+            [ -z "$_moss_em_icon_path" ] && _moss_em_icon_path=$(printf '%s
+' "$_moss_em_paths" | grep '\.svg$' | head -n 1)
+            [ -z "$_moss_em_icon_path" ] && _moss_em_icon_path=$(printf '%s
+' "$_moss_em_paths" | grep '\.png$' | head -n 1)
 
             _moss_em_extract_args=""
             [ -n "$_moss_em_desk_path" ] && _moss_em_extract_args="$_moss_em_extract_args $_moss_em_desk_path"
@@ -883,18 +905,20 @@ moss_extract_metadata() {
 
             _moss_em_ai_root="$_moss_em_md_dir/squashfs-root"
             if [ -n "$_moss_em_extract_args" ]; then
-                unsquashfs -d "$_moss_em_ai_root" -f "$_moss_em_src" $_moss_em_extract_args >/dev/null 2>&1 || :
+                unsquashfs $_moss_em_unsq_args -d "$_moss_em_ai_root" -f "$_moss_em_src" $_moss_em_extract_args >/dev/null 2>&1 || :
             fi
         fi
 
         if [ -d "$_moss_em_ai_root" ]; then
-            MOSS_MD_DESKTOP=$(find "$_moss_em_ai_root" -name "*.desktop" -type f 2>/dev/null | head -n 1)
+            MOSS_MD_DESKTOP=$(find -L "$_moss_em_ai_root" -name "*.desktop" -type f 2>/dev/null | head -n 1)
             for _moss_em_p in ".DirIcon" "*.svg" "*.png"; do
-                MOSS_MD_ICON=$(find "$_moss_em_ai_root" -name "$_moss_em_p" 2>/dev/null | head -n 1)
+                MOSS_MD_ICON=$(find -L "$_moss_em_ai_root" -name "$_moss_em_p" 2>/dev/null | head -n 1)
                 [ -n "$MOSS_MD_ICON" ] && break
             done
         fi
     fi
+
+    moss_log DEBUG "metadata: desktop='${MOSS_MD_DESKTOP:-ninguno}' icono='${MOSS_MD_ICON:-ninguno}'"
     return 0
 }
 
@@ -1076,6 +1100,26 @@ moss_perform_install() {
         _moss_icons_svg_dir="/usr/share/icons/hicolor/scalable/apps"
         _moss_icons_png_dir="/usr/share/icons/hicolor/512x512/apps"
     fi
+    _moss_has_md=0
+    if [ -n "$MOSS_MD_ICON" ]; then
+        case "$MOSS_MD_ICON" in
+            *.svg)
+                mkdir -p "$_moss_icons_svg_dir" 2>/dev/null
+                cp -L "$MOSS_MD_ICON" "$_moss_icons_svg_dir/$_moss_p_name.svg" 2>/dev/null
+                printf '%s
+' "$_moss_icons_svg_dir/$_moss_p_name.svg" >> "$_moss_p_state/files"
+                _moss_has_md=1
+                ;;
+            *)
+                mkdir -p "$_moss_icons_png_dir" 2>/dev/null
+                cp -L "$MOSS_MD_ICON" "$_moss_icons_png_dir/$_moss_p_name.png" 2>/dev/null
+                printf '%s
+' "$_moss_icons_png_dir/$_moss_p_name.png" >> "$_moss_p_state/files"
+                _moss_has_md=1
+                ;;
+        esac
+    fi
+
     
     _moss_candidates=""
     _moss_cand_count=0
@@ -1157,23 +1201,11 @@ $_moss_cand"
                 return $MOSS_EX_CONFLICT
             fi
             
-            _moss_has_md=0
-            if [ -n "$MOSS_MD_ICON" ]; then
-                case "$MOSS_MD_ICON" in
-                    *.svg)
-                        mkdir -p "$_moss_icons_svg_dir" 2>/dev/null
-                        cp "$MOSS_MD_ICON" "$_moss_icons_svg_dir/$_moss_p_name.svg" 2>/dev/null
-                        printf '%s\n' "$_moss_icons_svg_dir/$_moss_p_name.svg" >> "$_moss_p_state/files"
-                        _moss_has_md=1
-                        ;;
-                    *)
-                        mkdir -p "$_moss_icons_png_dir" 2>/dev/null
-                        cp "$MOSS_MD_ICON" "$_moss_icons_png_dir/$_moss_p_name.png" 2>/dev/null
-                        printf '%s\n' "$_moss_icons_png_dir/$_moss_p_name.png" >> "$_moss_p_state/files"
-                        _moss_has_md=1
-                        ;;
-                esac
+
+            if [ -z "$MOSS_MD_ICON" ]; then
+                moss_log WARN "$_moss_p_name: no se encontro icono; el .desktop usara el icono generico. Para agregarlo manualmente: cp <tu-icono> ${_moss_icons_png_dir}/$_moss_p_name.png"
             fi
+
 
             _moss_term_val="false"
             [ "$MOSS_OPT_TERM" = "1" ] && _moss_term_val="true"
