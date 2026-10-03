@@ -920,6 +920,7 @@ moss_perform_install() {
     _moss_p_state=$MOSS_STATE_DIR/$_moss_p_name
     if [ -f "$_moss_p_state/manifest" ]; then
         if [ "$MOSS_FORCE" -eq 1 ]; then
+            moss_log STEP "Reinstalando $_moss_p_name (modo force)..."
             moss_log INFO "$_moss_p_name ya esta gestionado; se reemplaza (--force)"
             [ -f "$_moss_p_state/manifest.bak" ] &&
                 mv "$_moss_p_state/manifest.bak" "$MOSS_TMPDIR/keep-manifest.$$"
@@ -1275,6 +1276,7 @@ moss_cmd_remove() {
         fi
     fi
 
+    moss_log STEP "Eliminando $_moss_rm_name..."
     if moss_remove_pkg "$_moss_rm_name"; then
         moss_log SUCCESS "Paquete '$_moss_rm_name' eliminado completamente."
         exit $MOSS_EX_OK
@@ -1413,6 +1415,8 @@ moss_cmd_update() {
             _moss_prev_name=$(sed -n 's/^Name=//p' "$_moss_desk_file" | head -n 1)
         fi
         
+        moss_log STEP "Actualizando $1 desde tarball local..."
+        [ -n "$_moss_prev_name" ] && moss_log DEBUG "nombre de escritorio preservado: $_moss_prev_name"
         export MOSS_R_NAME="$1"
         export MOSS_P_APP_NAME="${_moss_prev_name:-$1}"
         export MOSS_IS_LOCAL_UPDATE=1
@@ -1625,6 +1629,7 @@ moss_cmd_rollback() {
     moss_state_init || exit $MOSS_EX_DEP
     _moss_rb_name=$1
     _moss_rb_state=$MOSS_STATE_DIR/$_moss_rb_name
+    moss_log STEP "Preparando rollback de $_moss_rb_name..."
 
     [ -f "$_moss_rb_state/manifest.bak" ] ||
         moss_die $MOSS_EX_USAGE "no hay respaldo para revertir: $_moss_rb_name"
@@ -1658,6 +1663,7 @@ moss_cmd_rollback() {
     _moss_rb_dry=$MOSS_DRY_RUN
     MOSS_FORCE=1
     MOSS_DRY_RUN=0
+    moss_log STEP "Reinstalando $_moss_rb_version..."
     moss_perform_install "$_moss_rb_name" "$_moss_rb_version" "$_moss_rb_url" \
         "$_moss_rb_sha" '' "$_moss_rb_src" '' "$_moss_rb_cat" "$_moss_rb_term" "$_moss_rb_type"
     _moss_rb_rc=$?
