@@ -187,7 +187,7 @@ television	alexpasmantier/television	tv-.*_64-unknown-linux-gnu\.tar\.gz	A very 
 terragrunt	gruntwork-io/terragrunt	terragrunt_linux_amd64\.tar\.gz	Terragrunt is a flexible orchestration tool that allows Infrastructure as Code written in OpenTofu/Terraform to scale.	terragrunt	Development	N
 tilt	tilt-dev/tilt	tilt..*.linux-alpine.x86_64\.tar\.gz	Define your dev environment as code. For microservice apps on Kubernetes.	tilt	Development	N
 tlrc	tldr-pages/tlrc	tlrc-v.*_64-unknown-linux-gnu\.tar\.gz	Official tldr client written in Rust.	tlrc	Utility	Y
-tor-browser-linux-x86_64	external/tor-browser-linux-x86_64	TEMPLATE|https://dist.torproject.org/torbrowser/@VERSION@/tor-browser-linux-x86_64-@VERSION@.tar.xz|15.0.24	Aplicacion Externa	tor-browser-linux-x86_64	Utility	N
+tor-browser	external/tor-browser	TEMPLATE|https://dist.torproject.org/torbrowser/@VERSION@/tor-browser-linux-x86_64-@VERSION@.tar.xz|15.0.24	Aplicacion Externa	tor-browser	Utility	N
 trippy	fujiapple852/trippy	trippy-.*_64-unknown-linux-gnu\.tar\.gz	A network diagnostic tool	trippy	Utility	N
 trivy	aquasecurity/trivy	trivy_.*_Linux-64bit\.tar\.gz	Find vulnerabilities, misconfigurations, secrets, SBOM in containers, Kubernetes, code repositories, clouds and more	trivy	Development	N
 ubi	houseabsolute/ubi	ubi-FreeBSD-x86_64\.tar\.gz	The Universal Binary Installer	ubi	Utility	N
