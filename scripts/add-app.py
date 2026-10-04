@@ -279,6 +279,31 @@ def main():
                         return a
             return None
 
+        def get_standalone_binary():
+            bad_exts = ('.deb', '.rpm', '.apk', '.msi', '.exe', '.dmg', '.pkg', '.sig', '.sha256', '.txt', '.md', '.pem', '.sum', '.pub', '.json', '.yaml', '.yml', '.sbom')
+            filtered = [a for a in assets if not any(a.lower().endswith(e) for e in bad_exts)]
+            arch_exts = ('.tar.gz', '.tar.xz', '.txz', '.zip', '.tar', '.appimage')
+            filtered = [a for a in filtered if not any(a.lower().endswith(e) for e in arch_exts)]
+            
+            if hint:
+                hint_filtered = [a for a in filtered if re.search(hint, a, re.IGNORECASE)]
+                if hint_filtered:
+                    return hint_filtered[0]
+            
+            for a in filtered:
+                if is_linux_amd64(a) and 'gnu' in a.lower(): return a
+            for a in filtered:
+                if is_linux_amd64(a) and 'musl' not in a.lower(): return a
+            for a in filtered:
+                if is_linux_amd64(a) and 'musl' in a.lower(): return a
+                
+            for a in filtered:
+                al = a.lower()
+                if 'linux' in al or ('binary' in al):
+                    if not any(x in al for x in ['windows', 'darwin', 'mac', 'arm', 'aarch64', 'i386']):
+                        return a
+            return None
+
         if is_inrepo:
             target_tar = "INREPO"
             target_appimage = None
@@ -291,6 +316,8 @@ def main():
                 target_appimage = None
         else:
             target_tar = get_best_target(('.tar.gz', '.tar.xz', '.txz', '.zip', '.tar'))
+            if not target_tar:
+                target_tar = get_standalone_binary()
             target_appimage = get_best_target(('.appimage',))
         
         found_any = False

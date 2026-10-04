@@ -615,9 +615,12 @@ moss_extract() {
             bunzip2 -c "$2" > "$3/$(basename "$2" .bz2)"
             chmod +x "$3/$(basename "$2" .bz2)"
             ;;
-        *)                
-            moss_log ERROR "formato de archivo no soportado: $2"
-            return 1
+        *)
+            # Si no es un formato comprimido conocido, asumimos que es un binario suelto
+            moss_log INFO "Tratando como binario o script ejecutable..."
+            cp "$2" "$3/$4"
+            chmod +x "$3/$4"
+            return 0
             ;;
     esac
 }
