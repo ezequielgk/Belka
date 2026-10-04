@@ -165,6 +165,37 @@ def main():
     added_appimage = False
     
     for raw_url, alias, template in repos_to_process:
+        is_direct = False
+        url_clean = raw_url.lower().split('?')[0]
+        if any(url_clean.endswith(ext) for ext in ['.tar.gz', '.tar.xz', '.txz', '.zip', '.tar', '.appimage']):
+            is_direct = True
+        elif raw_url.startswith('http') and not any(x in raw_url.lower() for x in ['github.com', 'gitlab.com', 'codeberg.org']):
+            is_direct = True
+
+        if is_direct and not (template and template.startswith('TEMPLATE|')):
+            match = re.search(r'([0-9]+(?:\.[0-9]+)+)', raw_url)
+            if match:
+                version = match.group(1)
+                template_url = raw_url.replace(version, '@VERSION@')
+            else:
+                version = 'latest'
+                template_url = raw_url
+
+            filename = raw_url.split('/')[-1].split('?')[0]
+            if alias:
+                app_name = alias
+            else:
+                app_name = filename
+                if version != 'latest':
+                    app_name = app_name.replace(version, '')
+                for ext in ['.tar.gz', '.tar.xz', '.txz', '.zip', '.tar', '.appimage', '.AppImage']:
+                    app_name = app_name.replace(ext, '')
+                app_name = app_name.strip('-_.').lower()
+                if not app_name: app_name = "app"
+
+            template = f"TEMPLATE|{template_url}|{version}"
+            raw_url = f"external/{app_name}"
+
         forge, norm_repo, out_repo = normalize_repo(raw_url)
         
         is_inrepo = (alias and alias.lower() == 'inrepo')
