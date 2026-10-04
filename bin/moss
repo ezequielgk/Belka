@@ -529,7 +529,7 @@ EOF
 #   0 si es valido, 1 si no se puede leer
 moss_manifest_read() {
     MOSS_M_NAME='' MOSS_M_VERSION='' MOSS_M_URL='' MOSS_M_SHA='' MOSS_M_PREFIX=''
-    MOSS_M_TARBALL='' MOSS_M_DATE='' MOSS_M_TYPE=''
+    MOSS_M_TARBALL='' MOSS_M_DATE='' MOSS_M_TYPE='' MOSS_M_ZSYNC=''
     [ -f "$1" ] || return 1
     while IFS='=' read -r _moss_r_key _moss_r_val; do
         case $_moss_r_key in
@@ -540,6 +540,7 @@ moss_manifest_read() {
             prefix)       MOSS_M_PREFIX=$_moss_r_val ;;
             tarball)      MOSS_M_TARBALL=$_moss_r_val ;;
             type)         MOSS_M_TYPE=$_moss_r_val ;;
+            zsync)        MOSS_M_ZSYNC=$_moss_r_val ;;
             installed_at) MOSS_M_DATE=$_moss_r_val ;;
         esac
     done < "$1"
@@ -809,6 +810,52 @@ moss_remove_pkg() {
 #   MOSS_TMPDIR, MOSS_MD_DESKTOP, MOSS_MD_ICON
 # Retorna:
 #   0
+
+moss_icon_kind() {
+    _kind_head=$(head -c 4 "$1" 2>/dev/null)
+    if printf '%s\n' "$_kind_head" | grep -q "PNG"; then
+        printf 'png\n'
+    else
+        if head -c 4096 "$1" 2>/dev/null | grep -iq "<svg"; then
+            printf 'svg\n'
+        fi
+    fi
+}
+
+moss_png_size() {
+    od -An -tu1 -j16 -N4 "$1" 2>/dev/null | awk '{print ($1*16777216) + ($2*65536) + ($3*256) + $4}'
+}
+
+moss_pick_icon() {
+    _dir=$1
+    _pkg_name=$2
+    _pkg_norm=$(printf '%s\n' "$_pkg_name" | tr '[:upper:]' '[:lower:]' | sed 's/[-_].*//')
+    
+    find -L "$_dir" -type f \( -name "*.png" -o -name "*.svg" -o -name "*.xpm" -o -name ".DirIcon" \) 2>/dev/null |
+        grep -v -E '/node_modules/|/doc/|/docs/|/help/|/man/' | awk -v pkg_norm="$_pkg_norm" -F/ '
+        {
+            path = $0
+            depth = NF
+            base = tolower($NF)
+            sub(/[-_].*/, "", base)
+            score = 0
+            
+            if (base == pkg_norm) score += 60
+            if (index(base, pkg_norm) == 1) score += 100
+            
+            if (path ~ /\/share\/icons\//) score += 30
+            if (path ~ /\/(share\/)?pixmaps\//) score += 25
+            if (path ~ /\/share\//) score += 10
+            if (path ~ /\/scalable\//) score += 6
+            
+            if (path ~ /512|256|128|1024/) score += 5
+            if (path ~ /16|22|24|32|48/) score -= 5
+            
+            print score, depth, path
+        }
+        ' | sort -k1,1nr -k2,2n | awk 'NR==1 {print $3}'
+}
+
 moss_extract_metadata() {
     _moss_em_type=$1
     _moss_em_name=$2
@@ -828,25 +875,7 @@ moss_extract_metadata() {
             MOSS_MD_DESKTOP=$_moss_em_desk
         fi
 
-        for _moss_em_p in ".DirIcon" "$_moss_em_name.svg" "$_moss_em_name.png" "$_moss_em_name*.svg" "$_moss_em_name*.png" "$_moss_em_name*.xpm" "*.svg" "*.png" "*.xpm"; do
-            _moss_em_icons=$(find "$_moss_em_staging" -name "$_moss_em_p" 2>/dev/null)
-            if [ -n "$_moss_em_icons" ]; then
-                _moss_em_valid_icons=$(printf '%s
-' "$_moss_em_icons" | grep -v -E '/node_modules/|/doc/|/docs/|/help/')
-                if [ -n "$_moss_em_valid_icons" ]; then
-                    _moss_em_best=$(printf '%s
-' "$_moss_em_valid_icons" | awk -F/ '{print NF, $0}' | sort -n | grep -E '/share/icons/|/pixmaps/|/share/pixmaps/' | cut -d' ' -f2- | head -n 1)
-                    if [ -z "$_moss_em_best" ]; then
-                        _moss_em_best=$(printf '%s
-' "$_moss_em_valid_icons" | awk -F/ '{print NF, $0}' | sort -n | cut -d' ' -f2- | head -n 1)
-                    fi
-                    if [ -n "$_moss_em_best" ]; then
-                        MOSS_MD_ICON=$_moss_em_best
-                        break
-                    fi
-                fi
-            fi
-        done
+        MOSS_MD_ICON=$(moss_pick_icon "$_moss_em_staging" "$_moss_em_name")
 
     elif [ "$_moss_em_type" = "appimage" ]; then
         _moss_em_has_unsquash=0
@@ -859,16 +888,17 @@ moss_extract_metadata() {
         if [ "$_moss_em_has_unsquash" -eq 1 ]; then
             _moss_em_toc=$(unsquashfs -l "$_moss_em_src" 2>/dev/null)
             if [ $? -ne 0 ] || [ -z "$_moss_em_toc" ]; then
-                _moss_em_off=$(grep -abo 'hsqs' "$_moss_em_src" | tail -n 1 | cut -d: -f1)
-                if [ -n "$_moss_em_off" ]; then
-                    _moss_em_toc=$(unsquashfs -o "$_moss_em_off" -l "$_moss_em_src" 2>/dev/null)
-                    if [ $? -ne 0 ] || [ -z "$_moss_em_toc" ]; then
-                        _moss_em_use_fallback=1
-                    else
-                        _moss_em_unsq_args="-o $_moss_em_off"
-                    fi
-                else
-                    _moss_em_use_fallback=1
+                _moss_em_offs=$(grep -abo 'hsqs' "$_moss_em_src" | cut -d: -f1)
+                _moss_em_use_fallback=1
+                if [ -n "$_moss_em_offs" ]; then
+                    for _moss_em_off in $_moss_em_offs; do
+                        _moss_em_toc=$(unsquashfs -o "$_moss_em_off" -l "$_moss_em_src" 2>/dev/null)
+                        if [ $? -eq 0 ] && [ -n "$_moss_em_toc" ]; then
+                            _moss_em_unsq_args="-o $_moss_em_off"
+                            _moss_em_use_fallback=0
+                            break
+                        fi
+                    done
                 fi
             fi
         else
@@ -911,10 +941,7 @@ moss_extract_metadata() {
 
         if [ -d "$_moss_em_ai_root" ]; then
             MOSS_MD_DESKTOP=$(find -L "$_moss_em_ai_root" -name "*.desktop" -type f 2>/dev/null | head -n 1)
-            for _moss_em_p in ".DirIcon" "*.svg" "*.png"; do
-                MOSS_MD_ICON=$(find -L "$_moss_em_ai_root" -name "$_moss_em_p" 2>/dev/null | head -n 1)
-                [ -n "$MOSS_MD_ICON" ] && break
-            done
+            MOSS_MD_ICON=$(moss_pick_icon "$_moss_em_ai_root" "$_moss_em_name")
         fi
     fi
 
@@ -1102,22 +1129,35 @@ moss_perform_install() {
     fi
     _moss_has_md=0
     if [ -n "$MOSS_MD_ICON" ]; then
-        case "$MOSS_MD_ICON" in
-            *.svg)
-                mkdir -p "$_moss_icons_svg_dir" 2>/dev/null
-                cp -L "$MOSS_MD_ICON" "$_moss_icons_svg_dir/$_moss_p_name.svg" 2>/dev/null
-                printf '%s
+        _moss_real_icon=$(readlink -f "$MOSS_MD_ICON" 2>/dev/null || printf '%s' "$MOSS_MD_ICON")
+        _moss_icon_kind=$(moss_icon_kind "$_moss_real_icon")
+        if [ -z "$_moss_icon_kind" ]; then
+            case "$_moss_real_icon" in
+                *.svg) _moss_icon_kind="svg" ;;
+                *) _moss_icon_kind="png" ;;
+            esac
+        fi
+        
+        if [ "$_moss_icon_kind" = "svg" ]; then
+            mkdir -p "$_moss_icons_svg_dir" 2>/dev/null
+            cp -L "$_moss_real_icon" "$_moss_icons_svg_dir/$_moss_p_name.svg" 2>/dev/null
+            printf '%s
 ' "$_moss_icons_svg_dir/$_moss_p_name.svg" >> "$_moss_p_state/files"
-                _moss_has_md=1
-                ;;
-            *)
-                mkdir -p "$_moss_icons_png_dir" 2>/dev/null
-                cp -L "$MOSS_MD_ICON" "$_moss_icons_png_dir/$_moss_p_name.png" 2>/dev/null
-                printf '%s
-' "$_moss_icons_png_dir/$_moss_p_name.png" >> "$_moss_p_state/files"
-                _moss_has_md=1
-                ;;
-        esac
+            _moss_has_md=1
+        else
+            _moss_sz=$(moss_png_size "$_moss_real_icon")
+            case "$_moss_sz" in
+                16|22|24|32|48|64|128|256|512) ;;
+                *) _moss_sz=512 ;;
+            esac
+            _moss_png_tgt="${XDG_DATA_HOME:-$HOME/.local/share}/icons/hicolor/${_moss_sz}x${_moss_sz}/apps"
+            [ "$MOSS_SYSTEM" -eq 1 ] && _moss_png_tgt="/usr/share/icons/hicolor/${_moss_sz}x${_moss_sz}/apps"
+            mkdir -p "$_moss_png_tgt" 2>/dev/null
+            cp -L "$_moss_real_icon" "$_moss_png_tgt/$_moss_p_name.png" 2>/dev/null
+            printf '%s
+' "$_moss_png_tgt/$_moss_p_name.png" >> "$_moss_p_state/files"
+            _moss_has_md=1
+        fi
     fi
 
     
@@ -1487,6 +1527,92 @@ moss_cmd_remove() {
 #   MOSS_STATE_DIR, MOSS_U_RESULT
 # Retorna:
 #   0 en exito/sin cambios, 1 en fallo
+moss_read_upd_info() {
+    _moss_ru_ai=$1
+    _moss_ru_info=$(readelf --string-dump=.upd_info "$_moss_ru_ai" 2>/dev/null || strings "$_moss_ru_ai" 2>/dev/null)
+    printf '%s\n' "$_moss_ru_info" | sed -n 's/^ *\[[^]]*\] *//p' | grep -E '^(gh-releases-zsync\||zsync\||https?://)' | head -n 1
+}
+
+moss_resolve_zsync_url() {
+    _moss_rz_src=$1
+    case $_moss_rz_src in
+        gh-releases-zsync\|*)
+            _moss_rz_own=$(printf '%s\n' "$_moss_rz_src" | cut -d'|' -f2)
+            _moss_rz_rep=$(printf '%s\n' "$_moss_rz_src" | cut -d'|' -f3)
+            _moss_rz_rel=$(printf '%s\n' "$_moss_rz_src" | cut -d'|' -f4)
+            _moss_rz_glb=$(printf '%s\n' "$_moss_rz_src" | cut -d'|' -f5)
+            
+            _moss_rz_api="https://api.github.com/repos/$_moss_rz_own/$_moss_rz_rep/releases/latest"
+            [ "$_moss_rz_rel" != "latest" ] && _moss_rz_api="https://api.github.com/repos/$_moss_rz_own/$_moss_rz_rep/releases/tags/$_moss_rz_rel"
+            
+            _moss_rz_json=$(curl -sSfL "$_moss_rz_api" 2>/dev/null) || return 1
+            _moss_rz_tag=$(printf '%s\n' "$_moss_rz_json" | awk -F'"' '/"tag_name":/ {print $4; exit}')
+            
+            _moss_rz_regex=$(printf '%s\n' "$_moss_rz_glb" | sed 's/\./\\./g; s/\*/.*/g')
+            _moss_rz_url=$(printf '%s\n' "$_moss_rz_json" | awk -F'"' '/"browser_download_url":/ { url=$4; if (url ~ /'"$_moss_rz_regex"'$/) { print url; exit } }' IGNORECASE=1)
+            [ -z "$_moss_rz_url" ] && return 1
+            
+            _moss_rz_ai_url=${_moss_rz_url%.zsync}
+            _moss_rz_sha=$(printf '%s\n' "$_moss_rz_json" | awk -F'"' '/"browser_download_url":/ { url=$4; if (url ~ /'"${_moss_rz_regex%.zsync}"'$/) { url_ai=url } } /"digest":/ { if (url_ai != "") { print $4; exit } }' IGNORECASE=1) # Fallback to not using digest if complex
+            
+            printf '%s\t%s\t%s\n' "$_moss_rz_url" "$_moss_rz_tag" "$_moss_rz_sha"
+            ;;
+        zsync\|*)
+            _moss_rz_url=$(printf '%s\n' "$_moss_rz_src" | cut -d'|' -f2)
+            printf '%s\t\t\n' "$_moss_rz_url"
+            ;;
+        http*.zsync)
+            printf '%s\t\t\n' "$_moss_rz_src"
+            ;;
+    esac
+}
+
+moss_appimage_delta_update() {
+    _moss_ad_name=$1
+    moss_manifest_read "$MOSS_STATE_DIR/$_moss_ad_name/manifest"
+    [ "$MOSS_M_TYPE" != "appimage" ] && return 1
+    [ "$MOSS_NO_ZSYNC" = "1" ] && return 1
+    command -v zsync >/dev/null 2>&1 || return 1
+    
+    _moss_ad_seed="$MOSS_PREFIX/pkg/appimage/$_moss_ad_name/$MOSS_M_TARBALL"
+    [ ! -f "$_moss_ad_seed" ] && _moss_ad_seed=$(find "$MOSS_PREFIX/pkg/appimage/$_moss_ad_name" -name "*.AppImage" 2>/dev/null | head -n 1)
+    [ ! -f "$_moss_ad_seed" ] && return 1
+    
+    _moss_ad_src=${MOSS_OPT_ZSYNC:-}
+    [ -z "$_moss_ad_src" ] && _moss_ad_src=$MOSS_M_ZSYNC
+    if [ -z "$_moss_ad_src" ]; then
+        moss_index_lookup "$_moss_ad_name"
+        [ -n "$MOSS_L_ZSYNC" ] && [ "$MOSS_L_ZSYNC" != "-" ] && _moss_ad_src=$MOSS_L_ZSYNC
+    fi
+    [ -z "$_moss_ad_src" ] && _moss_ad_src=$(moss_read_upd_info "$_moss_ad_seed")
+    [ -z "$_moss_ad_src" ] && return 1
+    
+    _moss_ad_res=$(moss_resolve_zsync_url "$_moss_ad_src") || return 1
+    _moss_ad_url=$(printf '%s\n' "$_moss_ad_res" | cut -f1)
+    _moss_ad_ver=$(printf '%s\n' "$_moss_ad_res" | cut -f2)
+    _moss_ad_sha=$(printf '%s\n' "$_moss_ad_res" | cut -f3)
+    
+    [ -z "$_moss_ad_ver" ] && _moss_ad_ver=$MOSS_L_VERSION
+    [ -z "$_moss_ad_sha" ] && _moss_ad_sha=$MOSS_L_SHA
+    
+    [ "$_moss_ad_ver" = "$MOSS_M_VERSION" ] && return 0
+    
+    moss_log STEP "Actualizando $_moss_ad_name via delta (zsync)..."
+    _moss_ad_tmp="$MOSS_TMPDIR/$_moss_ad_name.AppImage"
+    ( cd "$MOSS_TMPDIR" && zsync -i "$_moss_ad_seed" -o "$_moss_ad_name.AppImage" "$_moss_ad_url" >/dev/null 2>&1 ) || return 1
+    
+    if [ -n "$_moss_ad_sha" ]; then
+        _moss_ad_got=$(moss_sha256 "$_moss_ad_tmp" 2>/dev/null || printf '')
+        if [ "$_moss_ad_got" != "$_moss_ad_sha" ]; then
+            moss_log WARN "zsync checksum invalido, se intentara descarga completa"
+            rm -f "$_moss_ad_tmp"
+            return 1
+        fi
+    fi
+    
+    MOSS_FORCE=1 moss_perform_install "$_moss_ad_name" "$_moss_ad_ver" "${_moss_ad_url%.zsync}" "$_moss_ad_sha" '' "$_moss_ad_tmp" '' "$MOSS_M_CAT" "$MOSS_M_TERM" "appimage" "$_moss_ad_src"
+}
+
 moss_update_one() {
     MOSS_U_RESULT=uptodate
     _moss_u_state=$MOSS_STATE_DIR/$1
@@ -1549,7 +1675,7 @@ moss_update_one() {
         fi
     fi
     if [ -n "$_moss_u_src" ] &&
-       moss_perform_install "$1" "$MOSS_M_VERSION" "$MOSS_M_URL" "$MOSS_M_SHA" '' "$_moss_u_src" '' "$MOSS_M_CAT" "$MOSS_M_TERM" "$MOSS_M_TYPE"; then
+       moss_perform_install "$1" "$MOSS_M_VERSION" "$MOSS_M_URL" "$MOSS_M_SHA" '' "$_moss_u_src" '' "$MOSS_M_CAT" "$MOSS_M_TERM" "$MOSS_M_TYPE" "$MOSS_M_ZSYNC"; then
         moss_log INFO "se revirtio automaticamente a $1 $MOSS_M_VERSION"
         # BUG CORREGIDO: Se elimina la sobreescritura de manifest.bak con la nueva version fallida; esto era un bug ya que impedia el rollback manual posterior.
     else
@@ -1649,8 +1775,24 @@ moss_cmd_update() {
             return 1
         fi
     fi
+    if [ "$#" -eq 1 ]; then
+        moss_manifest_read "$MOSS_STATE_DIR/$1/manifest" || {
+            moss_log ERROR "el paquete '$1' no esta instalado"
+            return $MOSS_EX_USAGE
+        }
+        if [ "$MOSS_M_TYPE" = "appimage" ]; then
+            if moss_appimage_delta_update "$1"; then
+                return 0
+            else
+                moss_log WARN "actualizacion delta fallo o no aplica, fallback a completa"
+            fi
+        fi
+        moss_update_one "$1"
+        [ "$MOSS_U_RESULT" = "failed" ] && return 1
+        return 0
+    fi
 
-    moss_log ERROR "Uso incorrecto. Argumentos esperados: 0 (sincronizar) o 2 (actualizacion local)."
+    moss_log ERROR "Uso incorrecto. Argumentos esperados: 0 (sincronizar), 1 (actualizacion remota) o 2 (actualizacion local)."
     return 1
 }
 
@@ -1860,7 +2002,7 @@ moss_cmd_rollback() {
     MOSS_DRY_RUN=0
     moss_log STEP "Reinstalando $_moss_rb_version..."
     moss_perform_install "$_moss_rb_name" "$_moss_rb_version" "$_moss_rb_url" \
-        "$_moss_rb_sha" '' "$_moss_rb_src" '' "$_moss_rb_cat" "$_moss_rb_term" "$_moss_rb_type"
+        "$_moss_rb_sha" '' "$_moss_rb_src" '' "$MOSS_M_CAT" "$MOSS_M_TERM" "$MOSS_M_TYPE" "$MOSS_M_ZSYNC"
     _moss_rb_rc=$?
     MOSS_FORCE=$_moss_rb_force
     MOSS_DRY_RUN=$_moss_rb_dry
