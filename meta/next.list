@@ -19,9 +19,9 @@ jqlang/jq	jq
 Macchina-CLI/macchina	macchina
 svenstaro/miniserve	miniserve
 FiloSottile/mkcert	mkcert
-yorhel/ncdu	ncdu
+yorhel/ncdu	ncdu	TEMPLATE|https://dev.yorhel.nl/download/ncdu-@VERSION@-linux-x86_64.tar.gz|2.7
 hatoo/oha	oha
-dylanaraps/pfetch	pfetch
+dylanaraps/pfetch	inrepo	pfetch
 Nukesor/pueue	pueue
 restic/restic	restic
 mvdan/sh	shfmt
