@@ -1,3 +1,184 @@
 # nombre	repo	patron_asset	descripcion	exec	categoria	terminal
+7zip	ip7z/7zip	7z2603-linux-x64\.tar\.xz	7-Zip	7zip	Utility	N
+act	nektos/act	act_Linux_x86_64\.tar\.gz	Run your GitHub Actions locally 🚀	act	Utility	N
+actionlint	rhysd/actionlint	actionlint_.*_freebsd_amd64\.tar\.gz	:octocat: Static checker for GitHub Actions workflow files	actionlint	Utility	N
+aeris	pkgforge/aeris	aeris-x86_64-linux\.tar\.xz	Manages your package managers	aeris	Utility	N
+age	FiloSottile/age	age-v.*\.tar\.gz	A simple, modern and secure encryption tool (and Go library) with small explicit keys, no config options, and UNIX-style composability.	age	Utility	N
+albafetch	alba4k/albafetch	albafetch-linux-x64-static\.zip	Faster neofetch alternative, written in C. Still improving :)	albafetch	Utility	N
+algernon	xyproto/algernon	algernon-.*_x86_64_static\.tar\.gz	Small self-contained pure-Go web server with Lua, Teal, Markdown, HTTP/2, QUIC, Redis, TypeScript, npm-less React 19, SQLite, and PostgreSQL support ++	algernon	Network	N
+alist	AlistGo/alist	alist-android-amd64\.tar\.gz	🗂️A file list/WebDAV program that supports multiple storages, powered by Gin and Solidjs. / 一个支持多存储的文件列表/WebDAV程序，使用 Gin 和 Solidjs。	alist	Network	N
+alterx	projectdiscovery/alterx	alterx_.*_linux_amd64\.zip	Fast and customizable subdomain wordlist generator using DSL	alterx	Utility	N
+amass	OWASP/Amass	amass_linux_amd64\.tar\.gz	In-depth attack surface mapping and asset discovery	amass	Utility	N
+amdgpu_top	Umio-Yasuno/amdgpu_top	amdgpu_top-.*_64-unknown-linux-gnu\.tar\.gz	Tool to display AMDGPU usage	amdgpu_top	Utility	N
+appimagetool	pkgforge-dev/appimagetool	appimagetool-corresponding-source-dwarfs-.*\.tar\.xz	A Rust implementation of appimagetool for the Anylinux-AppImages project.	appimagetool	Utility	N
+arduino-cli	arduino/arduino-cli	arduino-cli_.*_Linux_64bit\.tar\.gz	Arduino command line tool	arduino-cli	Utility	N
+atuin	atuinsh/atuin	atuin-server-x86_64-unknown-linux-gnu\.tar\.gz	✨ Making your shell magical	atuin	Utility	N
+audiosource	https://github.com/ezequielgk/audiosource	audiosource-linux\.tar\.gz	:microphone: Use an Android device as a USB microphone	audiosource	Utility	N
+aws-nuke	ekristen/aws-nuke	aws-nuke-v.*\.tar\.gz	Remove all the resources from an AWS account	aws-nuke	Utility	N
+bandwhich	imsnif/bandwhich	bandwhich-v.*_64-unknown-linux-gnu\.tar\.gz	Terminal bandwidth utilization tool	bandwhich	Utility	Y
+bat	sharkdp/bat	bat-v.*_64-unknown-linux-gnu\.tar\.gz	A cat(1) clone with wings.	bat	Utility	N
+binfmt	tonistiigi/binfmt	binfmt_linux-amd64\.tar\.gz	Cross-platform emulator collection distributed with Docker images.	binfmt	Game	N
+binsider	orhun/binsider	binsider-.*_64-unknown-linux-gnu\.tar\.gz	Analyze ELF binaries like a boss 😼🕵️‍♂️	binsider	Utility	N
+bluetuith	bluetuith-org/bluetuith	bluetuith_.*_Linux_x86_64\.tar\.gz	A cross-platform TUI bluetooth manager.	bluetuith	Utility	N
+bore	ekzhang/bore	bore-v.*_64-unknown-linux-musl\.tar\.gz	🕳 bore is a simple CLI tool for making tunnels to localhost	bore	Utility	Y
+bottom	ClementTsang/bottom	bottom_x86_64-unknown-linux-gnu-2-17\.tar\.gz	Yet another cross-platform graphical process/system monitor.	bottom	Utility	N
+brave-browser	https://github.com/brave/brave-browser	brave-browser-.*\.zip	Brave browser for Android, iOS, Linux, macOS, Windows.	brave-browser	Network	N
+btop	aristocratos/btop	btop-x86_64-unknown-linux-musl\.tar\.gz	A monitor of resources	btop	Utility	N
+buf	bufbuild/buf	buf-FreeBSD-x86_64\.tar\.gz	The best way of working with Protocol Buffers.	buf	Utility	N
+caddy	caddyserver/caddy	caddy_.*_freebsd_amd64\.tar\.gz	Fast and extensible multi-platform HTTP/1-2-3 web server with automatic HTTPS	caddy	Network	N
+chezmoi	twpayne/chezmoi	chezmoi_.*_freebsd_amd64\.tar\.gz	Manage your dotfiles across multiple diverse machines, securely.	chezmoi	Utility	N
+cilium-cli	cilium/cilium-cli	cilium-linux-amd64\.tar\.gz	CLI to install, manage & troubleshoot Kubernetes clusters running Cilium	cilium-cli	Utility	Y
+clipcat	xrelkd/clipcat	clipcat-.*_64-unknown-linux-musl\.tar\.gz	A clipboard manager written in Rust Programming Language.	clipcat	Utility	Y
+concord	chojs23/concord	concord-x86_64-unknown-linux-gnu\.tar\.xz	A feature-rich TUI client for Discord	concord	Utility	Y
+croc	schollz/croc	croc-web_v.*_Linux-amd64\.tar\.gz	Easily and securely send things from one computer to another :crocodile: :package:	croc	Utility	N
+csvtk	shenwei356/csvtk	csvtk_freebsd_amd64\.tar\.gz	A cross-platform, efficient and practical CSV/TSV toolkit in Golang	csvtk	Utility	N
+curlie	rs/curlie	curlie_.*_freebsd_amd64\.tar\.gz	The power of curl, the ease of use of httpie.	curlie	Utility	N
+delta	dandavison/delta	delta-.*_64-unknown-linux-gnu\.tar\.gz	A syntax-highlighting pager for git, diff, grep, rg --json, and blame output	delta	Utility	N
+difftastic	Wilfred/difftastic	difft-.*_64-unknown-linux-gnu\.tar\.gz	a structural diff that understands syntax 🟥🟩	difftastic	Utility	N
+dive	wagoodman/dive	dive_.*_linux_amd64\.tar\.gz	A tool for exploring each layer in a docker image	dive	Utility	N
+doggo	mr-karan/doggo	doggo-freebsd-x86_64\.tar\.gz	:dog: Command-line DNS Client for Humans. Written in Golang	doggo	Utility	Y
+duf	muesli/duf	duf_.*_freebsd_x86_64\.tar\.gz	Disk Usage/Free Utility - a better 'df' alternative	duf	Utility	N
+dufs	sigoden/dufs	dufs-v.*_64-unknown-linux-musl\.tar\.gz	A file server that supports static serving, uploading, searching, accessing control, webdav...	dufs	Network	N
+dust	bootandy/dust	dust-v.*_64-unknown-linux-gnu\.tar\.gz	A more intuitive version of du in rust	dust	Utility	N
+dyff	homeport/dyff	dyff_.*_linux_amd64\.tar\.gz	/ˈdʏf/ - diff tool for YAML files, and sometimes JSON	dyff	Utility	N
+eza	eza-community/eza	eza_x86_64-unknown-linux-gnu\.tar\.gz	A modern alternative to ls	eza	Utility	N
+f2	ayoisaiah/f2	f2_.*_linux_amd64\.tar\.gz	F2 is a cross-platform command-line tool for batch renaming files and directories quickly and safely. Written in Go!	f2	Utility	N
+fastfetch	fastfetch-cli/fastfetch	fastfetch-dragonfly-amd64\.tar\.gz	A maintained, feature-rich and performance oriented, neofetch like system information tool.	fastfetch	Utility	N
+fclones	pkolaczk/fclones	fclones-.*_64\.tar\.gz	Efficient Duplicate File Finder	fclones	Utility	N
+fd	sharkdp/fd	fd-v.*_64-unknown-linux-gnu\.tar\.gz	A simple, fast and user-friendly alternative to 'find'	fd	Utility	N
+feroxbuster	epi052/feroxbuster	feroxbuster_amd64\.deb\.zip	A fast, simple, recursive content discovery tool written in Rust.	feroxbuster	Utility	N
+ffuf	ffuf/ffuf	ffuf_.*_freebsd_amd64\.tar\.gz	Fast web fuzzer written in Go	ffuf	Network	N
+fish	fish-shell/fish-shell	fish-.*_64\.tar\.xz	The user-friendly command line shell.	fish	Utility	N
+flannel	flannel-io/flannel	flannel-v.*\.tar\.gz	flannel is a network fabric for containers, designed for Kubernetes	flannel	Utility	N
+flux2	fluxcd/flux2	flux_.*_linux_amd64\.tar\.gz	Open and extensible continuous delivery solution for Kubernetes. Powered by GitOps Toolkit.	flux2	Utility	N
+fnm	Schniz/fnm	fnm-linux\.zip	🚀 Fast and simple Node.js version manager, built in Rust	fnm	Utility	N
+freeze	charmbracelet/freeze	freeze_.*_Freebsd_x86_64\.tar\.gz	Generate images of code and terminal output 📸	freeze	Development	Y
+frp	fatedier/frp	frp_.*_freebsd_amd64\.tar\.gz	A fast reverse proxy to help you expose a local server behind a NAT or firewall to the internet.	frp	Network	N
+fselect	jhspetersson/fselect	fselect-x86_64-win\.zip	Find files with SQL-like queries	fselect	Utility	N
+fzf	junegunn/fzf	fzf-.*_amd64\.tar\.gz	:cherry_blossom: A command-line fuzzy finder	fzf	Utility	N
+gba-emulator	amyanger/gba-emulator	gba_emulator-.*_64\.tar\.gz	A Game Boy Advance emulator written in C, targeting Pokemon Emerald. ARM7TDMI CPU interpreter with scanline-based PPU and SDL2 frontend.	gba-emulator	Game	N
+gh	cli/cli	gh_.*_linux_amd64\.tar\.gz	GitHub’s official command line tool	gh	Utility	N
+git-cliff	orhun/git-cliff	git-cliff-.*_64-unknown-linux-gnu\.tar\.gz	A highly customizable Changelog Generator that follows Conventional Commit specifications ⛰️	git-cliff	Utility	N
+gitleaks	gitleaks/gitleaks	gitleaks_.*_linux_x64\.tar\.gz	Find secrets with Gitleaks 🔑	gitleaks	Utility	N
+gitui	extrawurst/gitui	gitui-linux-x86_64\.tar\.gz	Blazing 💥 fast terminal-ui for git written in rust 🦀	gitui	Utility	Y
+glow	charmbracelet/glow	glow_.*_Freebsd_x86_64\.tar\.gz	Render markdown on the CLI, with pizzazz! 💅🏻	glow	Utility	Y
+golangci-lint	golangci/golangci-lint	golangci-lint-.*\.tar\.gz	Fast linters runner for Go	golangci-lint	Utility	N
+goofcord	Milkshiift/GoofCord	GoofCord-.*\.tar\.xz	:shield: Take control of your Discord experience with GoofCord – a highly configurable and privacy minded discord client.	goofcord	Utility	Y
+gopass	gopasspw/gopass	gopass-.*\.tar\.gz	The slightly more awesome standard unix password manager for teams	gopass	Utility	N
+goreleaser	goreleaser/goreleaser	goreleaser_Linux_x86_64\.tar\.gz	Release engineering, simplified	goreleaser	Utility	N
+gping	orf/gping	gping-Linux-gnu-x86_64\.tar\.gz	Ping, but with a graph	gping	Utility	N
+grex	pemistahl/grex	grex-v.*_64-unknown-linux-musl\.tar\.gz	A command-line tool and Rust library with Python bindings for generating regular expressions from user-provided test cases	grex	Development	N
+grpcui	fullstorydev/grpcui	grpcui_.*_linux_x86_64\.tar\.gz	An interactive web UI for gRPC, along the lines of postman	grpcui	Network	N
+grpcurl	fullstorydev/grpcurl	grpcurl_.*_linux_x86_64\.tar\.gz	Like cURL, but for gRPC: Command-line tool for interacting with gRPC servers	grpcurl	Utility	N
+grype	anchore/grype	grype_.*_linux_amd64\.tar\.gz	A vulnerability scanner for container images and filesystems	grype	Utility	N
+gum	charmbracelet/gum	gum_.*_Freebsd_x86_64\.tar\.gz	A tool for glamorous shell scripts 🎀	gum	Utility	N
+halp	orhun/halp	halp-.*_64-unknown-linux-gnu\.tar\.gz	A CLI tool to get help with CLI tools 🐙	halp	Utility	Y
+helium	imputnet/helium-linux	helium-.*.1-x86_64_linux\.tar\.xz	Helium Browser for Linux	helium	Network	N
+helix	helix-editor/helix	helix-.*_64-linux\.tar\.xz	A post-modern modal text editor.	helix	Development	N
+heroic-games-launcher	Heroic-Games-Launcher/HeroicGamesLauncher	Heroic-.*\.tar\.xz	A games launcher for GOG, Amazon and Epic Games for Linux, Windows and macOS.	heroic-games-launcher	Game	N
+hexyl	sharkdp/hexyl	hexyl-v.*_64-unknown-linux-gnu\.tar\.gz	A command-line hex viewer	hexyl	Utility	N
+httpx	projectdiscovery/httpx	httpx_.*_linux_amd64\.zip	httpx is a fast and multi-purpose HTTP toolkit that allows running multiple probes using the retryablehttp library.	httpx	Utility	N
+hugo	gohugoio/hugo	hugo_.*_dragonfly-amd64\.tar\.gz	The world’s fastest framework for building websites.	hugo	Network	N
+hwatch	blacknon/hwatch	hwatch-.*.x86_64-unknown-linux-gnu\.tar\.gz	hwatch: alternative watch command with history, diff view, JSONL logging, and change hooks. since 2018.	hwatch	Utility	N
+hyperfine	sharkdp/hyperfine	hyperfine-v.*_64-unknown-linux-gnu\.tar\.gz	A command-line benchmarking tool	hyperfine	Utility	N
+intermodal	casey/intermodal	imdl-v.*_64-unknown-linux-musl\.tar\.gz	command-line utility for BitTorrent torrent file creation, verification, and more	intermodal	Utility	N
+istio	istio/istio	istio-.*\.tar\.gz	Connect, secure, control, and observe services.	istio	Utility	N
 jetbrains-toolbox	external/jetbrains-toolbox	TEMPLATE|https://download.jetbrains.com/toolbox/jetbrains-toolbox-@VERSION@.tar.gz|3.8.1.88030	Aplicacion Externa	jetbrains-toolbox	Utility	N
+jnv	ynqa/jnv	jnv-x86_64-unknown-linux-gnu\.tar\.xz	Interactive JSON filter using jq	jnv	Utility	N
+jql	yamafaktory/jql	jql-v.*_64-unknown-linux-musl\.tar\.gz	A JSON Query Language CLI tool	jql	Utility	Y
+jqp	noahgorstein/jqp	jqp_Linux_x86_64\.tar\.gz	A TUI playground to experiment with jq	jqp	Utility	N
+just	casey/just	just-.*_64-unknown-linux-musl\.tar\.gz	🤖 Just a command runner	just	Utility	N
+k6	grafana/k6	k6-v.*\.tar\.gz	A modern load testing tool, using Go and JavaScript	k6	Utility	N
+k9s	derailed/k9s	k9s_Freebsd_amd64\.tar\.gz	🐶 Kubernetes CLI To Manage Your Clusters In Style!	k9s	Utility	Y
+kitty	https://github.com/kovidgoyal/kitty	kitty-.*_64\.txz	If you live in the terminal, kitty is made for you! Cross-platform, fast, feature-rich, GPU based.	kitty	Utility	Y
+kmon	orhun/kmon	kmon-.*_64-unknown-linux-gnu\.tar\.gz	Linux Kernel Manager and Activity Monitor 🐧💻	kmon	Utility	N
+ko	ko-build/ko	ko_.*_Linux_x86_64\.tar\.gz	Build and deploy Go applications	ko	Utility	N
+kotofetch	hxpe-dev/kotofetch	kotofetch-v.*_64-unknown-linux-gnu\.tar\.gz	kotofetch is a small, configurable CLI that displays Japanese quotes in the terminal.	kotofetch	Utility	Y
+kube-bench	aquasecurity/kube-bench	kube-bench_.*_linux_amd64\.tar\.gz	Checks whether Kubernetes is deployed according to security best practices as defined in the CIS Kubernetes Benchmark	kube-bench	Utility	N
+kube-linter	stackrox/kube-linter	kube-linter-linux\.tar\.gz	KubeLinter is a static analysis tool that checks Kubernetes YAML files and Helm charts to ensure the applications represented in them adhere to best practices.	kube-linter	Utility	N
+kubectx	ahmetb/kubectx	kubectx_v.*_linux_x86_64\.tar\.gz	Faster way to switch between clusters and namespaces in kubectl	kubectx	Utility	N
+kustomize	kubernetes-sigs/kustomize	kustomize_v.*_linux_amd64\.tar\.gz	Customization of kubernetes YAML configurations	kustomize	Utility	N
+lazydocker	jesseduffield/lazydocker	lazydocker_.*_Linux_x86_64\.tar\.gz	The lazier way to manage everything docker	lazydocker	Utility	N
+lazygit	jesseduffield/lazygit	lazygit_.*_freebsd_x86_64\.tar\.gz	simple terminal UI for git commands	lazygit	Utility	Y
+legcord	Legcord/Legcord	Legcord-.*\.tar\.gz	Legcord is a custom client designed to enhance your Discord experience while keeping everything lightweight.	legcord	Utility	Y
+lf	gokcehan/lf	lf-dragonfly-amd64\.tar\.gz	Terminal file manager	lf	Utility	Y
+librewolf	https://codeberg.org/librewolf/bsys6	librewolf-.*_64-package\.tar\.xz	Mirror of https://librewolf.dev/librewolf/bsys6	librewolf	Utility	N
+lima	lima-vm/lima	lima-.*_64\.tar\.gz	Linux virtual machines, with a focus on running containers	lima	Utility	N
+limine	https://github.com/limine-bootloader/limine	limine-binary\.tar\.gz	Modern, secure, portable, multiprotocol bootloader and boot manager.	limine	Utility	N
+linapple	linappleii/linapple	linapple-headless-v.*_64\.tar\.gz	Apple 2e emulator	linapple	Game	N
+lnav	tstack/lnav	lnav-.*_64\.zip	Log file navigator	lnav	Utility	N
+localsend	localsend/localsend	LocalSend-.*\.tar\.gz	An open-source cross-platform alternative to AirDrop	localsend	Utility	N
+lsd	lsd-rs/lsd	lsd-v.*_64-unknown-linux-gnu\.tar\.gz	The next gen ls command	lsd	Utility	N
+mcfly	cantino/mcfly	mcfly-v.*_64-unknown-linux-musl\.tar\.gz	Fly through your shell history. Great Scott!	mcfly	Utility	N
+melt	charmbracelet/melt	melt_.*_Freebsd_x86_64\.tar\.gz	Backup and restore Ed25519 SSH keys with seed words 🫠	melt	Utility	N
+micro	micro-editor/micro	micro-.*\.tar\.gz	A modern and intuitive terminal-based text editor	micro	Development	Y
+mise	jdx/mise	mise-v.*\.tar\.gz	dev tools, env vars, task runner	mise	Utility	N
+moss	ezequielgk/Moss	moss-linux-amd64\.tar\.gz	Moss — a POSIX-compliant tarball manager. Installs and updates tarball packages atomically, with checksum verification and rollback.	moss	Utility	N
+navi	denisidoro/navi	navi-v.*_64-unknown-linux-musl\.tar\.gz	An interactive cheatsheet tool for the command-line	navi	Utility	N
+neovim	neovim/neovim	nvim-linux-x86_64\.tar\.gz	Vim-fork focused on extensibility and usability	neovim	Utility	N
+nerdctl	containerd/nerdctl	nerdctl-.*\.tar\.gz	contaiNERD CTL - Docker-compatible CLI for containerd, with support for Compose, Rootless, eStargz, OCIcrypt, IPFS, ...	nerdctl	Utility	Y
+nnn	jarun/nnn	nnn-emoji-static-.*.x86_64\.tar\.gz	n³ The unorthodox terminal file manager	nnn	Utility	Y
+nushell	nushell/nushell	nu-.*_64-unknown-linux-gnu\.tar\.gz	A new type of shell	nushell	Utility	N
+openmw	OpenMW/openmw	openmw-.*\.tar\.gz	OpenMW is an open-source open-world RPG game engine that supports playing Morrowind. Main repo and issue tracker can be found here: https://gitlab.com/OpenMW/openmw/	openmw	Game	N
+openrct2	OpenRCT2/OpenRCT2	OpenRCT2-v.*_64\.tar\.gz	An open source re-implementation of RollerCoaster Tycoon 2 🎢	openrct2	Utility	N
+opentofu	opentofu/opentofu	tofu_.*_freebsd_amd64\.tar\.gz	OpenTofu lets you declaratively manage your cloud infrastructure.	opentofu	Utility	N
+oras	oras-project/oras	oras_.*_freebsd_amd64\.tar\.gz	OCI registry client - managing content like artifacts, images, packages	oras	Utility	Y
+pinecone-launcher	ElyPrismLauncher/Launcher	PineconeMC-Linux-Qt6-Portable-.*\.tar\.gz	This fork of Prism Launcher adds integrated support for Ely.by accounts.	pinecone-launcher	Utility	N
+presenterm	mfontanini/presenterm	presenterm-.*_64-unknown-linux-gnu\.tar\.gz	A markdown terminal slideshow tool	presenterm	Development	Y
+prism-launcher	PrismLauncher/PrismLauncher	PrismLauncher-Linux-Qt6-Portable-.*\.tar\.gz	A custom launcher for Minecraft that allows you to easily manage multiple installations of Minecraft at once (Fork of MultiMC)	prism-launcher	Utility	N
+procs	dalance/procs	procs-v.*_64-linux\.zip	A modern replacement for ps written in Rust	procs	Utility	N
+pulumi	pulumi/pulumi	pulumi-v.*\.tar\.gz	Pulumi - Infrastructure as Code in any programming language 🚀	pulumi	Development	N
+ranger	https://github.com/ranger/ranger	INREPO	A VIM-inspired filemanager for the console	ranger.py	Utility	N
+rclone	rclone/rclone	rclone-v.*\.zip	"rsync for cloud storage" - Google Drive, S3, Dropbox, Backblaze B2, One Drive, Swift, Hubic, Wasabi, Google Cloud Storage, Azure Blob, Azure Files, Yandex Files	rclone	Utility	N
+ripgrep	BurntSushi/ripgrep	ripgrep-.*_64-unknown-linux-musl\.tar\.gz	ripgrep recursively searches directories for a regex pattern while respecting your gitignore	ripgrep	Utility	N
+ruff	astral-sh/ruff	ruff-x86_64-unknown-linux-gnu\.tar\.gz	An extremely fast Python linter and code formatter, written in Rust.	ruff	Development	N
+s5cmd	peak/s5cmd	s5cmd_.*_Linux-64bit\.tar\.gz	Parallel S3 and local filesystem execution tool.	s5cmd	Utility	N
+sad	ms-jpq/sad	x86_64-unknown-linux-gnu\.zip	CLI search and replace | Space Age seD	sad	Utility	Y
+scrcpy	Genymobile/scrcpy	scrcpy-linux-x86_64-v.*\.tar\.gz	Display and control your Android device	scrcpy	Utility	N
+sd	chmln/sd	sd-v.*_64-unknown-linux-gnu\.tar\.gz	Intuitive find & replace CLI (sed alternative)	sd	Utility	Y
+sequin	charmbracelet/sequin	sequin_.*_Freebsd_x86_64\.tar\.gz	Human-readable ANSI sequences 🪩	sequin	Utility	N
+shellcheck	koalaman/shellcheck	shellcheck-v.*.linux.x86_64\.tar\.gz	ShellCheck, a static analysis tool for shell scripts	shellcheck	Utility	N
+skim	lotabout/skim	skim-x86_64-unknown-linux-gnu\.tar\.xz	Fuzzy Finder in rust!	skim	Utility	N
+so	samtay/so	so-x86_64-unknown-linux-gnu\.tar\.gz	A terminal interface for Stack Overflow	so	Utility	Y
+soar	pkgforge/soar	soar-x86_64-linux\.tar\.gz	A fast, modern, distro-independent package manager that just works [maintainer=@QaidVoid]	soar	Utility	N
+soft-serve	charmbracelet/soft-serve	soft-serve_.*_Freebsd_x86_64\.tar\.gz	The mighty, self-hostable Git server for the command line🍦	soft-serve	Utility	N
+splitux	splitux-gg/splitux	splitux-v.*_64\.tar\.gz	Local co-op split-screen launcher for Linux	splitux	Utility	N
+spotifast	https://github.com/crmne/spotifast	spotifast-v.*_64-unknown-linux-gnu\.tar\.gz	Spotify, native and fast. One lightweight Rust app for your whole library, local playback, and Spotify Connect on Linux, macOS, and Windows.	spotifast	Utility	N
+starship	starship/starship	starship-x86_64-unknown-linux-gnu\.tar\.gz	☄🌌️  The minimal, blazing-fast, and infinitely customizable prompt for any shell!	starship	Utility	N
+stern	stern/stern	stern_.*_linux_amd64\.tar\.gz	⎈ Multi pod and container log tailing for Kubernetes -- Friendly fork of https://github.com/wercker/stern	stern	Utility	N
+sttr	abhimanyu003/sttr	sttr_Freebsd_x86_64\.tar\.gz	cross-platform, cli app to perform various operations on string	sttr	Utility	Y
+superfile	yorukot/superfile	superfile-linux-v.*\.tar\.gz	Pretty fancy and modern terminal file manager	superfile	Utility	Y
+supertuxkart	supertuxkart/stk-code	SuperTuxKart-.*_64\.tar\.gz	The code base of SuperTuxKart	supertuxkart	Development	N
+syft	anchore/syft	syft_.*_linux_amd64\.tar\.gz	CLI tool and library for generating a Software Bill of Materials from container images and filesystems	syft	Utility	Y
+syncthing	syncthing/syncthing	syncthing-freebsd-amd64-v.*\.tar\.gz	Open Source Continuous File Synchronization	syncthing	Utility	N
+tailspin	bensadeh/tailspin	tailspin-x86_64-unknown-linux-musl\.tar\.gz	🌀 A log file highlighter	tailspin	Utility	N
+task	go-task/task	task_freebsd_amd64\.tar\.gz	A fast, cross-platform build tool inspired by Make, designed for modern workflows.	task	Utility	N
+television	alexpasmantier/television	tv-.*_64-unknown-linux-gnu\.tar\.gz	A very fast, portable and hackable fuzzy finder.	television	Utility	N
+terragrunt	gruntwork-io/terragrunt	terragrunt_linux_amd64\.tar\.gz	Terragrunt is a flexible orchestration tool that allows Infrastructure as Code written in OpenTofu/Terraform to scale.	terragrunt	Development	N
+tilt	tilt-dev/tilt	tilt..*.linux-alpine.x86_64\.tar\.gz	Define your dev environment as code. For microservice apps on Kubernetes.	tilt	Development	N
+tlrc	tldr-pages/tlrc	tlrc-v.*_64-unknown-linux-gnu\.tar\.gz	Official tldr client written in Rust.	tlrc	Utility	Y
 tor-browser-linux-x86_64	external/tor-browser-linux-x86_64	TEMPLATE|https://dist.torproject.org/torbrowser/@VERSION@/tor-browser-linux-x86_64-@VERSION@.tar.xz|15.0.24	Aplicacion Externa	tor-browser-linux-x86_64	Utility	N
+trippy	fujiapple852/trippy	trippy-.*_64-unknown-linux-gnu\.tar\.gz	A network diagnostic tool	trippy	Utility	N
+trivy	aquasecurity/trivy	trivy_.*_Linux-64bit\.tar\.gz	Find vulnerabilities, misconfigurations, secrets, SBOM in containers, Kubernetes, code repositories, clouds and more	trivy	Development	N
+ubi	houseabsolute/ubi	ubi-FreeBSD-x86_64\.tar\.gz	The Universal Binary Installer	ubi	Utility	N
+umbrella-fetch	ezequielgk/Umbrella-Fetch	umbrella-fetch-v.*_64-unknown-linux-gnu\.tar\.gz	Umbrella - Fast and efficient data fetching tool built with Rust	umbrella-fetch	Utility	N
+upx	upx/upx	upx-.*_linux\.tar\.xz	UPX - the Ultimate Packer for eXecutables	upx	Utility	N
+uv	astral-sh/uv	uv-x86_64-unknown-linux-gnu\.tar\.gz	An extremely fast Python package and project manager, written in Rust.	uv	Utility	N
+vegeta	tsenart/vegeta	vegeta_.*_freebsd_amd64\.tar\.gz	HTTP load testing tool and library. It's over 9000!	vegeta	Utility	N
+vhs	charmbracelet/vhs	vhs_.*_Linux_x86_64\.tar\.gz	Your CLI home video recorder 📼	vhs	Video	Y
+viddy	sachaos/viddy	viddy-v.*_64\.tar\.gz	👀 A modern watch command. Time machine and pager etc.	viddy	Utility	N
+vscodium	VSCodium/vscodium	vscodium-cli-linux-x64-.*\.tar\.gz	binary releases of VS Code without MS branding/telemetry/licensing	vscodium	Development	N
+wasmtime	bytecodealliance/wasmtime	wasmtime-v.*_64-android-c-api\.tar\.xz	A lightweight WebAssembly runtime that is fast, secure, and standards-compliant	wasmtime	Network	N
+watchexec	watchexec/watchexec	watchexec-.*_64-unknown-linux-gnu\.tar\.xz	Executes commands in response to file modifications	watchexec	Utility	N
+xh	ducaale/xh	xh-v.*_64-unknown-linux-musl\.tar\.gz	Friendly and fast tool for sending HTTP requests	xh	Utility	N
+xq	sibprogrammer/xq	xq_.*_linux_amd64\.tar\.gz	Command-line XML and HTML beautifier and content extractor	xq	Utility	N
+yazi	sxyazi/yazi	yazi-x86_64-unknown-linux-gnu\.zip	💥 Blazing fast terminal file manager written in Rust, based on async I/O.	yazi	Utility	Y
+yq	mikefarah/yq	yq_freebsd_amd64\.tar\.gz	yq is a portable command-line YAML, JSON, XML, CSV, TOML, HCL  and properties processor	yq	Utility	N
+yt-dlp	yt-dlp/yt-dlp	yt-dlp_linux\.zip	A feature-rich command-line audio/video downloader	yt-dlp	Audio	N
+ytmgo	https://github.com/anas1412/ytmgo	ytmgo_Linux_x86_64\.tar\.gz	YT Music from Terminal - written in GO	ytmgo	Audio	Y
+zed	https://github.com/zed-industries/zed	zed-linux-x86_64\.tar\.gz	Code at the speed of thought – Zed is a high-performance, multiplayer code editor from the creators of Atom and Tree-sitter.	zed	Audio	N
+zellij	zellij-org/zellij	zellij-no-web-x86_64-unknown-linux-musl\.tar\.gz	A terminal workspace with batteries included	zellij	Utility	Y
+zen-browser	zen-browser/desktop	zen\.linux-x86_64\.tar\.xz	Welcome to a calmer internet	zen-browser	Network	N
+zerotierone-static	https://github.com/rafalb8/ZeroTierOne-Static	zerotier-one-x86_64\.tar\.gz	Static Zerotier-One binaries	zerotierone-static	Utility	N
+zfind	laktak/zfind	zfind-freebsd-amd64\.tar\.gz	search for files (even inside tar/zip/7z/rar) using a SQL-WHERE filter	zfind	Development	N
+zoxide	ajeetdsouza/zoxide	zoxide-.*_64-unknown-linux-musl\.tar\.gz	A smarter cd command. Supports all major shells.	zoxide	Utility	N
