@@ -102,6 +102,27 @@ repo_fetch_latest_release() {
                 _dl_url=$(printf '%s\n' "$_resp" | jq -r '.tarball_url')
             else
                 case "$_pattern" in
+                    INREPO*)
+                        _repo_api="https://api.github.com/repos/${_repo_path}"
+                        if [ -n "$GITHUB_TOKEN" ]; then
+                            _repo_info=$(curl -sL --max-time 10 --retry 3 -H "Authorization: Bearer $GITHUB_TOKEN" "$_repo_api")
+                        else
+                            _repo_info=$(curl -sL --max-time 10 --retry 3 "$_repo_api")
+                        fi
+                        _branch=$(printf '%s\n' "$_repo_info" | jq -r '.default_branch')
+                        [ -z "$_branch" ] || [ "$_branch" = "null" ] && _branch="master"
+                        
+                        _commits_api="https://api.github.com/repos/${_repo_path}/commits/${_branch}"
+                        if [ -n "$GITHUB_TOKEN" ]; then
+                            _commit_info=$(curl -sL --max-time 10 --retry 3 -H "Authorization: Bearer $GITHUB_TOKEN" "$_commits_api")
+                        else
+                            _commit_info=$(curl -sL --max-time 10 --retry 3 "$_commits_api")
+                        fi
+                        _version=$(printf '%s\n' "$_commit_info" | jq -r 'if type == "array" then .[0].sha[0:7] else .sha[0:7] end')
+                        [ -z "$_version" ] || [ "$_version" = "null" ] && _version="latest"
+                        
+                        _dl_url="https://github.com/${_repo_path}/archive/refs/heads/${_branch}.tar.gz"
+                        ;;
                     TEMPLATE\|*)
                         _tpl_url=$(printf '%s\n' "$_pattern" | cut -d'|' -f2)
                         _tpl_fb=$(printf '%s\n' "$_pattern" | cut -d'|' -f3)

@@ -166,8 +166,16 @@ def main():
     
     for raw_url, alias, template in repos_to_process:
         forge, norm_repo, out_repo = normalize_repo(raw_url)
-        app_name = alias.lower() if alias else norm_repo.split('/')[-1].lower()
         
+        is_inrepo = (alias and alias.lower() == 'inrepo')
+        
+        if is_inrepo:
+            app_name = norm_repo.split('/')[-1].lower()
+            exec_name_override = template if template else app_name
+        else:
+            app_name = alias.lower() if alias else norm_repo.split('/')[-1].lower()
+            exec_name_override = None
+            
         print(f"Analizando {app_name} en {norm_repo}...")
         if template and template.startswith('TEMPLATE|'):
             info = {'description': 'Aplicacion Externa'}
@@ -182,13 +190,15 @@ def main():
         if not desc: desc = "Sin descripcion"
         desc = desc.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').strip()
         
-        if template and template.startswith('TEMPLATE|'):
+        if is_inrepo:
+            release = {'assets': [{'name': 'dummy'}]}
+        elif template and template.startswith('TEMPLATE|'):
             release = {'assets': [{'name': 'dummy'}]}
         else:
             release = get_latest_release(forge, norm_repo)
         
-        if template and template.startswith('TEMPLATE|'):
-            # Skip asset checking, it's an external template
+        if is_inrepo or (template and template.startswith('TEMPLATE|')):
+            # Skip asset checking
             pass
         elif not release or 'assets' not in release or len(release['assets']) == 0:
             print(f"  -> Error: no se encontraron assets para {app_name}")
@@ -231,7 +241,10 @@ def main():
                         return a
             return None
 
-        if template and template.startswith('TEMPLATE|'):
+        if is_inrepo:
+            target_tar = "INREPO"
+            target_appimage = None
+        elif template and template.startswith('TEMPLATE|'):
             if 'appimage' in template.lower():
                 target_appimage = template
                 target_tar = None
@@ -243,13 +256,16 @@ def main():
             target_appimage = get_best_target(('.appimage',))
         
         found_any = False
-        exec_name = app_name
+        exec_name = exec_name_override if exec_name_override else app_name
         categoria = get_category(desc, app_name)
         is_terminal = "Y" if "terminal" in desc.lower() or "cli" in desc.lower() else "N"
         
         if target_tar:
             if app_name not in existing_tar_apps and out_repo.lower() not in existing_tar_repos:
-                regex = target_tar if target_tar.startswith('TEMPLATE|') else generate_regex(target_tar, app_name)
+                if target_tar.startswith('TEMPLATE|') or target_tar == 'INREPO':
+                    regex = target_tar
+                else:
+                    regex = generate_regex(target_tar, app_name)
                 line = f"{app_name}\t{out_repo}\t{regex}\t{desc}\t{exec_name}\t{categoria}\t{is_terminal}\n"
                 with open(tar_list_path, "a") as out_file:
                     out_file.write(line)
