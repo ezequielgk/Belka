@@ -275,8 +275,15 @@ def main():
             for a in filtered:
                 al = a.lower()
                 if 'linux' in al or ('binary' in al) or ('appimage' in al):
-                    if not any(x in al for x in ['windows', 'darwin', 'mac', 'arm', 'aarch64', 'i386']):
+                    if not any(x in al for x in ['windows', 'darwin', 'macos', 'arm', 'aarch64', 'i386']):
                         return a
+                        
+            # Final fallback: if it doesn't contain ANY other OS/Arch, assume it is generic linux amd64
+            for a in filtered:
+                al = a.lower()
+                if not any(x in al for x in ['windows', 'win32', 'darwin', 'macos', 'arm', 'aarch64', 'i386', '386', 'ia32', 'i686', 'riscv', 'mips', 's390x', 'ppc']):
+                    return a
+                    
             return None
 
         def get_standalone_binary():
