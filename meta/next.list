@@ -1,36 +1,3 @@
-jmacdonald/amp	amp
-BLAKE3-team/BLAKE3	b3sum
 Canop/broot	broot
-cargo-bins/cargo-binstall	cargo-binstall
-theryangeary/choose	choose
-sigstore/cosign	cosign
-Dr-Noob/cpufetch	cpufetch
-TomWright/dasel	dasel
-direnv/direnv	direnv
-svenstaro/dummyhttp	dummyhttp
 brocode/fblog	fblog
-antonmedv/fx	fx
-dundee/gdu	gdu
-svenstaro/genact	genact
-hadolint/hadolint	hadolint
-helm/helm	helm
-01mf02/jaq	jaq
-jqlang/jq	jq
-Macchina-CLI/macchina	macchina
-svenstaro/miniserve	miniserve
-FiloSottile/mkcert	mkcert
-yorhel/ncdu	ncdu	TEMPLATE|https://dev.yorhel.nl/download/ncdu-@VERSION@-linux-x86_64.tar.gz|2.7
-hatoo/oha	oha
-dylanaraps/pfetch	inrepo	pfetch
-Nukesor/pueue	pueue
-restic/restic	restic
-mvdan/sh	shfmt
-getsops/sops	sops
-dbrgn/tealdeer	tealdeer
-xo/usql	usql
-antonmedv/walk	walk
-sclevine/yj	yj
-pkgforge-dev/Drum-Machine-AppImage	drum-machine
-pkgforge-dev/Mini-vMac-AppImage	mini-vmac
-pkgforge-dev/Nomacs-AppImage	nomacs
 pkgforge-dev/qarma-AppImage	qarma

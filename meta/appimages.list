@@ -97,6 +97,7 @@ dosbox-x	pkgforge-dev/DOSBox-X-AppImage	DOSBox-X-.*_64\.AppImage	Unofficial AppI
 dr-robotniks-ring-racers	pkgforge-dev/Dr-Robotniks-Ring-Racers-AppImage	Dr._Robotnik.s_Ring_Racers-.*_64\.AppImage	Unofficial AppImage of Dr. Robotnik's Ring Racers [Maintainer=@Link4Electronics]	dr-robotniks-ring-racers	Utility	N
 drally	pkgforge-dev/dRally-AppImage	dRally-920d85a7f-anylinux-x86_64\.AppImage	Unofficial AppImage of dRally [Maintainer=@Link4Electronics]	drally	Utility	N
 dreamm	pkgforge-dev/DREAMM-AppImage	DREAMM-.*_64\.AppImage	Unofficial AppImage of DREAMM [Maintainer=@Link4Electronics]	dreamm	Utility	N
+drum-machine	pkgforge-dev/Drum-Machine-AppImage	Drum_Machine-.*_64\.AppImage	Unofficial AppImage of Drum Machine application for managing and playing with drum patterns.　　　　　[Maintainer=@fiftydinar]	drum-machine	Utility	N
 duckstation-gpl	pkgforge-dev/DuckStation-GPL-AppImage-Enhanced	DuckStation-.*_64\.AppImage	Unofficial AppImage of DuckStation when it was still GPLv3 [Maintainer=@Link4Electronics]	duckstation-gpl	Utility	N
 dunst	pkgforge-dev/dunst-AppImage	dunst-.*_64\.AppImage	Unofficial AppImage of dunst [Maintainer=@Samueru-sama]	dunst	Utility	N
 dwarf-fortress	pkgforge-dev/Dwarf-Fortress-AppImage	Dwarf_Fortress-.*_64\.AppImage	Unofficial AppImage of Dwarf Fortress [Maintainer=@Link4Electronics]	dwarf-fortress	Utility	N
@@ -226,6 +227,7 @@ megaman64recomp	pkgforge-dev/MegaMan64Recomp-AppImage	MegaMan64Recompiled-.*_64\
 melonds	pkgforge-dev/melonDS-AppImage-Enhanced	melonDS-.*_64\.AppImage	Unofficial AppImage of melonDS that can work on any linux system [Maintainer=@Samueru-sama]	melonds	Utility	N
 mesa	pkgforge-dev/MESA-AppImage	MESA-.*_64\.AppImage	Experimental AppImage that lets you use the latest MESA with any binary on your system [Maintainer=@Samueru-sama]	mesa	Utility	N
 mgba	pkgforge-dev/mGBA-AppImage-Enhanced	mGBA-.*_64\.AppImage	Unofficial AppImage of mGBA [Maintainer=@Link4Electronics]	mgba	Utility	N
+mini-vmac	pkgforge-dev/Mini-vMac-AppImage	Mini_vMac-.*_64\.AppImage	Unofficial AppImage of Mini vMac [Maintainer=@Link4Electronics]	mini-vmac	Utility	N
 mixxx	pkgforge-dev/Mixxx-AppImage	Mixxx-.*_64\.AppImage	Unofficial AppImage of Mixxx [Maintainer=@Link4Electronics]	mixxx	Utility	N
 mousai	pkgforge-dev/Mousai-AppImage	Mousai-.*_64\.AppImage	Unofficial AppImage of the Mousai song identifier application.　　　　　[Maintainer=@fiftydinar]	mousai	Development	N
 mpv	pkgforge-dev/mpv-AppImage	mpv-v.*_64\.AppImage	Unofficial AppImage of mpv [Maintainer=@Samueru-sama]	mpv	Utility	N
@@ -239,6 +241,7 @@ neverball	pkgforge-dev/Neverball-AppImage	Neverball-.*_64\.AppImage	Unofficial A
 newsflash	pkgforge-dev/NewsFlash-AppImage	Newsflash-.*_64\.AppImage	Unofficial AppImage of the NewsFlash RSS reader.　　　　　　　　　　[Maintainer=@fiftydinar]	newsflash	Utility	N
 nfsiise	pkgforge-dev/NFSIISE-AppImage	Need_For_Speed_II_SE-fde04b571-anylinux-x86_64\.AppImage	Unofficial AppImage of NFSIISE [Maintainer=@Link4Electronics]	nfsiise	Utility	N
 nitrogen	pkgforge-dev/Nitrogen-AppImage	nitrogen-.*_64\.AppImage	Unofficial AppImage of Nitrogen [Maintainer=@Samueru-sama]	nitrogen	Utility	N
+nomacs	pkgforge-dev/Nomacs-AppImage	nomacs-.*_64\.AppImage	Unofficial AppImage. nomacs is a free, open source image viewer, which supports multiple platforms. You can use it for viewing all common image formats including RAW and psd images. [Maintainer=@lucasmz1]	nomacs	Utility	N
 nsz	pkgforge-dev/NSZ-AppImage	NSZ-.*_64\.AppImage	Unofficial AppImage of the NSZ utility, GUI included [Maintainer=@Samueru-sama]	nsz	Utility	N
 nugget-doom	pkgforge-dev/Nugget-Doom-AppImage-Enhanced	Nugget_Doom-.*_64\.AppImage	Unofficial AppImage of Nugget Doom [Maintainer=@Link4Electronics]	nugget-doom	Utility	N
 nxengine-evo	pkgforge-dev/NXEngine-evo-AppImage-Enhanced	Cave_Story_NX-evo-1f093d142-anylinux-x86_64\.AppImage	Unofficial AppImage of NXEngine-evo [Maintainer=@Link4Electronics]	nxengine-evo	Utility	N
