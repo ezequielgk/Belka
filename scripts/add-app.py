@@ -240,7 +240,7 @@ def main():
         
         def is_linux_amd64(name):
             al = name.lower()
-            if any(x in al for x in ['windows', 'win32', 'darwin', 'macos']):
+            if any(x in al for x in ['windows', 'win32', 'darwin', 'macos', 'freebsd', 'dragonfly', 'netbsd', 'openbsd', 'plan9']):
                 return False
             if any(x in al for x in ['arm', 'aarch64', 'riscv', 'mips', 's390x', 'ppc']):
                 return False
@@ -275,13 +275,13 @@ def main():
             for a in filtered:
                 al = a.lower()
                 if 'linux' in al or ('binary' in al) or ('appimage' in al):
-                    if not any(x in al for x in ['windows', 'darwin', 'macos', 'arm', 'aarch64', 'i386']):
+                    if not any(x in al for x in ['windows', 'darwin', 'macos', 'arm', 'aarch64', 'i386', 'freebsd', 'dragonfly', 'netbsd', 'openbsd', 'plan9']):
                         return a
                         
             # Final fallback: if it doesn't contain ANY other OS/Arch, assume it is generic linux amd64
             for a in filtered:
                 al = a.lower()
-                if not any(x in al for x in ['windows', 'win32', 'darwin', 'macos', 'arm', 'aarch64', 'i386', '386', 'ia32', 'i686', 'riscv', 'mips', 's390x', 'ppc']):
+                if not any(x in al for x in ['windows', 'win32', 'darwin', 'macos', 'arm', 'aarch64', 'i386', '386', 'ia32', 'i686', 'riscv', 'mips', 's390x', 'ppc', 'freebsd', 'dragonfly', 'netbsd', 'openbsd', 'plan9']):
                     return a
                     
             return None

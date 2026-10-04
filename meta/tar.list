@@ -156,7 +156,7 @@ procs	dalance/procs	procs-v.*_64-linux\.zip	A modern replacement for ps written 
 pueue	Nukesor/pueue	pueue-x86_64-unknown-freebsd	:stars: Manage your shell commands.	pueue	Utility	N
 pulumi	pulumi/pulumi	pulumi-v.*\.tar\.gz	Pulumi - Infrastructure as Code in any programming language 🚀	pulumi	Development	N
 ranger	https://github.com/ranger/ranger	INREPO	A VIM-inspired filemanager for the console	ranger.py	Utility	N
-rclone	rclone/rclone	rclone-v.*\.zip	"rsync for cloud storage" - Google Drive, S3, Dropbox, Backblaze B2, One Drive, Swift, Hubic, Wasabi, Google Cloud Storage, Azure Blob, Azure Files, Yandex Files	rclone	Utility	N
+rclone	rclone/rclone	rclone-v.*\.zip	rsync for cloud storage - Google Drive, S3, Dropbox, Backblaze B2, One Drive, Swift, Hubic, Wasabi, Google Cloud Storage, Azure Blob, Azure Files, Yandex Files	rclone	Utility	N
 restic	restic/restic	restic_.*_dragonfly_amd64\.bz2	Fast, secure, efficient backup program	restic	Utility	N
 ripgrep	BurntSushi/ripgrep	ripgrep-.*_64-unknown-linux-musl\.tar\.gz	ripgrep recursively searches directories for a regex pattern while respecting your gitignore	ripgrep	Utility	N
 ruff	astral-sh/ruff	ruff-x86_64-unknown-linux-gnu\.tar\.gz	An extremely fast Python linter and code formatter, written in Rust.	ruff	Development	N
