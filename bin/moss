@@ -592,13 +592,13 @@ moss_extract() {
             n = split($0, parts, " -> ")
             tgt = parts[n]
             gsub(/^[ \t]+|[ \t]+$/, "", tgt)
-            if (tgt ~ /^\// || tgt ~ /(^|\/)\.\.(\/|$)/) bad = 1
+            if (tgt ~ /^\//) bad = 1
         }
         /^h/ && / link to / {
             n = split($0, parts, " link to ")
             tgt = parts[n]
             gsub(/^[ \t]+|[ \t]+$/, "", tgt)
-            if (tgt ~ /^\// || tgt ~ /(^|\/)\.\.(\/|$)/) bad = 1
+            if (tgt ~ /^\//) bad = 1
         }
         END { exit(bad ? 1 : 0) }
     ' || {
