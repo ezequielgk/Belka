@@ -712,6 +712,10 @@ moss_rmdir_chain() {
 moss_install_files() {
     _moss_if_installed=$MOSS_TMPDIR/installed.$$
     
+    ( cd "$1" && find . -type f -o -type l 2>/dev/null ) | sed 's|^\./||' | while IFS= read -r _moss_if_f; do
+        [ -n "$_moss_if_f" ] && rm -f "$MOSS_PREFIX/$_moss_if_f"
+    done
+
     if ! ( cd "$1" && tar cf - . ) | ( cd "$MOSS_PREFIX" && tar xf - 2>/dev/null ); then
         moss_log ERROR "fallo en la copia masiva; revirtiendo cambios parciales"
         ( cd "$1" && find . -type f 2>/dev/null ) | sed 's|^\./||' | while IFS= read -r _moss_if_g; do
@@ -1899,10 +1903,15 @@ moss_cmd_upgrade() {
     _moss_up_ok=0
     moss_progress "$_moss_up_curr" "$_moss_up_tot" "Calculando..."
 
+    _moss_up_saved_log_level=$MOSS_LOG_LEVEL
+
     for _pkg in $_moss_up_pkgs; do
+        MOSS_LOG_LEVEL=$_moss_up_saved_log_level
         moss_progress "$_moss_up_curr" "$_moss_up_tot" "Actualizando $_pkg..."
 
+        [ "$MOSS_LOG_LEVEL" -eq 2 ] && MOSS_LOG_LEVEL=1
         moss_update_one "$_pkg"
+        MOSS_LOG_LEVEL=$_moss_up_saved_log_level
         
         if [ "$MOSS_U_RESULT" = "updated" ]; then
             _moss_up_ok=$((_moss_up_ok + 1))
