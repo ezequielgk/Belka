@@ -224,8 +224,15 @@ def main():
                 return True
             return False
 
+        hint = template if template and not template.startswith('TEMPLATE|') else None
+
         def get_best_target(exts):
             filtered = [a for a in assets if any(a.lower().endswith(e) for e in exts) and not a.lower().endswith('.sig')]
+            
+            if hint:
+                hint_filtered = [a for a in filtered if re.search(hint, a, re.IGNORECASE)]
+                if hint_filtered:
+                    return hint_filtered[0]
             
             for a in filtered:
                 if is_linux_amd64(a) and 'gnu' in a.lower(): return a
