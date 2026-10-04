@@ -114,22 +114,24 @@ def main():
     
     if len(sys.argv) > 1:
         for arg in sys.argv[1:]:
-            parts = arg.split(maxsplit=1)
+            parts = arg.split(maxsplit=2)
             alias = parts[1] if len(parts) > 1 else None
-            repos_to_process.append((parts[0], alias))
+            template = parts[2] if len(parts) > 2 else None
+            repos_to_process.append((parts[0], alias, template))
     else:
         if os.path.exists(next_list_path):
             with open(next_list_path, 'r') as f:
                 for line in f:
                     line = line.strip()
                     if not line or line.startswith('#'): continue
-                    parts = line.split(maxsplit=1)
+                    parts = line.split(maxsplit=2)
                     url = parts[0]
                     alias = parts[1] if len(parts) > 1 else None
-                    repos_to_process.append((url, alias))
+                    template = parts[2] if len(parts) > 2 else None
+                    repos_to_process.append((url, alias, template))
         else:
             print(f"Uso: ./add-app.py autor/repo [autor2/repo2 ...]")
-            print(f"O crea un archivo {next_list_path} con un repo por linea (alias opcional).")
+            print(f"O crea un archivo {next_list_path} con un repo por linea (alias y template opcional).")
             sys.exit(1)
             
     if not repos_to_process:
@@ -162,25 +164,35 @@ def main():
     added_tar = False
     added_appimage = False
     
-    for raw_url, alias in repos_to_process:
+    for raw_url, alias, template in repos_to_process:
         forge, norm_repo, out_repo = normalize_repo(raw_url)
         app_name = alias.lower() if alias else norm_repo.split('/')[-1].lower()
         
         print(f"Analizando {app_name} en {norm_repo}...")
-        info = get_repo_info(forge, norm_repo)
+        if template and template.startswith('TEMPLATE|'):
+            info = {'description': 'Aplicacion Externa'}
+        else:
+            info = get_repo_info(forge, norm_repo)
+        
         if not info: 
-            failed_repos.append(raw_url if not alias else f"{raw_url}\t{alias}")
+            failed_repos.append(raw_url if not alias else (f"{raw_url}\t{alias}" if not template else f"{raw_url}\t{alias}\t{template}"))
             continue
         
         desc = info.get('description', 'Sin descripcion')
         if not desc: desc = "Sin descripcion"
         desc = desc.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').strip()
         
-        release = get_latest_release(forge, norm_repo)
+        if template and template.startswith('TEMPLATE|'):
+            release = {'assets': [{'name': 'dummy'}]}
+        else:
+            release = get_latest_release(forge, norm_repo)
         
-        if not release or 'assets' not in release or len(release['assets']) == 0:
+        if template and template.startswith('TEMPLATE|'):
+            # Skip asset checking, it's an external template
+            pass
+        elif not release or 'assets' not in release or len(release['assets']) == 0:
             print(f"  -> Error: no se encontraron assets para {app_name}")
-            failed_repos.append(raw_url if not alias else f"{raw_url}\t{alias}")
+            failed_repos.append(raw_url if not alias else (f"{raw_url}\t{alias}" if not template else f"{raw_url}\t{alias}\t{template}"))
             continue
             
         assets = [a['name'] for a in release['assets']]
@@ -215,8 +227,16 @@ def main():
                         return a
             return None
 
-        target_tar = get_best_target(('.tar.gz', '.tar.xz', '.txz', '.zip', '.tar'))
-        target_appimage = get_best_target(('.appimage',))
+        if template and template.startswith('TEMPLATE|'):
+            if 'appimage' in template.lower():
+                target_appimage = template
+                target_tar = None
+            else:
+                target_tar = template
+                target_appimage = None
+        else:
+            target_tar = get_best_target(('.tar.gz', '.tar.xz', '.txz', '.zip', '.tar'))
+            target_appimage = get_best_target(('.appimage',))
         
         found_any = False
         exec_name = app_name
@@ -225,7 +245,7 @@ def main():
         
         if target_tar:
             if app_name not in existing_tar_apps and out_repo.lower() not in existing_tar_repos:
-                regex = generate_regex(target_tar, app_name)
+                regex = target_tar if target_tar.startswith('TEMPLATE|') else generate_regex(target_tar, app_name)
                 line = f"{app_name}\t{out_repo}\t{regex}\t{desc}\t{exec_name}\t{categoria}\t{is_terminal}\n"
                 with open(tar_list_path, "a") as out_file:
                     out_file.write(line)
@@ -240,7 +260,7 @@ def main():
                 
         if target_appimage:
             if app_name not in existing_appimage_apps and out_repo.lower() not in existing_appimage_repos:
-                regex = generate_regex(target_appimage, app_name)
+                regex = target_appimage if target_appimage.startswith('TEMPLATE|') else generate_regex(target_appimage, app_name)
                 line = f"{app_name}\t{out_repo}\t{regex}\t{desc}\t{exec_name}\t{categoria}\t{is_terminal}\n"
                 with open(appimages_list_path, "a") as out_file:
                     out_file.write(line)

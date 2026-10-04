@@ -101,7 +101,19 @@ repo_fetch_latest_release() {
             if [ "$_pattern" = "TARBALL" ]; then
                 _dl_url=$(printf '%s\n' "$_resp" | jq -r '.tarball_url')
             else
-                _dl_url=$(printf '%s\n' "$_resp" | jq -r --arg pat "$_pattern" 'if .assets != null then .assets[] | select(.name != null and (.name | test($pat; "i")) and (.name | test("aarch64|arm64|armv|armhf|i386|i686|386|riscv|mips|s390x|ppc"; "i") | not)) | .browser_download_url else empty end' | head -n 1)
+                case "$_pattern" in
+                    TEMPLATE\|*)
+                        _tpl_url=$(printf '%s\n' "$_pattern" | cut -d'|' -f2)
+                        _tpl_fb=$(printf '%s\n' "$_pattern" | cut -d'|' -f3)
+                        if [ -z "$_version" ] || [ "$_version" = "null" ]; then
+                            _version="$_tpl_fb"
+                        fi
+                        _dl_url=$(echo "$_tpl_url" | sed "s|@VERSION@|$_version|g")
+                        ;;
+                    *)
+                        _dl_url=$(printf '%s\n' "$_resp" | jq -r --arg pat "$_pattern" 'if .assets != null then .assets[] | select(.name != null and (.name | test($pat; "i")) and (.name | test("aarch64|arm64|armv|armhf|i386|i686|386|riscv|mips|s390x|ppc"; "i") | not)) | .browser_download_url else empty end' | head -n 1)
+                        ;;
+                esac
             fi
             ;;
     esac
