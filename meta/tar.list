@@ -197,7 +197,7 @@ upx	upx/upx	upx-.*_linux\.tar\.xz	UPX - the Ultimate Packer for eXecutables	upx	
 usql	xo/usql	usql-.*.tar\.bz2	Universal command-line interface for SQL databases	usql	Utility	N
 uv	astral-sh/uv	uv-x86_64-unknown-linux-gnu\.tar\.gz	An extremely fast Python package and project manager, written in Rust.	uv	Utility	N
 vegeta	tsenart/vegeta	vegeta_.*_freebsd_amd64\.tar\.gz	HTTP load testing tool and library. It's over 9000!	vegeta	Utility	N
-vesktop	Vencord/Vesktop	Vesktop-.*\.zip	Vesktop is a custom Discord App aiming to give you better performance and improve linux support	vesktop	Utility	N
+vesktop	Vencord/Vesktop	vesktop-.*\.tar\.gz	Vesktop is a custom Discord App aiming to give you better performance and improve linux support	vesktop	Utility	N
 vhs	charmbracelet/vhs	vhs_.*_Linux_x86_64\.tar\.gz	Your CLI home video recorder 📼	vhs	Video	Y
 viddy	sachaos/viddy	viddy-v.*_64\.tar\.gz	👀 A modern watch command. Time machine and pager etc.	viddy	Utility	N
 vscodium	VSCodium/vscodium	vscodium-cli-linux-x64-.*\.tar\.gz	binary releases of VS Code without MS branding/telemetry/licensing	vscodium	Development	N
