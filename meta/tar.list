@@ -25,6 +25,7 @@ bluetuith	bluetuith-org/bluetuith	bluetuith_.*_Linux_x86_64\.tar\.gz	A cross-pla
 bore	ekzhang/bore	bore-v.*_64-unknown-linux-musl\.tar\.gz	🕳 bore is a simple CLI tool for making tunnels to localhost	bore	Utility	Y
 bottom	ClementTsang/bottom	bottom_x86_64-unknown-linux-gnu-2-17\.tar\.gz	Yet another cross-platform graphical process/system monitor.	bottom	Utility	N
 brave-browser	https://github.com/brave/brave-browser	brave-browser-.*\.zip	Brave browser for Android, iOS, Linux, macOS, Windows.	brave-browser	Network	N
+broot	Canop/broot	broot_.*\.zip	A new way to see and navigate directory trees	broot	Utility	N
 btop	aristocratos/btop	btop-x86_64-unknown-linux-musl\.tar\.gz	A monitor of resources	btop	Utility	N
 buf	bufbuild/buf	buf-FreeBSD-x86_64\.tar\.gz	The best way of working with Protocol Buffers.	buf	Utility	N
 caddy	caddyserver/caddy	caddy_.*_freebsd_amd64\.tar\.gz	Fast and extensible multi-platform HTTP/1-2-3 web server with automatic HTTPS	caddy	Network	N
