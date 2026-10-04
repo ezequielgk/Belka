@@ -10,6 +10,7 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 
 URL="https://github.com/ezequielgk/Moss/releases/latest/download/moss-linux-amd64.tar.gz"
 curl -sL "$URL" | tar -xz -C "$TMP_DIR"
+chmod +x "$TMP_DIR/moss"
 
 MOSS_VER=$("$TMP_DIR/moss" -V | awk '{print $2}')
 echo "Instalando Moss (v${MOSS_VER}) de forma limpia..."
