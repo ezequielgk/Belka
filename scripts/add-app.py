@@ -240,7 +240,7 @@ def main():
         
         def is_linux_amd64(name):
             al = name.lower()
-            if any(x in al for x in ['windows', 'win32', 'darwin', 'mac', 'apple']):
+            if any(x in al for x in ['windows', 'win32', 'darwin', 'macos']):
                 return False
             if any(x in al for x in ['arm', 'aarch64', 'riscv', 'mips', 's390x', 'ppc']):
                 return False
@@ -300,7 +300,7 @@ def main():
             for a in filtered:
                 al = a.lower()
                 if 'linux' in al or ('binary' in al):
-                    if not any(x in al for x in ['windows', 'darwin', 'mac', 'arm', 'aarch64', 'i386']):
+                    if not any(x in al for x in ['windows', 'darwin', 'macos', 'arm', 'aarch64', 'i386']):
                         return a
             return None
 
