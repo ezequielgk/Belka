@@ -1,11 +1,11 @@
 #!/bin/sh
-# moss — runner de tests minimalista (POSIX sh, sin dependencias).
+# belka — runner de tests minimalista (POSIX sh, sin dependencias).
 # Cubre: instalacion, checksum, conflictos, rollback, remove, update,
 # verify, dry-run, list/search/info (JSON), TUI fallback, resolucion de
 # fuente (local/URL/nombre), sync, TTL del cache y modo offline.
 
-MOSS_BIN=$(CDPATH= cd "$(dirname "$0")/../bin" && pwd)/moss
-[ -f "$MOSS_BIN" ] || { echo "no se encuentra $MOSS_BIN" >&2; exit 2; }
+BELKA_BIN=$(CDPATH= cd "$(dirname "$0")/../bin" && pwd)/belka
+[ -f "$BELKA_BIN" ] || { echo "no se encuentra $BELKA_BIN" >&2; exit 2; }
 
 TESTS_RUN=0
 TESTS_FAIL=0
@@ -50,9 +50,9 @@ t_sandbox() {
 }
 
 t_tm() {
-    # t_tm [args...] — corre moss aislado. T_ENV="VAR=val ..." inyecta env.
+    # t_tm [args...] — corre belka aislado. T_ENV="VAR=val ..." inyecta env.
     env -i PATH="$PATH" HOME="$T/home" XDG_CACHE_HOME="$T/xcache" \
-        TMPDIR="$T/tmp" ${T_ENV:-} sh "$MOSS_BIN" "$@"
+        TMPDIR="$T/tmp" ${T_ENV:-} sh "$BELKA_BIN" "$@"
 }
 
 t_sha() {
@@ -72,12 +72,15 @@ t_mkpkg() {
         _t_content=${_t_spec#*:}
         mkdir -p "$_t_src/$(dirname "$_t_path")"
         printf '%s\n' "$_t_content" > "$_t_src/$_t_path"
+        case "$_t_path" in
+            bin/*) chmod +x "$_t_src/$_t_path" ;;
+        esac
     done
     ( cd "$T/src" && tar -czf "$T/pkgs/$_t_out.tar.gz" "$_t_root" )
 }
 
 t_new_index() {
-    printf '# moss index v1 (TSV)\n'
+    printf '# belka index v1 (TSV)\n'
 }
 
 t_index_add() {
@@ -100,11 +103,11 @@ test_install_ok() {
     t_index_add "$T/index.tsv" demo 1.0.0 "$T/pkgs/demo-1.0.0.tar.gz" 'Demo app'
     t_tm --index "$T/index.tsv" install demo || return 1
 
-    t_eq "$(cat "$T/home/.local/bin/hello")" '#!/bin/sh echo hola-1.0.0' || return 1
+    t_eq "$(cat "$T/home/.local/belka/bin/hello")" '#!/bin/sh echo hola-1.0.0' || return 1
     t_eq "$(cat "$T/home/.local/share/doc/demo/readme")" 'doc 1.0.0' || return 1
-    t_eq "$(awk -F= '/^version=/ {print $2}' "$T/home/.local/share/moss/demo/manifest")" 1.0.0 || return 1
-    grep -q '^bin/hello$' "$T/home/.local/share/moss/demo/files" || return 1
-    grep -q '^name=demo$' "$T/home/.local/share/moss/demo/manifest" || return 1
+    t_eq "$(awk -F= '/^version=/ {print $2}' "$T/home/.local/share/belka/demo/manifest")" 1.0.0 || return 1
+    grep -q '^bin/hello$' "$T/home/.local/share/belka/demo/files" || return 1
+    grep -q '^name=demo$' "$T/home/.local/share/belka/demo/manifest" || return 1
 }
 
 test_install_bad_checksum() {
@@ -116,25 +119,25 @@ test_install_bad_checksum() {
         >> "$T/index.tsv"
     t_tm --index "$T/index.tsv" install demo && return 1
     t_eq "$?" 3 || return 1
-    [ ! -d "$T/home/.local/share/moss/demo" ] || return 1
-    [ ! -e "$T/home/.local/bin/hello" ] || return 1
+    [ ! -d "$T/home/.local/share/belka/demo" ] || return 1
+    [ ! -e "$T/home/.local/belka/bin/hello" ] || return 1
 }
 
 test_install_conflict() {
     T=$(t_sandbox)
     mkdir -p "$T/home/.local/bin"
-    printf 'archivo ajeno\n' > "$T/home/.local/bin/hello"
+    printf 'archivo ajeno\n' > "$T/home/.local/belka/bin/hello"
     t_mkpkg demo-1.0.0 demo-1.0.0 bin/hello:'hola demo'
     t_new_index > "$T/index.tsv"
     t_index_add "$T/index.tsv" demo 1.0.0 "$T/pkgs/demo-1.0.0.tar.gz" 'Demo'
 
     t_tm --index "$T/index.tsv" install demo && return 1
     t_eq "$?" 5 || return 1
-    t_eq "$(cat "$T/home/.local/bin/hello")" 'archivo ajeno' || return 1
+    t_eq "$(cat "$T/home/.local/belka/bin/hello")" 'archivo ajeno' || return 1
 
     # con --force se sobrescribe
     t_tm --index "$T/index.tsv" install -f demo || return 1
-    t_eq "$(cat "$T/home/.local/bin/hello")" 'hola demo' || return 1
+    t_eq "$(cat "$T/home/.local/belka/bin/hello")" 'hola demo' || return 1
 
     # reinstalar sin --force -> conflicto (ya gestionado)
     t_tm --index "$T/index.tsv" install demo && return 1
@@ -159,7 +162,7 @@ test_install_rollback() {
     [ ! -e "$T/home/.local/aaa.txt" ] || return 1
     [ -f "$T/home/.local/lib" ] || return 1
     [ ! -e "$T/home/.local/lib/zzz.txt" ] || return 1
-    [ ! -d "$T/home/.local/share/moss/rb" ] || return 1
+    [ ! -d "$T/home/.local/share/belka/rb" ] || return 1
 }
 
 test_remove_ok() {
@@ -170,9 +173,9 @@ test_remove_ok() {
     t_tm --index "$T/index.tsv" install demo || return 1
 
     t_tm remove -f demo || return 1
-    [ ! -e "$T/home/.local/bin/hello" ] || return 1
+    [ ! -e "$T/home/.local/belka/bin/hello" ] || return 1
     [ ! -e "$T/home/.local/share/demo/data.txt" ] || return 1
-    [ ! -d "$T/home/.local/share/moss/demo" ] || return 1
+    [ ! -d "$T/home/.local/share/belka/demo" ] || return 1
     t_tm remove -f demo && return 1
     t_eq "$?" 1 || return 1
 }
@@ -187,19 +190,19 @@ test_update_and_rollback() {
     t_index_add "$T/index-v2.tsv" foo 2.0.0 "$T/pkgs/foo-2.0.0.tar.gz" 'Foo'
 
     t_tm --index "$T/index-v1.tsv" install foo || return 1
-    t_eq "$(cat "$T/home/.local/bin/foo")" 'version-1.0.0' || return 1
+    t_eq "$(cat "$T/home/.local/belka/bin/foo")" 'version-1.0.0' || return 1
 
     t_tm --index "$T/index-v2.tsv" update foo || return 1
-    t_eq "$(cat "$T/home/.local/bin/foo")" 'version-2.0.0' || return 1
-    t_eq "$(awk -F= '/^version=/ {print $2}' "$T/home/.local/share/moss/foo/manifest")" 2.0.0 || return 1
-    t_eq "$(awk -F= '/^version=/ {print $2}' "$T/home/.local/share/moss/foo/manifest.bak")" 1.0.0 || return 1
+    t_eq "$(cat "$T/home/.local/belka/bin/foo")" 'version-2.0.0' || return 1
+    t_eq "$(awk -F= '/^version=/ {print $2}' "$T/home/.local/share/belka/foo/manifest")" 2.0.0 || return 1
+    t_eq "$(awk -F= '/^version=/ {print $2}' "$T/home/.local/share/belka/foo/manifest.bak")" 1.0.0 || return 1
 
     t_tm --index "$T/index-v2.tsv" update foo || return 1
-    t_eq "$(cat "$T/home/.local/bin/foo")" 'version-2.0.0' || return 1
+    t_eq "$(cat "$T/home/.local/belka/bin/foo")" 'version-2.0.0' || return 1
 
     t_tm rollback foo || return 1
-    t_eq "$(cat "$T/home/.local/bin/foo")" 'version-1.0.0' || return 1
-    t_eq "$(awk -F= '/^version=/ {print $2}' "$T/home/.local/share/moss/foo/manifest")" 1.0.0 || return 1
+    t_eq "$(cat "$T/home/.local/belka/bin/foo")" 'version-1.0.0' || return 1
+    t_eq "$(awk -F= '/^version=/ {print $2}' "$T/home/.local/share/belka/foo/manifest")" 1.0.0 || return 1
 }
 
 test_update_all_summary() {
@@ -221,8 +224,8 @@ test_update_all_summary() {
     _t_out=$(t_tm --index "$T/i2.tsv" update --all 2>&1) || return 1
     printf '%s\n' "$_t_out" | grep -q 'actualizados=1' || return 1
     printf '%s\n' "$_t_out" | grep -q 'al_dia=1' || return 1
-    t_eq "$(cat "$T/home/.local/bin/a")" 'a-2' || return 1
-    t_eq "$(cat "$T/home/.local/bin/b")" 'b-1' || return 1
+    t_eq "$(cat "$T/home/.local/belka/bin/a")" 'a-2' || return 1
+    t_eq "$(cat "$T/home/.local/belka/bin/b")" 'b-1' || return 1
 }
 
 test_verify() {
@@ -233,7 +236,7 @@ test_verify() {
     t_tm --index "$T/index.tsv" install demo || return 1
 
     t_tm verify demo || return 1
-    rm "$T/home/.local/bin/hello"
+    rm "$T/home/.local/belka/bin/hello"
     t_tm verify demo && return 1
     t_eq "$?" 3 || return 1
 }
@@ -244,8 +247,8 @@ test_dry_run() {
     t_new_index > "$T/index.tsv"
     t_index_add "$T/index.tsv" demo 1.0.0 "$T/pkgs/demo-1.0.0.tar.gz" 'Demo'
     t_tm --index "$T/index.tsv" install --dry-run demo || return 1
-    [ ! -e "$T/home/.local/bin/hello" ] || return 1
-    [ ! -d "$T/home/.local/share/moss/demo" ] || return 1
+    [ ! -e "$T/home/.local/belka/bin/hello" ] || return 1
+    [ ! -d "$T/home/.local/share/belka/demo" ] || return 1
 }
 
 test_list_search_info() {
@@ -279,8 +282,8 @@ test_local_file_install() {
     T=$(t_sandbox)
     t_mkpkg localapp-0.1 localapp-0.1 bin/localapp:'local-0.1'
     t_tm install "$T/pkgs/localapp-0.1.tar.gz" || return 1
-    t_eq "$(cat "$T/home/.local/bin/localapp")" 'local-0.1' || return 1
-    t_eq "$(awk -F= '/^version=/ {print $2}' "$T/home/.local/share/moss/localapp-0.1/manifest")" local || return 1
+    t_eq "$(cat "$T/home/.local/belka/bin/localapp")" 'local-0.1' || return 1
+    t_eq "$(awk -F= '/^version=/ {print $2}' "$T/home/.local/share/belka/localapp-0.1/manifest")" local || return 1
 }
 
 test_tui_fallback() {
@@ -313,10 +316,10 @@ test_source_resolution_url() {
     t_mkpkg web-1.0.0 web-1.0.0 bin/web:'web-1'
     # URL directa (file://): sin indice, sin nombre en el indice
     t_tm install "file://$T/pkgs/web-1.0.0.tar.gz" || return 1
-    t_eq "$(cat "$T/home/.local/bin/web")" 'web-1' || return 1
-    t_eq "$(awk -F= '/^version=/ {print $2}' "$T/home/.local/share/moss/web-1.0.0/manifest")" direct || return 1
+    t_eq "$(cat "$T/home/.local/belka/bin/web")" 'web-1' || return 1
+    t_eq "$(awk -F= '/^version=/ {print $2}' "$T/home/.local/share/belka/web-1.0.0/manifest")" direct || return 1
     # el nombre se deriva del basename del URL
-    [ -f "$T/home/.local/share/moss/web-1.0.0/manifest" ] || return 1
+    [ -f "$T/home/.local/share/belka/web-1.0.0/manifest" ] || return 1
 }
 
 test_sync() {
@@ -327,7 +330,7 @@ test_sync() {
 
     # sync desde URL file:// crea el cache
     t_tm --index "file://$T/index.tsv" sync || return 1
-    _t_cache=$T/xcache/moss/index/packages.tsv
+    _t_cache=$T/xcache/belka/index/packages.tsv
     [ -f "$_t_cache" ] || return 1
     grep -q 'demo' "$_t_cache" || return 1
 
@@ -352,7 +355,7 @@ test_ttl_and_offline() {
     t_new_index > "$T/index.tsv"
     t_index_add "$T/index.tsv" demo 1.0.0 "$T/pkgs/demo-1.0.0.tar.gz" 'Demo'
     t_tm --index "file://$T/index.tsv" sync || return 1
-    _t_cache=$T/xcache/moss/index/packages.tsv
+    _t_cache=$T/xcache/belka/index/packages.tsv
 
     # la fuente pasa a 2.0.0; el cache fresco (TTL 24h) sigue sirviendo 1.0.0
     t_mkpkg demo-2.0.0 demo-2.0.0 bin/demo:'v2'
@@ -363,14 +366,14 @@ test_ttl_and_offline() {
     printf '%s\n' "$_t_out" | grep -q '2.0.0' && return 1
 
     # TTL=0 -> refresco automatico: ahora se ve 2.0.0
-    _t_out=$(T_ENV="MOSS_INDEX_TTL=0" t_tm --index "file://$T/index.tsv" search demo 2>&1) || return 1
+    _t_out=$(T_ENV="BELKA_INDEX_TTL=0" t_tm --index "file://$T/index.tsv" search demo 2>&1) || return 1
     printf '%s\n' "$_t_out" | grep -q '2.0.0' || return 1
 
     # fuente vuelve a 1.0.0 + TTL=0 + --offline: se sirve el cache (2.0.0)
     t_mkpkg demo-1.0.0 demo-1.0.0 bin/demo:'v1'
     t_new_index > "$T/index.tsv"
     t_index_add "$T/index.tsv" demo 1.0.0 "$T/pkgs/demo-1.0.0.tar.gz" 'Demo'
-    _t_out=$(T_ENV="MOSS_INDEX_TTL=0" t_tm --offline --index "file://$T/index.tsv" search demo 2>&1) || return 1
+    _t_out=$(T_ENV="BELKA_INDEX_TTL=0" t_tm --offline --index "file://$T/index.tsv" search demo 2>&1) || return 1
     printf '%s\n' "$_t_out" | grep -q '2.0.0' || return 1
 
     # offline sin cache -> rc 2 (misma familia de error de descarga)

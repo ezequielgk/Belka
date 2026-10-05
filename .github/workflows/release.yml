@@ -1,4 +1,4 @@
-name: Release Moss
+name: Release Belka
 
 on:
   push:
@@ -15,14 +15,14 @@ jobs:
       - name: Checkout del repositorio
         uses: actions/checkout@v4
 
-      - name: Empaquetar Moss
+      - name: Empaquetar Belka
         run: |
-          tar -czvf moss-linux-amd64.tar.gz -C bin moss
+          tar -czvf belka-linux-amd64.tar.gz -C bin belka
 
       - name: Crear Release y adjuntar Asset
         uses: softprops/action-gh-release@v1
         with:
-          files: moss-linux-amd64.tar.gz
+          files: belka-linux-amd64.tar.gz
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

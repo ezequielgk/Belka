@@ -3,8 +3,8 @@
 
 set -e
 
-OUTPUT_FILE=${MOSS_OUTPUT_FILE:-"packages.tsv"}
-TMP_DIR="/tmp/moss_build_$$"
+OUTPUT_FILE=${BELKA_OUTPUT_FILE:-"packages.tsv"}
+TMP_DIR="/tmp/belka_build_$$"
 mkdir -p "$TMP_DIR"
 trap 'rm -rf "$TMP_DIR"' EXIT INT TERM HUP
 

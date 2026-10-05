@@ -40,9 +40,9 @@ jobs:
           [ -z "$APPS" ] && APPS="ALL"
           if [ "$APPS" = "ALL" ]; then
             echo "Modo ALL detectado: Compilando en paralelo..."
-            MOSS_OUTPUT_FILE="packages_tar.tsv" BUILD_APPIMAGE=0 ./scripts/build-repo.sh ALL &
+            BELKA_OUTPUT_FILE="packages_tar.tsv" BUILD_APPIMAGE=0 ./scripts/build-repo.sh ALL &
             PID1=$!
-            MOSS_OUTPUT_FILE="packages_appimage.tsv" BUILD_TAR=0 ./scripts/build-repo.sh ALL &
+            BELKA_OUTPUT_FILE="packages_appimage.tsv" BUILD_TAR=0 ./scripts/build-repo.sh ALL &
             PID2=$!
             wait $PID1
             wait $PID2

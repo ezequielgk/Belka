@@ -1,0 +1,2611 @@
+#!/bin/sh
+
+BELKA_VERSION=1.2.5
+PROG_NAME=belka
+
+BELKA_PREFIX=${BELKA_PREFIX:-}
+BELKA_STATE_DIR=${BELKA_STATE_DIR:-}
+BELKA_CACHE_DIR=${BELKA_CACHE_DIR:-}
+BELKA_INDEX_URL=${BELKA_INDEX_URL:-https://raw.githubusercontent.com/ezequielgk/Belka/main/packages.tsv}
+BELKA_INDEX_TTL=${BELKA_INDEX_TTL:-24}
+
+BELKA_SYSTEM=${BELKA_SYSTEM:-0}
+BELKA_DRY_RUN=0
+BELKA_FORCE=0
+BELKA_JSON=0
+BELKA_ASSUME_YES=0
+BELKA_OFFLINE=0
+BELKA_SYNC_FORCE=0
+BELKA_LOG_LEVEL=2
+
+BELKA_EX_OK=0
+BELKA_EX_USAGE=1
+BELKA_EX_DOWNLOAD=2
+BELKA_EX_VERIFY=3
+BELKA_EX_INSTALL=4
+BELKA_EX_CONFLICT=5
+BELKA_EX_DEP=6
+
+BELKA_TAB=$(printf '\t')
+
+case $0 in */*) _belka_self=$0 ;; *) _belka_self=$(command -v "$0") ;; esac
+_belka_self=${_belka_self:-$0}
+
+# Imprime mensajes en la consola con diferentes niveles de severidad.
+#
+# Argumentos:
+#   $1 - Nivel de log (INFO, STEP, WARN, ERROR, SUCCESS, DEBUG)
+#   $2.. - Mensaje a imprimir
+# Globales:
+#   BELKA_LOG_LEVEL
+# Retorna:
+#   0 siempre
+belka_log() {
+    _belka_l_level=$1
+    shift
+    case $_belka_l_level in
+        INFO)    _belka_l_num=2 _belka_l_tag="==>" ;;
+        STEP)    _belka_l_num=2 _belka_l_tag="  ->" ;;
+        WARN)    _belka_l_num=1 _belka_l_tag="[ADVERTENCIA]" ;;
+        ERROR)   _belka_l_num=0 _belka_l_tag="[ERROR]" ;;
+        SUCCESS) _belka_l_num=2 _belka_l_tag="==> EXITO:" ;;
+        DEBUG)   _belka_l_num=3 _belka_l_tag="depur" ;;
+        *) return 0 ;;
+    esac
+    [ "$_belka_l_num" -le "$BELKA_LOG_LEVEL" ] || return 0
+    printf '%s %s\n' "$_belka_l_tag" "$*" >&2
+}
+
+# Termina la ejecucion del programa tras imprimir un mensaje de error.
+#
+# Argumentos:
+#   $1 - Codigo de salida
+#   $2.. - Mensaje de error
+# Globales:
+#   Ninguna
+# Retorna:
+#   Sale del script con el codigo indicado
+belka_die() {
+    _belka_d_code=$1
+    shift
+    belka_log ERROR "$*"
+    exit "$_belka_d_code"
+}
+
+# Imprime y actualiza una barra de progreso estatica en linea.
+#
+# Argumentos:
+#   $1 - Valor actual
+#   $2 - Valor total
+#   $3 - Mensaje corto descriptivo
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 siempre
+belka_progress() {
+    _belka_curr=$1
+    _belka_tot=$2
+    _belka_msg=$3
+    
+    [ "$_belka_tot" -eq 0 ] && return 0
+    
+    _belka_pct=$(( (_belka_curr * 100) / _belka_tot ))
+    _belka_filled=$(( (_belka_curr * 40) / _belka_tot ))
+    _belka_empty=$(( 40 - _belka_filled ))
+    
+    _belka_bar=""
+    _belka_i=0
+    while [ "$_belka_i" -lt "$_belka_filled" ]; do
+        _belka_bar="${_belka_bar}#"
+        _belka_i=$((_belka_i + 1))
+    done
+    
+    _belka_i=0
+    while [ "$_belka_i" -lt "$_belka_empty" ]; do
+        _belka_bar="${_belka_bar}-"
+        _belka_i=$((_belka_i + 1))
+    done
+    
+    printf '\r%-25.25s [%s] %3d%%' "$_belka_msg" "$_belka_bar" "$_belka_pct"
+    
+    if [ "$_belka_curr" -ge "$_belka_tot" ]; then
+        printf '\n'
+    fi
+}
+
+# Limpia los archivos temporales generados durante la ejecucion.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   BELKA_TMPDIR
+# Retorna:
+#   0 siempre
+belka_cleanup() {
+    if [ -n "${BELKA_TMPDIR:-}" ] && [ -d "$BELKA_TMPDIR" ]; then
+        rm -rf "$BELKA_TMPDIR"
+    fi
+}
+
+# Crea un directorio temporal de manera segura y compatible.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   TMPDIR
+# Retorna:
+#   0 si tiene exito, 1 si falla. Imprime la ruta al stdout.
+belka_mktempdir() {
+    _belka_m_dir=$(mktemp -d "${TMPDIR:-/tmp}/tm.XXXXXX" 2>/dev/null) && {
+        printf '%s\n' "$_belka_m_dir"
+        return 0
+    }
+    _belka_m_dir="${TMPDIR:-/tmp}/tm.$$"
+    (umask 077 && mkdir "$_belka_m_dir" 2>/dev/null) && {
+        printf '%s\n' "$_belka_m_dir"
+        return 0
+    }
+    return 1
+}
+
+# Carga la configuracion global del usuario desde XDG_CONFIG_HOME.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   BELKA_INDEX_URL, BELKA_INDEX_TTL
+# Retorna:
+#   0 si el archivo existe y es leido, 1 si no.
+belka_load_config() {
+    _belka_c_file=${BELKA_CONFIG:-$HOME/.config/belka/config}
+    [ -f "$_belka_c_file" ] || return 0
+    while IFS= read -r _belka_c_line; do
+        case $_belka_c_line in
+            ''|\#*) continue ;;
+        esac
+        _belka_c_key=${_belka_c_line%%=*}
+        _belka_c_val=${_belka_c_line#*=}
+        _belka_c_val=${_belka_c_val#\'}
+        _belka_c_val=${_belka_c_val%\'}
+        _belka_c_val=${_belka_c_val#\"}
+        _belka_c_val=${_belka_c_val%\"}
+        [ "$_belka_c_key" = "$_belka_c_line" ] && continue
+        case $_belka_c_key in
+            BELKA_PREFIX)     BELKA_PREFIX=$_belka_c_val ;;
+            BELKA_STATE_DIR)  BELKA_STATE_DIR=$_belka_c_val ;;
+            BELKA_CACHE_DIR)  BELKA_CACHE_DIR=$_belka_c_val ;;
+            BELKA_INDEX_URL)  BELKA_INDEX_URL=$_belka_c_val ;;
+            BELKA_INDEX_TTL)  BELKA_INDEX_TTL=$_belka_c_val ;;
+        esac
+    done < "$_belka_c_file"
+}
+
+# Aplica valores por defecto a configuraciones criticas si estan vacias.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   BELKA_PREFIX, BELKA_STATE_DIR, BELKA_CACHE_DIR, HOME
+# Retorna:
+#   Ninguno
+belka_apply_defaults() {
+    [ -z "$BELKA_PREFIX" ]    && BELKA_PREFIX="$HOME/.local/belka"
+    [ -z "$BELKA_STATE_DIR" ] && BELKA_STATE_DIR="$HOME/.local/share/belka"
+    [ -z "$BELKA_CACHE_DIR" ] && BELKA_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/belka"
+}
+
+# Reconfigura las rutas globales si se solicita el ambito del sistema.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   BELKA_SYSTEM, BELKA_PREFIX, BELKA_STATE_DIR
+# Retorna:
+#   0 siempre
+belka_apply_scope() {
+    if [ "$BELKA_SYSTEM" -eq 1 ]; then
+        BELKA_PREFIX=/usr/local/belka
+        BELKA_STATE_DIR=/var/lib/belka
+    fi
+}
+
+# Inicializa los directorios de estado, cache e indice locales.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   BELKA_PREFIX, BELKA_STATE_DIR, BELKA_CACHE_DIR
+# Retorna:
+#   0 si tiene exito creando directorios, exit >0 en error
+belka_state_init() {
+    belka_apply_scope
+    belka_apply_defaults
+    mkdir -p "$BELKA_PREFIX" "$BELKA_STATE_DIR" "$BELKA_CACHE_DIR" 2>/dev/null || {
+        belka_log ERROR "no se pudo crear $BELKA_PREFIX, $BELKA_STATE_DIR o $BELKA_CACHE_DIR (permisos?)"
+        return 1
+    }
+}
+
+# Calcula el hash SHA256 de un archivo usando shasum, sha256sum u openssl.
+#
+# Argumentos:
+#   $1 - Ruta del archivo
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 e imprime el hash si tiene exito, 1 si falla
+belka_sha256() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$1" | awk '{print $1}'
+    elif command -v shasum >/dev/null 2>&1; then
+        shasum -a 256 "$1" | awk '{print $1}'
+    elif command -v openssl >/dev/null 2>&1; then
+        openssl dgst -sha256 "$1" | awk '{print $NF}'
+    else
+        return 1
+    fi
+}
+
+# Descarga un archivo desde una URL manejando fallback a wget.
+#
+# Argumentos:
+#   $1 - URL de origen
+#   $2 - Archivo de destino
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 si descarga exitosa, exit 2 si fallan curl y wget
+belka_download() {
+    case $1 in
+        http://*|https://*)
+            if command -v wget >/dev/null 2>&1; then
+                wget -q --show-progress --timeout=10 --read-timeout=300 -O "$2" "$1"
+            elif command -v curl >/dev/null 2>&1; then
+                curl -# -fSL --connect-timeout 10 --max-time 300 -o "$2" "$1"
+            else
+                belka_log ERROR "se necesita wget o curl para descargar $1"
+                return $BELKA_EX_DEP
+            fi
+            ;;
+        file://*)
+            cp "${1#file://}" "$2"
+            ;;
+        *)
+            cp "$1" "$2"
+            ;;
+    esac
+}
+
+# Compara dos versiones semanticas para determinar cual es mayor.
+#
+# Argumentos:
+#   $1 - Version A
+#   $2 - Version B
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 si A > B, 1 en caso contrario
+belka_version_gt() {
+    awk -v a="$1" -v b="$2" 'BEGIN {
+        na = split(a, xa, /[^0-9]+/)
+        nb = split(b, xb, /[^0-9]+/)
+        for (i = 1; i <= na || i <= nb; i++) {
+            va = (i <= na) ? xa[i] + 0 : 0
+            vb = (i <= nb) ? xb[i] + 0 : 0
+            if (va > vb) { print 1; exit }
+            if (va < vb) { print 0; exit }
+        }
+        print 0
+    }'
+}
+
+# Escapa cadenas de texto para ser incrustadas de forma segura en JSON.
+#
+# Argumentos:
+#   $1 - Cadena de texto
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 e imprime el texto escapado en stdout
+belka_jesc() {
+    printf '%s' "$1" | awk '
+    {
+        gsub(/\\/, "\\\\")
+        gsub(/"/, "\\\"")
+        gsub(/\t/, "\\t")
+        if (NR > 1) printf "\\n"
+        printf "%s", $0
+    }'
+}
+
+# Devuelve la ruta local cacheada del indice de paquetes.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   BELKA_CACHE_DIR
+# Retorna:
+#   Imprime la ruta al stdout
+belka_index_cache_file() {
+    printf '%s\n' "$BELKA_CACHE_DIR/index/packages.tsv"
+}
+
+# Comprueba si la fuente del indice es una URL de red valida (http/https).
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   BELKA_INDEX_URL
+# Retorna:
+#   0 si es red, 1 si es archivo local
+belka_index_source_is_url() {
+    case ${BELKA_INDEX_URL:-} in
+        http://*|https://*|file://*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# Evalua si el indice cacheado es fresco basandose en el TTL configurado.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   BELKA_INDEX_TTL
+# Retorna:
+#   0 si esta fresco, 1 si requiere renovacion
+belka_index_fresh() {
+    _belka_f_file=$1
+    [ -f "$_belka_f_file" ] || return 1
+    case ${BELKA_INDEX_TTL:-24} in
+        ''|*[!0-9]*) BELKA_INDEX_TTL=24 ;;
+    esac
+    [ "$BELKA_INDEX_TTL" -eq 0 ] && return 1
+    _belka_f_min=$((BELKA_INDEX_TTL * 60))
+    if [ -n "$(find "$_belka_f_file" -mmin "+$_belka_f_min" 2>/dev/null)" ]; then
+        return 1
+    fi
+    return 0
+}
+
+# Descarga y actualiza el indice TSV local desde el servidor remoto.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   BELKA_INDEX_URL, BELKA_TMPDIR
+# Retorna:
+#   0 en exito, 2 si falla la descarga
+belka_index_refresh() {
+    _belka_r_cache=$(belka_index_cache_file)
+    mkdir -p "$(dirname "$_belka_r_cache")"
+    if belka_download "$BELKA_INDEX_URL" "$_belka_r_cache.tmp"; then
+        mv "$_belka_r_cache.tmp" "$_belka_r_cache"
+        return 0
+    fi
+    rm -f "$_belka_r_cache.tmp"
+    return $BELKA_EX_DOWNLOAD
+}
+
+# Carga la base de datos de paquetes y actualiza si es necesario.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   BELKA_OFFLINE, BELKA_INDEX_URL
+# Retorna:
+#   0 si el indice esta disponible y formateado adecuadamente, 2 en fallo
+belka_index_load() {
+    [ -n "${BELKA_INDEX_URL:-}" ] || {
+        belka_log ERROR "no hay indice configurado (BELKA_INDEX_URL, --index o ~/.config/belka/config)"
+        return $BELKA_EX_USAGE
+    }
+    case $BELKA_INDEX_URL in
+        *'<user>'*)
+            printf "BELKA_INDEX_URL no configurado.\n" >&2
+            printf "Introduce la URL o ruta de tu indice: " >&2
+            read -r _belka_new_url < /dev/tty || return $BELKA_EX_USAGE
+            BELKA_INDEX_URL="$_belka_new_url"
+            
+            _belka_cfg_dir="${XDG_CONFIG_HOME:-$HOME/.config}/belka"
+            mkdir -p "$_belka_cfg_dir"
+            if [ -f "$_belka_cfg_dir/config" ]; then
+                _belka_tmp_cfg="$_belka_cfg_dir/config.$$"
+                grep -v "^BELKA_INDEX_URL=" "$_belka_cfg_dir/config" > "$_belka_tmp_cfg" 2>/dev/null || :
+                printf "BELKA_INDEX_URL=%s\n" "$_belka_new_url" >> "$_belka_tmp_cfg"
+                mv "$_belka_tmp_cfg" "$_belka_cfg_dir/config"
+            else
+                printf "BELKA_INDEX_URL=%s\n" "$_belka_new_url" > "$_belka_cfg_dir/config"
+            fi
+            belka_log INFO "Configuracion guardada en $_belka_cfg_dir/config"
+            ;;
+    esac
+    if ! belka_index_source_is_url; then
+        [ -f "$BELKA_INDEX_URL" ] || {
+            belka_log ERROR "indice no encontrado: $BELKA_INDEX_URL"
+            return $BELKA_EX_USAGE
+        }
+        _belka_index_file=$BELKA_INDEX_URL
+        return 0
+    fi
+    _belka_il_cache=$(belka_index_cache_file)
+    if [ "$BELKA_SYNC_FORCE" -eq 1 ]; then
+        belka_index_refresh || return $BELKA_EX_DOWNLOAD
+        _belka_index_file=$_belka_il_cache
+        return 0
+    fi
+    if belka_index_fresh "$_belka_il_cache"; then
+        _belka_index_file=$_belka_il_cache
+        return 0
+    fi
+    if [ "$BELKA_OFFLINE" -eq 1 ]; then
+        if [ -f "$_belka_il_cache" ]; then
+            belka_log WARN "offline: se usa el cache del indice aunque este vencido"
+            _belka_index_file=$_belka_il_cache
+            return 0
+        fi
+        belka_log ERROR "modo offline y no hay cache del indice"
+        return $BELKA_EX_DOWNLOAD
+    fi
+    if belka_index_refresh; then
+        _belka_index_file=$_belka_il_cache
+        return 0
+    fi
+    if [ -f "$_belka_il_cache" ]; then
+        belka_log WARN "no se pudo refrescar el indice; se usa el cache disponible"
+        _belka_index_file=$_belka_il_cache
+        return 0
+    fi
+    belka_log ERROR "no se pudo descargar el indice y no hay cache"
+    return $BELKA_EX_DOWNLOAD
+}
+
+# Busca un paquete por nombre exacto en el indice global.
+#
+# Argumentos:
+#   $1 - Nombre del paquete
+# Globales:
+#   BELKA_L_NAME, BELKA_L_VERSION, BELKA_L_URL, BELKA_L_SHA, BELKA_L_DESC, BELKA_L_EXEC
+# Retorna:
+#   0 y puebla variables globales si lo encuentra, 1 si no
+belka_index_lookup() {
+    _belka_l_name="$1"
+    _belka_pref_type="$2"
+    _belka_silent="$3"
+    _belka_l_lines=$(awk -F "$BELKA_TAB" -v n="$_belka_l_name" '{sub(/\r$/, "")} $1 !~ /^#/ && $1 == n { print }' "$_belka_index_file")
+    [ -n "$_belka_l_lines" ] || return 1
+
+    if [ -n "$_belka_pref_type" ]; then
+        _belka_l_filtered=$(printf '%s
+' "$_belka_l_lines" | awk -F'	' -v t="$_belka_pref_type" '{ if ($9 == t || ($9 == "" && t == "tar")) print }')
+        if [ -n "$_belka_l_filtered" ]; then
+            _belka_l_lines="$_belka_l_filtered"
+        fi
+    fi
+
+    _belka_l_count=$(printf '%s
+' "$_belka_l_lines" | wc -l | tr -dc '0-9')
+    _belka_l_line=$(printf '%s
+' "$_belka_l_lines" | head -n 1)
+    
+    if [ "$_belka_l_count" -gt 1 ]; then
+        if [ "$BELKA_ASSUME_YES" -eq 0 ] && [ "$_belka_silent" != 1 ] && [ -t 0 ]; then
+            printf "Múltiples formatos encontrados para '%s':\n" "$1" >&2
+            _belka_i=1
+            while IFS= read -r _line; do
+                _t=$(printf '%s\n' "$_line" | awk -F'\t' '{print $9}')
+                [ -z "$_t" ] && _t="tar"
+                printf "  %d) %s\n" "$_belka_i" "$_t" >&2
+                _belka_i=$((_belka_i + 1))
+            done << EOF
+$_belka_l_lines
+EOF
+            printf "Selecciona una opción [1]: " >&2
+            read -r _belka_ans </dev/tty || _belka_ans=1
+            [ -z "$_belka_ans" ] && _belka_ans=1
+            _belka_l_line=$(printf '%s\n' "$_belka_l_lines" | sed -n "${_belka_ans}p")
+            [ -z "$_belka_l_line" ] && _belka_l_line=$(printf '%s\n' "$_belka_l_lines" | head -n 1)
+        else
+            belka_log WARN "Multiples formatos de $1 encontrados; auto-seleccionando el primero (modo no interactivo)"
+        fi
+    fi
+
+    BELKA_L_VERSION='' BELKA_L_URL='' BELKA_L_SHA='' BELKA_L_DESC='' BELKA_L_EXEC='' BELKA_L_SIG='' BELKA_L_CAT='' BELKA_L_TERM='' BELKA_L_TYPE='' BELKA_L_ZSYNC=''
+    IFS=$BELKA_TAB read -r _belka_l_name BELKA_L_VERSION BELKA_L_URL BELKA_L_SHA BELKA_L_DESC BELKA_L_EXEC BELKA_L_CAT BELKA_L_TERM BELKA_L_TYPE BELKA_L_SIG BELKA_L_ZSYNC << EOF
+$_belka_l_line
+EOF
+    [ -z "$BELKA_L_CAT" ] || [ "$BELKA_L_CAT" = "-" ] && BELKA_L_CAT="Utility"
+    [ -z "$BELKA_L_TERM" ] || [ "$BELKA_L_TERM" = "-" ] && BELKA_L_TERM="N"
+    [ -z "$BELKA_L_TYPE" ] && BELKA_L_TYPE="tar"
+    [ "$BELKA_L_ZSYNC" = "-" ] && BELKA_L_ZSYNC=""
+    return 0
+}
+
+# Lee el manifiesto de un paquete instalado y carga sus variables en el entorno.
+#
+# Argumentos:
+#   $1 - Ruta al archivo manifest
+# Globales:
+#   BELKA_M_NAME, BELKA_M_VERSION, BELKA_M_URL, BELKA_M_SHA, BELKA_M_PREFIX, BELKA_M_TARBALL, BELKA_M_DATE
+# Retorna:
+#   0 si es valido, 1 si no se puede leer
+belka_manifest_read() {
+    BELKA_M_NAME='' BELKA_M_VERSION='' BELKA_M_URL='' BELKA_M_SHA='' BELKA_M_PREFIX=''
+    BELKA_M_TARBALL='' BELKA_M_DATE='' BELKA_M_TYPE='' BELKA_M_ZSYNC=''
+    [ -f "$1" ] || return 1
+    while IFS='=' read -r _belka_r_key _belka_r_val; do
+        case $_belka_r_key in
+            name)         BELKA_M_NAME=$_belka_r_val ;;
+            version)      BELKA_M_VERSION=$_belka_r_val ;;
+            url)          BELKA_M_URL=$_belka_r_val ;;
+            sha256)       BELKA_M_SHA=$_belka_r_val ;;
+            prefix)       BELKA_M_PREFIX=$_belka_r_val ;;
+            tarball)      BELKA_M_TARBALL=$_belka_r_val ;;
+            type)         BELKA_M_TYPE=$_belka_r_val ;;
+            zsync)        BELKA_M_ZSYNC=$_belka_r_val ;;
+            installed_at) BELKA_M_DATE=$_belka_r_val ;;
+        esac
+    done < "$1"
+}
+
+# Escribe las propiedades del paquete en un archivo manifest seguro.
+#
+# Argumentos:
+#   $1 - Ruta de destino
+# Globales:
+#   BELKA_P_NAME, BELKA_P_VERSION, BELKA_P_URL, BELKA_P_SHA, BELKA_P_PREFIX, BELKA_P_TARBALL, BELKA_P_TYPE
+# Retorna:
+#   0 si tiene exito, 1 si no
+belka_write_manifest() {
+    {
+        printf 'name=%s\n' "$2"
+        printf 'version=%s\n' "$3"
+        printf 'url=%s\n' "$4"
+        printf 'sha256=%s\n' "$5"
+        printf 'prefix=%s\n' "$6"
+        printf 'tarball=%s\n' "$7"
+        printf 'type=%s\n' "$8"
+        printf 'zsync=%s\n' "$9"
+        printf 'installed_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    } > "$1"
+}
+
+# Extrae el paquete descargado segun su formato (tar o appimage).
+#
+# Argumentos:
+#   $1 - Tipo (tar | appimage)
+#   $2 - Ruta al archivo descargado
+#   $3 - Directorio temporal de destino (staging)
+#   $4 - Nombre del paquete original
+# Retorna:
+#   0 en exito, 1 si falla o falta comando
+belka_extract() {
+    [ "$1" = "appimage" ] && {
+        _belka_ai_tgt="$3/$4.AppImage"
+        cp "$2" "$_belka_ai_tgt"
+        chmod +x "$_belka_ai_tgt"
+        return 0
+    }
+    tar -tf "$2" 2>/dev/null | grep -E '(^|/)\.\.(/|$)|^/' >/dev/null && {
+        belka_log ERROR "tar contiene rutas inseguras: $2"
+        return 1
+    }
+    LC_ALL=C tar -tvf "$2" 2>/dev/null | awk '
+        /^l/ && / -> / {
+            n = split($0, parts, " -> ")
+            tgt = parts[n]
+            gsub(/^[ \t]+|[ \t]+$/, "", tgt)
+            if (tgt ~ /^\//) bad = 1
+        }
+        /^h/ && / link to / {
+            n = split($0, parts, " link to ")
+            tgt = parts[n]
+            gsub(/^[ \t]+|[ \t]+$/, "", tgt)
+            if (tgt ~ /^\//) bad = 1
+        }
+        END { exit(bad ? 1 : 0) }
+    ' || {
+        belka_log ERROR "tar contiene enlaces inseguros: $2"
+        return 1
+    }
+    tar -xf "$2" -C "$3" 2>/dev/null && return 0
+    case $2 in
+        *.tar.gz|*.tgz)   tar -xzf "$2" -C "$3" ;;
+        *.tar.xz|*.txz)   tar -xJf "$2" -C "$3" ;;
+        *.tar.bz2|*.tbz2) tar -xjf "$2" -C "$3" ;;
+        *.zip)            unzip -q "$2" -d "$3" || return 1 ;;
+        *.bz2)            
+            bunzip2 -c "$2" > "$3/$(basename "$2" .bz2)"
+            chmod +x "$3/$(basename "$2" .bz2)"
+            ;;
+        *)
+            belka_log ERROR "formato de archivo no soportado o archivo corrupto: $2"
+            return 1
+            ;;
+    esac
+}
+
+# Normaliza el directorio de staging eliminando envolturas innecesarias.
+#
+# Argumentos:
+#   $1 - Directorio de staging
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 siempre
+belka_normalize_staging() {
+    _belka_n_entries=$(ls -A "$1" 2>/dev/null | sed '/^$/d')
+    _belka_n_count=$(printf '%s\n' "$_belka_n_entries" | wc -l | tr -dc '0-9')
+    if [ "$_belka_n_count" -eq 1 ] && [ -d "$1/$_belka_n_entries" ]; then
+        mv "$1" "$1.orig" &&
+        mv "$1.orig/$_belka_n_entries" "$1" &&
+        rm -rf "$1.orig"
+    fi
+}
+
+# Genera una lista de rutas relativas de los archivos en staging.
+#
+# Argumentos:
+#   $1 - Directorio base
+# Globales:
+#   Ninguna
+# Retorna:
+#   0, imprime lista en stdout
+belka_build_filelist() {
+    ( cd "$1" && find . \( -type f -o -type l \) -print ) |
+        sed 's|^\./||' | LC_ALL=C sort > "$2"
+}
+
+# Verifica si los archivos a instalar ya existen y previene colisiones.
+#
+# Argumentos:
+#   $1 - Ruta a la lista de archivos
+#   $2 - Directorio de destino base
+# Globales:
+#   BELKA_FORCE
+# Retorna:
+#   0 si no hay conflicto, 5 si detecta solapamiento
+belka_check_conflicts() {
+    _belka_k_n=0
+    _belka_k_any=0
+    while IFS= read -r _belka_k_f; do
+        if [ -e "$BELKA_PREFIX/$_belka_k_f" ] || [ -L "$BELKA_PREFIX/$_belka_k_f" ]; then
+            _belka_k_any=1
+            if [ "$_belka_k_n" -lt 20 ]; then
+                belka_log WARN "existe: $BELKA_PREFIX/$_belka_k_f"
+                _belka_k_n=$((_belka_k_n + 1))
+            fi
+        fi
+    done < "$1"
+    [ "$_belka_k_n" -ge 20 ] && belka_log WARN "(mas conflictos omitidos...)"
+    return "$_belka_k_any"
+}
+
+# Elimina un directorio y todos sus padres recursivamente si quedan vacios.
+#
+# Argumentos:
+#   $1 - Ruta del directorio base
+#   $2 - Directorio raiz a no superar
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 siempre
+belka_rmdir_chain() {
+    _belka_rc_d=$(dirname "$1")
+    while [ "$_belka_rc_d" != "." ] && [ "$BELKA_PREFIX/$_belka_rc_d" != "$BELKA_PREFIX" ]; do
+        rmdir "$BELKA_PREFIX/$_belka_rc_d" 2>/dev/null || break
+        _belka_rc_d=$(dirname "$_belka_rc_d")
+    done
+}
+
+# Copia fisicamente los archivos del paquete al sistema de destino definitivo.
+#
+# Argumentos:
+#   $1 - Directorio fuente (staging)
+#   $2 - Directorio destino (prefix)
+#   $3 - Nombre del paquete
+#   $4 - Archivo temporal de lista
+# Globales:
+#   Ninguna
+# Retorna:
+#   0 si tiene exito copiado completo
+belka_install_files() {
+    _belka_if_installed=$BELKA_TMPDIR/installed.$$
+    
+    ( cd "$1" && find . -type f -o -type l 2>/dev/null ) | sed 's|^\./||' | while IFS= read -r _belka_if_f; do
+        [ -n "$_belka_if_f" ] && rm -f "$BELKA_PREFIX/$_belka_if_f"
+    done
+
+    if ! ( cd "$1" && tar cf - . ) | ( cd "$BELKA_PREFIX" && tar xf - 2>/dev/null ); then
+        belka_log ERROR "fallo en la copia masiva; revirtiendo cambios parciales"
+        ( cd "$1" && find . -type f 2>/dev/null ) | sed 's|^\./||' | while IFS= read -r _belka_if_g; do
+            [ -n "$_belka_if_g" ] || continue
+            rm -f "$BELKA_PREFIX/$_belka_if_g"
+            belka_rmdir_chain "$_belka_if_g"
+        done
+        return 1
+    fi
+
+    ( cd "$1" && find . ! -type d 2>/dev/null ) | sed 's|^\./||' > "$_belka_if_installed"
+    mv "$_belka_if_installed" "$3"
+    return 0
+}
+
+# Elimina todos los archivos y metadatos asociados a un paquete instalado.
+#
+# Argumentos:
+#   $1 - ID exacto del paquete
+# Globales:
+#   BELKA_STATE_DIR, BELKA_PREFIX
+# Retorna:
+#   0 en exito, 1 si no esta instalado, u otro codigo en fallo de operacion
+belka_remove_pkg() {
+    _belka_rm_d=$BELKA_STATE_DIR/$1
+    _belka_rm_prefix=$BELKA_PREFIX
+    if [ -f "$_belka_rm_d/manifest" ]; then
+        while IFS='=' read -r _belka_rm_k _belka_rm_v; do
+            [ "$_belka_rm_k" = prefix ] && _belka_rm_prefix=$_belka_rm_v
+        done < "$_belka_rm_d/manifest"
+    fi
+    
+    belka_log INFO "Iniciando desinstalacion de: $1"
+    
+    if [ -f "$_belka_rm_d/files" ]; then
+        _belka_rm_tot=$(wc -l < "$_belka_rm_d/files" | tr -dc '0-9')
+        if [ "$_belka_rm_tot" -gt 0 ]; then
+            [ "$BELKA_LOG_LEVEL" -lt 3 ] && belka_progress 0 "$_belka_rm_tot" "Preparando..."
+            
+            _belka_rm_curr=0
+            LC_ALL=C sort -r "$_belka_rm_d/files" | while IFS= read -r _belka_rm_f; do
+                case "$_belka_rm_f" in
+                    /*) 
+                        case "$_belka_rm_f" in
+                            "$BELKA_PREFIX"/*|"$BELKA_STATE_DIR"/*|"$HOME/.local/share/applications"/*|"/usr/share/applications"/*|"${XDG_DATA_HOME:-$HOME/.local/share}/applications"/*|"$HOME/.local/share/icons"/*|"/usr/share/icons"/*|"${XDG_DATA_HOME:-$HOME/.local/share}/icons"/*) _belka_rm_tgt="$_belka_rm_f" ;;
+                            *) belka_log ERROR "ruta absoluta invalida en files: $_belka_rm_f"; continue ;;
+                        esac
+                        ;;
+                    *)  
+                        case "$_belka_rm_f" in
+                            *..*) belka_log ERROR "ruta relativa invalida en files: $_belka_rm_f"; continue ;;
+                        esac
+                        _belka_rm_tgt="$_belka_rm_prefix/$_belka_rm_f" 
+                        ;;
+                esac
+                
+                [ "$BELKA_LOG_LEVEL" -ge 3 ] && belka_log DEBUG "eliminando: $_belka_rm_tgt"
+                rm -f "$_belka_rm_tgt"
+            
+                case "$_belka_rm_f" in
+                    /*) ;;
+                    *)
+                        _belka_rm_save=$BELKA_PREFIX
+                        BELKA_PREFIX=$_belka_rm_prefix
+                        belka_rmdir_chain "$_belka_rm_f"
+                        BELKA_PREFIX=$_belka_rm_save
+                        ;;
+                esac
+            
+                _belka_rm_curr=$((_belka_rm_curr + 1))
+                if [ "$BELKA_LOG_LEVEL" -lt 3 ]; then
+                    if [ $((_belka_rm_curr % 25)) -eq 0 ] || [ "$_belka_rm_curr" -eq "$_belka_rm_tot" ]; then
+                        belka_progress "$_belka_rm_curr" "$_belka_rm_tot" "Eliminando archivos..."
+                    fi
+                fi
+            done
+        fi
+    fi
+    rm -rf "$_belka_rm_d"
+}
+
+# Orquesta de principio a fin el flujo completo de instalacion de un tarball.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   BELKA_P_NAME, BELKA_P_VERSION, BELKA_P_URL, BELKA_P_SHA, BELKA_P_LOCAL, BELKA_P_SIG, BELKA_P_EXEC
+# Retorna:
+#   0 en exito total de instalacion, exit >0 en cualquier falla critica
+# Extrae metadatos graficos (.desktop e icono) de un paquete.
+#
+# Argumentos:
+#   $1 - Tipo (tar o appimage)
+#   $2 - Nombre del paquete
+#   $3 - Archivo fuente (tarball o appimage)
+#   $4 - Directorio staging
+#   $5 - Si el sha256 fue verificado (1 o 0)
+# Globales:
+#   BELKA_TMPDIR, BELKA_MD_DESKTOP, BELKA_MD_ICON
+# Retorna:
+#   0
+
+belka_icon_kind() {
+    _kind_head=$(head -c 4 "$1" 2>/dev/null)
+    if printf '%s\n' "$_kind_head" | grep -q "PNG"; then
+        printf 'png\n'
+    else
+        if head -c 4096 "$1" 2>/dev/null | grep -iq "<svg"; then
+            printf 'svg\n'
+        fi
+    fi
+}
+
+belka_png_size() {
+    od -An -tu1 -j16 -N4 "$1" 2>/dev/null | awk '{print ($1*16777216) + ($2*65536) + ($3*256) + $4}'
+}
+
+belka_pick_icon() {
+    _dir=$1
+    _pkg_name=$2
+    _pkg_norm=$(printf '%s\n' "$_pkg_name" | tr '[:upper:]' '[:lower:]' | sed 's/[0-9][0-9.]*$//')
+    
+    find -L "$_dir" -type f \( -name "*.png" -o -name "*.svg" -o -name "*.xpm" -o -name ".DirIcon" \) 2>/dev/null |
+        grep -v -E '/node_modules/|/doc/|/docs/|/help/|/man/' | awk -v pkg_norm="$_pkg_norm" -F/ '
+        {
+            path = $0
+            depth = NF
+            base = tolower($NF)
+            sub(/\.[^.]+$/, "", base)
+            sub(/[0-9][0-9.]*$/, "", base)
+            score = 0
+            
+            if (base == pkg_norm) score += 60
+            if (index(base, pkg_norm) == 1) score += 100
+            
+            if (path ~ /\/share\/icons\//) score += 30
+            if (path ~ /\/(share\/)?pixmaps\//) score += 25
+            if (path ~ /\/share\//) score += 10
+            if (path ~ /\/scalable\//) score += 6
+            
+            if (path ~ /512|256|128|1024/) score += 5
+            if (path ~ /16|22|24|32|48/) score -= 5
+            
+            print score, depth, path
+        }
+        ' | sort -k1,1nr -k2,2n | awk 'NR==1 { $1=""; $2=""; sub(/^  */,""); print }'
+}
+
+belka_extract_metadata() {
+    _belka_em_type=$1
+    _belka_em_name=$2
+    _belka_em_src=$3
+    _belka_em_staging=$4
+    _belka_em_verified=${5:-0}
+
+    BELKA_MD_DESKTOP=""
+    BELKA_MD_ICON=""
+
+    _belka_em_md_dir=$BELKA_TMPDIR/metadata.$$
+    mkdir -p "$_belka_em_md_dir"
+
+    if [ "$_belka_em_type" = "tar" ]; then
+        _belka_em_desk=$(find "$_belka_em_staging" -name "*.desktop" -type f 2>/dev/null | awk '{ print length($0), $0 }' | sort -n | cut -d' ' -f2- | head -n 1)
+        if [ -n "$_belka_em_desk" ]; then
+            BELKA_MD_DESKTOP=$_belka_em_desk
+        fi
+
+        BELKA_MD_ICON=$(belka_pick_icon "$_belka_em_staging" "$_belka_em_name")
+
+    elif [ "$_belka_em_type" = "appimage" ]; then
+        _belka_em_has_unsquash=0
+        command -v unsquashfs >/dev/null 2>&1 && _belka_em_has_unsquash=1
+        
+        _belka_em_use_fallback=0
+        _belka_em_unsq_args=""
+        _belka_em_toc=""
+
+        if [ "$_belka_em_has_unsquash" -eq 1 ]; then
+            _belka_em_toc=$(unsquashfs -l "$_belka_em_src" 2>/dev/null)
+            if [ $? -ne 0 ] || [ -z "$_belka_em_toc" ]; then
+                _belka_em_offs=$(grep -abo 'hsqs' "$_belka_em_src" | cut -d: -f1)
+                _belka_em_use_fallback=1
+                if [ -n "$_belka_em_offs" ]; then
+                    for _belka_em_off in $_belka_em_offs; do
+                        _belka_em_toc=$(unsquashfs -o "$_belka_em_off" -l "$_belka_em_src" 2>/dev/null)
+                        if [ $? -eq 0 ] && [ -n "$_belka_em_toc" ]; then
+                            _belka_em_unsq_args="-o $_belka_em_off"
+                            _belka_em_use_fallback=0
+                            break
+                        fi
+                    done
+                fi
+            fi
+        else
+            _belka_em_use_fallback=1
+        fi
+
+        if [ "$_belka_em_use_fallback" -eq 1 ]; then
+            if [ "$_belka_em_verified" -eq 0 ]; then
+                belka_log WARN "metadata grafica omitida: AppImage sin verificar (unsquashfs/offset fallo)"
+            else
+                belka_log DEBUG "metadata: via appimage-extract (unsquashfs fallo o no detecto offset)"
+                chmod +x "$_belka_em_src"
+                ( cd "$_belka_em_md_dir" && "$_belka_em_src" --appimage-extract >/dev/null 2>&1 || : )
+                
+                _belka_em_ai_root="$_belka_em_md_dir/squashfs-root"
+            fi
+        else
+            _belka_em_paths=$(printf '%s
+' "$_belka_em_toc" | sed 's|^[^/]*/||')
+            
+            _belka_em_desk_path=$(printf '%s
+' "$_belka_em_paths" | grep '\.desktop$' | head -n 1)
+            
+            _belka_em_icon_path=$(printf '%s
+' "$_belka_em_paths" | grep '^\.DirIcon$' | head -n 1)
+            [ -z "$_belka_em_icon_path" ] && _belka_em_icon_path=$(printf '%s
+' "$_belka_em_paths" | grep '\.svg$' | head -n 1)
+            [ -z "$_belka_em_icon_path" ] && _belka_em_icon_path=$(printf '%s
+' "$_belka_em_paths" | grep '\.png$' | head -n 1)
+
+            _belka_em_extract_args=""
+            [ -n "$_belka_em_desk_path" ] && _belka_em_extract_args="$_belka_em_extract_args $_belka_em_desk_path"
+            [ -n "$_belka_em_icon_path" ] && _belka_em_extract_args="$_belka_em_extract_args $_belka_em_icon_path"
+
+            _belka_em_ai_root="$_belka_em_md_dir/squashfs-root"
+            if [ -n "$_belka_em_extract_args" ]; then
+                unsquashfs $_belka_em_unsq_args -d "$_belka_em_ai_root" -f "$_belka_em_src" $_belka_em_extract_args >/dev/null 2>&1 || :
+            fi
+        fi
+
+        if [ -d "$_belka_em_ai_root" ]; then
+            BELKA_MD_DESKTOP=$(find -L "$_belka_em_ai_root" -name "*.desktop" -type f 2>/dev/null | head -n 1)
+            BELKA_MD_ICON=$(belka_pick_icon "$_belka_em_ai_root" "$_belka_em_name")
+        fi
+    fi
+
+    belka_log DEBUG "metadata: desktop='${BELKA_MD_DESKTOP:-ninguno}' icono='${BELKA_MD_ICON:-ninguno}'"
+    return 0
+}
+
+belka_perform_install() {
+    _belka_p_name=$1
+    _belka_p_version=$2
+    _belka_p_url=$3
+    _belka_p_sha=$4
+    _belka_p_sig=$5
+    _belka_p_local=$6
+    _belka_p_exec_override=$7
+    _belka_p_cat=${8:-Utility}
+    _belka_p_term=${9:-N}
+    _belka_p_type=${10:-tar}
+    _belka_p_zsync=${11:-}
+    _belka_p_sha_verified=0
+
+    belka_log INFO "Instalando paquete: $_belka_p_name"
+
+    if [ -n "$_belka_p_local" ]; then
+        _belka_p_src=$_belka_p_local
+    else
+        _belka_p_base=$(basename "$_belka_p_url")
+        if [ -n "$_belka_p_sha" ]; then
+            _belka_p_cache=$BELKA_CACHE_DIR/$_belka_p_sha-$_belka_p_base
+        else
+            _belka_p_cache=$BELKA_CACHE_DIR/$_belka_p_base
+        fi
+        if [ ! -f "$_belka_p_cache" ]; then
+            _belka_p_size=""
+            if command -v curl >/dev/null 2>&1; then
+                _belka_p_bytes=$(curl -sI "$_belka_p_url" 2>/dev/null | awk '{ line = tolower($0) } line ~ /^content-length:/ {print $2; exit}' | tr -d '\r')
+                if [ -n "$_belka_p_bytes" ] && [ "$_belka_p_bytes" -gt 0 ] 2>/dev/null; then
+                    if [ "$_belka_p_bytes" -gt 1048576 ]; then
+                        _belka_p_size=" ($((_belka_p_bytes / 1048576)) MB)"
+                    else
+                        _belka_p_size=" ($((_belka_p_bytes / 1024)) KB)"
+                    fi
+                fi
+            fi
+            belka_log STEP "Descargando desde el repositorio${_belka_p_size}..."
+            if ! belka_download "$_belka_p_url" "$_belka_p_cache"; then
+                rm -f "$_belka_p_cache"
+                belka_log ERROR "fallo la descarga de $_belka_p_url"
+                return $BELKA_EX_DOWNLOAD
+            fi
+        fi
+        _belka_p_src=$_belka_p_cache
+    fi
+
+    if [ -n "$_belka_p_sha" ]; then
+        belka_log STEP "Verificando integridad (SHA256)..."
+        _belka_p_got=$(belka_sha256 "$_belka_p_src") || {
+            belka_log ERROR "no hay herramienta de sha256 (sha256sum/shasum/openssl)"
+            return $BELKA_EX_DEP
+        }
+        if [ "$_belka_p_got" != "$_belka_p_sha" ]; then
+            belka_log ERROR "checksum sha256 invalido para $_belka_p_name"
+            belka_log ERROR "esperado: $_belka_p_sha"
+            belka_log ERROR "obtenido: $_belka_p_got"
+            return $BELKA_EX_VERIFY
+        fi
+        belka_log DEBUG "checksum ok: $_belka_p_got"
+        _belka_p_sha_verified=1
+    else
+        belka_log WARN "$_belka_p_name: sin checksum en el indice; no se verifica integridad"
+    fi
+
+    if [ -n "$_belka_p_sig" ] && [ "$_belka_p_sig" != "-" ]; then
+        if command -v gpg >/dev/null 2>&1; then
+            _belka_p_sigfile=$BELKA_TMPDIR/pkg.$$.sig
+            if ! belka_download "$_belka_p_sig" "$_belka_p_sigfile"; then
+                belka_log ERROR "no se pudo descargar la firma $_belka_p_sig"
+                return $BELKA_EX_DOWNLOAD
+            fi
+            if ! gpg --verify "$_belka_p_sigfile" "$_belka_p_src" >/dev/null 2>&1; then
+                belka_log ERROR "firma GPG invalida para $_belka_p_name"
+                return $BELKA_EX_VERIFY
+            fi
+            belka_log DEBUG "firma gpg ok"
+        else
+            belka_log WARN "hay firma GPG en el indice pero gpg no esta instalado; se omite"
+        fi
+    fi
+
+    belka_log STEP "Extrayendo archivos temporales..."
+    _belka_p_staging=$BELKA_TMPDIR/staging.$$
+    rm -rf "$_belka_p_staging"
+    mkdir -p "$_belka_p_staging" || return $BELKA_EX_INSTALL
+
+    if ! belka_extract "$_belka_p_type" "$_belka_p_src" "$_belka_p_staging" "$_belka_p_name"; then
+        belka_log ERROR "no se pudo extraer $_belka_p_src"
+        return $BELKA_EX_INSTALL
+    fi
+
+    [ "$_belka_p_type" = "tar" ] && belka_normalize_staging "$_belka_p_staging"
+
+    _belka_p_list=$BELKA_TMPDIR/files.$$
+    belka_build_filelist "$_belka_p_staging" "$_belka_p_list"
+    
+    _belka_p_opt_staging="$BELKA_TMPDIR/sandbox.$$"
+    _belka_tgt_dir="pkg/tar/$_belka_p_name"
+    [ "$_belka_p_type" = "appimage" ] && _belka_tgt_dir="pkg/appimage/$_belka_p_name"
+    
+    mkdir -p "$_belka_p_opt_staging/$_belka_tgt_dir"
+    
+    for _belka_sb_f in "$_belka_p_staging"/* "$_belka_p_staging"/.[!.]* "$_belka_p_staging"/..?*; do
+        [ -e "$_belka_sb_f" ] || continue
+        mv "$_belka_sb_f" "$_belka_p_opt_staging/$_belka_tgt_dir/"
+    done
+    
+    rm -rf "$_belka_p_staging"
+    mv "$_belka_p_opt_staging" "$_belka_p_staging"
+    
+    belka_build_filelist "$_belka_p_staging" "$_belka_p_list"
+
+    if [ "$BELKA_DRY_RUN" -eq 1 ]; then
+        _belka_p_count=$(wc -l < "$_belka_p_list" | tr -dc '0-9')
+        belka_log INFO "[dry-run] se instalaria $_belka_p_name $_belka_p_version"
+        belka_log INFO "[dry-run] destino: $BELKA_PREFIX (archivos: $_belka_p_count)"
+        while IFS= read -r _belka_p_f; do
+            belka_log INFO "[dry-run]   + $BELKA_PREFIX/$_belka_p_f"
+        done < "$_belka_p_list"
+        return 0
+    fi
+
+    _belka_p_state=$BELKA_STATE_DIR/$_belka_p_name
+    if [ -f "$_belka_p_state/manifest" ]; then
+        if [ "$BELKA_FORCE" -eq 1 ]; then
+            belka_log STEP "Reinstalando $_belka_p_name (modo force)..."
+            belka_log INFO "$_belka_p_name ya esta gestionado; se reemplaza (--force)"
+            [ -f "$_belka_p_state/manifest.bak" ] &&
+                mv "$_belka_p_state/manifest.bak" "$BELKA_TMPDIR/keep-manifest.$$"
+            [ -f "$_belka_p_state/files.bak" ] &&
+                mv "$_belka_p_state/files.bak" "$BELKA_TMPDIR/keep-files.$$"
+            belka_remove_pkg "$_belka_p_name" || {
+                [ -f "$BELKA_TMPDIR/keep-manifest.$$" ] &&
+                    mv "$BELKA_TMPDIR/keep-manifest.$$" "$_belka_p_state/manifest.bak"
+                [ -f "$BELKA_TMPDIR/keep-files.$$" ] &&
+                    mv "$BELKA_TMPDIR/keep-files.$$" "$_belka_p_state/files.bak"
+                return $BELKA_EX_INSTALL
+            }
+            mkdir -p "$_belka_p_state"
+            [ -f "$BELKA_TMPDIR/keep-manifest.$$" ] &&
+                mv "$BELKA_TMPDIR/keep-manifest.$$" "$_belka_p_state/manifest.bak"
+            [ -f "$BELKA_TMPDIR/keep-files.$$" ] &&
+                mv "$BELKA_TMPDIR/keep-files.$$" "$_belka_p_state/files.bak"
+        else
+            belka_log ERROR "$_belka_p_name ya esta instalado (usa --force para reinstalar)"
+            return $BELKA_EX_CONFLICT
+        fi
+    fi
+
+    if ! belka_check_conflicts "$_belka_p_list"; then
+        if [ "$BELKA_FORCE" -eq 1 ]; then
+            belka_log WARN "conflictos con archivos existentes; se sobrescriben (--force)"
+        else
+            belka_log ERROR "conflictos con archivos existentes; abortando (usa --force)"
+            return $BELKA_EX_CONFLICT
+        fi
+    fi
+
+    mkdir -p "$_belka_p_state"
+    if ! belka_install_files "$_belka_p_staging" "$_belka_p_list" "$_belka_p_state/files"; then
+        rmdir "$_belka_p_state" 2>/dev/null
+        return $BELKA_EX_INSTALL
+    fi
+
+    if [ "$_belka_p_type" = "appimage" ] && [ -z "$_belka_p_zsync" ]; then
+        _belka_p_zsync=$(belka_read_upd_info "$_belka_p_src")
+    fi
+    
+    belka_write_manifest "$_belka_p_state/manifest" "$_belka_p_name" "$_belka_p_version" \
+        "$_belka_p_url" "$_belka_p_sha" "$BELKA_PREFIX" "$(basename "$_belka_p_src")" "$_belka_p_type" "$_belka_p_zsync"
+    
+    belka_log STEP "Configurando ejecutable y enlaces..."
+    belka_extract_metadata "$_belka_p_type" "$_belka_p_name" "$_belka_p_src" "$_belka_p_staging" "$_belka_p_sha_verified"
+
+    _belka_desk_dir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+    _belka_icons_svg_dir="${XDG_DATA_HOME:-$HOME/.local/share}/icons/hicolor/scalable/apps"
+    _belka_icons_png_dir="${XDG_DATA_HOME:-$HOME/.local/share}/icons/hicolor/512x512/apps"
+    if [ "$BELKA_SYSTEM" -eq 1 ]; then
+        _belka_desk_dir="/usr/share/applications"
+        _belka_icons_svg_dir="/usr/share/icons/hicolor/scalable/apps"
+        _belka_icons_png_dir="/usr/share/icons/hicolor/512x512/apps"
+    fi
+    _belka_has_md=0
+    if [ -n "$BELKA_MD_ICON" ]; then
+        _belka_real_icon=$(readlink -f "$BELKA_MD_ICON" 2>/dev/null || printf '%s' "$BELKA_MD_ICON")
+        _belka_icon_kind=$(belka_icon_kind "$_belka_real_icon")
+        if [ -z "$_belka_icon_kind" ]; then
+            case "$_belka_real_icon" in
+                *.svg) _belka_icon_kind="svg" ;;
+                *) _belka_icon_kind="png" ;;
+            esac
+        fi
+        
+        if [ "$_belka_icon_kind" = "svg" ]; then
+            mkdir -p "$_belka_icons_svg_dir" 2>/dev/null
+            cp -L "$_belka_real_icon" "$_belka_icons_svg_dir/$_belka_p_name.svg" 2>/dev/null
+            printf '%s
+' "$_belka_icons_svg_dir/$_belka_p_name.svg" >> "$_belka_p_state/files"
+            _belka_has_md=1
+        else
+            _belka_sz=$(belka_png_size "$_belka_real_icon")
+            case "$_belka_sz" in
+                16|22|24|32|48|64|128|256|512) ;;
+                *) _belka_sz=512 ;;
+            esac
+            _belka_png_tgt="${XDG_DATA_HOME:-$HOME/.local/share}/icons/hicolor/${_belka_sz}x${_belka_sz}/apps"
+            [ "$BELKA_SYSTEM" -eq 1 ] && _belka_png_tgt="/usr/share/icons/hicolor/${_belka_sz}x${_belka_sz}/apps"
+            mkdir -p "$_belka_png_tgt" 2>/dev/null
+            cp -L "$_belka_real_icon" "$_belka_png_tgt/$_belka_p_name.png" 2>/dev/null
+            printf '%s
+' "$_belka_png_tgt/$_belka_p_name.png" >> "$_belka_p_state/files"
+            _belka_has_md=1
+        fi
+    fi
+
+    
+    _belka_candidates=""
+    _belka_cand_count=0
+    while IFS= read -r _belka_raw_file; do
+        _belka_file=${_belka_raw_file#./}
+        
+        case "$_belka_file" in
+            *.so | *.so.* | *.pak | *.dat | *.html | *.txt | *.json | *.exe | *.dll | *.bat | */node_modules/*)
+                continue
+                ;;
+        esac
+        
+        _belka_cand="$BELKA_PREFIX/$_belka_file"
+        if [ -e "$_belka_cand" ] && [ ! -d "$_belka_cand" ] && [ -x "$_belka_cand" ]; then
+            if [ -z "$_belka_candidates" ]; then
+                _belka_candidates="$_belka_cand"
+            else
+                _belka_candidates="$_belka_candidates
+$_belka_cand"
+            fi
+            _belka_cand_count=$((_belka_cand_count + 1))
+        fi
+    done < "$_belka_p_state/files"
+
+    _belka_exec_path=""
+    if [ -n "$_belka_p_exec_override" ]; then
+        if [ -n "$_belka_candidates" ]; then
+            _belka_exec_path=$(printf '%s\n' "$_belka_candidates" | awk -v pat="/$_belka_p_exec_override$" '$0 ~ pat {print; exit}')
+        fi
+        [ -z "$_belka_exec_path" ] && belka_log WARN "el ejecutable forzado $_belka_p_exec_override no se encontro o no tiene permisos"
+    fi
+
+    if [ -z "$_belka_exec_path" ]; then
+        if [ "$_belka_cand_count" -eq 0 ]; then
+            belka_log WARN "no se encontraron ejecutables validos para generar .desktop"
+        elif [ "$_belka_cand_count" -eq 1 ]; then
+            _belka_exec_path="$_belka_candidates"
+        else
+        _belka_exec_path=$(printf '%s\n' "$_belka_candidates" | awk -v pkg="$_belka_p_name" '
+            BEGIN { 
+                norm_pkg = tolower(pkg); gsub(/[-_ ]/, "", norm_pkg)
+            }
+            {
+                bn = $0; sub(".*/", "", bn);
+                norm_bn = tolower(bn); gsub(/[-_ ]/, "", norm_bn)
+                
+                if (norm_bn == norm_pkg) { exact = $0 }
+                else if (index(norm_bn, norm_pkg) == 1) { starts = $0 }
+                else if (bn != "chrome-sandbox" && bn !~ /crashpad/ && bn !~ /\.so/ && bn != "libEGL.so" && bn != "libvulkan.so" && bn != "libGLESv2.so") { 
+                    if (!fallback) fallback = $0 
+                }
+            }
+            END {
+                if (exact) print exact
+                else if (starts) print starts
+                else if (fallback) print fallback
+                else print ""
+            }
+        ')
+        if [ -z "$_belka_exec_path" ]; then
+            _belka_exec_path=$(printf '%s\n' "$_belka_candidates" | awk 'NR==1 {print $0}')
+        fi
+        belka_log WARN "Multiples ejecutables encontrados, auto-seleccionando: $(basename "$_belka_exec_path")"
+        fi
+    fi
+
+    if [ -n "$_belka_exec_path" ]; then
+        _belka_bin_name=$(basename "$_belka_exec_path")
+        
+        if [ "$_belka_p_term" = "Y" ]; then
+            belka_log DEBUG "aplicacion de terminal; omitiendo creacion de .desktop"
+        else
+            mkdir -p "$_belka_desk_dir" 2>/dev/null
+            _belka_desk_file="$_belka_desk_dir/belka-$_belka_p_name.desktop"
+            
+            if [ "$BELKA_FORCE" -eq 0 ] && { [ -e "$_belka_desk_file" ] || [ -L "$_belka_desk_file" ]; }; then
+                belka_log ERROR "conflicto con acceso directo existente: $_belka_desk_file (usa --force)"
+                belka_remove_pkg "$_belka_p_name" >/dev/null 2>&1
+                return $BELKA_EX_CONFLICT
+            fi
+            
+
+            if [ -z "$BELKA_MD_ICON" ]; then
+                belka_log WARN "$_belka_p_name: no se encontro icono; el .desktop usara el icono generico. Para agregarlo manualmente: cp <tu-icono> ${_belka_icons_png_dir}/$_belka_p_name.png"
+            fi
+
+
+            _belka_term_val="false"
+            [ "$BELKA_OPT_TERM" = "1" ] && _belka_term_val="true"
+            
+            _belka_d_name="${BELKA_P_APP_NAME:-$_belka_p_name}"
+            _belka_d_name="$(awk 'BEGIN{print toupper(substr(ARGV[1],1,1)) substr(ARGV[1],2)}' "$_belka_d_name")"
+            
+            if [ -n "$BELKA_MD_DESKTOP" ]; then
+                _belka_orig_name=$(sed -n 's/^Name=//p' "$BELKA_MD_DESKTOP" | head -n 1)
+                [ -n "$_belka_orig_name" ] && _belka_d_name="$_belka_orig_name"
+                
+                awk -v exec="$BELKA_PREFIX/bin/${_belka_bin_name%.AppImage}" -v term="$_belka_term_val" -v name="$_belka_d_name" -v icon="$_belka_p_name" '
+                    BEGIN { exec_done=0; term_done=0; name_done=0; icon_done=0 }
+                    /^Exec=/ { print "Exec=" exec; exec_done=1; next }
+                    /^Terminal=/ { print "Terminal=" term; term_done=1; next }
+                    /^Name=/ { print "Name=" name; name_done=1; next }
+                    /^Icon=/ { print "Icon=" icon; icon_done=1; next }
+                    { print }
+                    END {
+                        if (!exec_done) print "Exec=" exec
+                        if (!term_done) print "Terminal=" term
+                        if (!name_done) print "Name=" name
+                        if (!icon_done) print "Icon=" icon
+                    }
+                ' "$BELKA_MD_DESKTOP" > "$_belka_desk_file"
+                _belka_has_md=1
+            else
+                cat <<EOF2 > "$_belka_desk_file"
+[Desktop Entry]
+Type=Application
+Name=$_belka_d_name
+Exec="$BELKA_PREFIX/bin/${_belka_bin_name%.AppImage}"
+Terminal=$_belka_term_val
+Categories=${_belka_p_cat};
+EOF2
+                if [ -n "$BELKA_MD_ICON" ]; then
+                    echo "Icon=$_belka_p_name" >> "$_belka_desk_file"
+                fi
+            fi
+
+            printf '%s\n' "$_belka_desk_file" >> "$_belka_p_state/files"
+            if [ "$_belka_has_md" -eq 1 ]; then
+                belka_log INFO "metadata grafica integrada (icono y/o .desktop)"
+            else
+                belka_log INFO "acceso directo creado: $_belka_desk_file"
+            fi
+            
+            command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$_belka_desk_dir"
+            _belka_icon_cache_dir="${XDG_DATA_HOME:-$HOME/.local/share}/icons/hicolor"
+            [ "$BELKA_SYSTEM" -eq 1 ] && _belka_icon_cache_dir="/usr/share/icons/hicolor"
+            if [ "$_belka_has_md" -eq 1 ]; then
+                command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -q "$_belka_icon_cache_dir" >/dev/null 2>&1 || :
+            fi
+        fi
+        
+        _belka_sym_name="${_belka_bin_name%.AppImage}"
+        
+        mkdir -p "$BELKA_PREFIX/bin"
+        _belka_rel_target="../${_belka_exec_path#"$BELKA_PREFIX/"}"
+        _belka_symlink="$BELKA_PREFIX/bin/$_belka_sym_name"
+        
+        if [ "$BELKA_FORCE" -eq 0 ] && { [ -e "$_belka_symlink" ] || [ -L "$_belka_symlink" ]; }; then
+            belka_log ERROR "conflicto con ejecutable existente: $_belka_symlink (usa --force)"
+            belka_remove_pkg "$_belka_p_name" >/dev/null 2>&1
+            return $BELKA_EX_CONFLICT
+        fi
+        
+        ln -sf "$_belka_rel_target" "$_belka_symlink"
+        printf 'bin/%s\n' "$_belka_sym_name" >> "$_belka_p_state/files"
+        belka_log INFO "enlace symlink creado: bin/$_belka_sym_name -> $_belka_rel_target"
+    fi
+
+    belka_log SUCCESS "Paquete '$_belka_p_name' instalado y listo para usar."
+    return 0
+}
+
+# Interpreta el argumento de usuario resolviendolo como URL, local o indice.
+#
+# Argumentos:
+#   $1 - Cadena provista por el usuario
+# Globales:
+#   BELKA_R_NAME, BELKA_R_VERSION, BELKA_R_URL, BELKA_R_SHA, BELKA_R_LOCAL, BELKA_R_SIG, BELKA_R_EXEC
+# Retorna:
+#   0 en resolucion valida, exit 1 si el origen es inviable o no existe
+belka_resolve_pkg() {
+    if [ -f "$1" ]; then
+        _belka_res_base=$(basename "$1")
+        BELKA_R_NAME=$(printf '%s' "$_belka_res_base" | sed \
+            's/\.tar\.gz$//; s/\.tar\.xz$//; s/\.tar\.bz2$//; s/\.tar\.zst$//;
+             s/\.tgz$//; s/\.txz$//; s/\.tbz2$//; s/\.AppImage$//i; s/\.zip$//i')
+        [ -n "$BELKA_R_NAME" ] || BELKA_R_NAME=$_belka_res_base
+        BELKA_R_VERSION=local
+        BELKA_R_URL=$1
+        BELKA_R_SHA=$(belka_sha256 "$1" 2>/dev/null || printf '')
+        BELKA_R_SIG=''
+        BELKA_R_EXEC=''
+        BELKA_R_CAT='Utility'
+        BELKA_R_TERM='N'
+        BELKA_R_TYPE='tar'
+        case "$1" in
+            *.AppImage|*.appimage) BELKA_R_TYPE='appimage' ;;
+        esac
+        case "$BELKA_R_NAME" in
+            */*|*..*|.*) belka_log ERROR "nombre de paquete invalido: $BELKA_R_NAME"; return $BELKA_EX_USAGE ;;
+        esac
+        BELKA_R_LOCAL=$1
+        return 0
+    fi
+    case $1 in
+        http://*|https://*|file://*)
+            _belka_res_base=$(basename "$1")
+            BELKA_R_NAME=$(printf '%s' "$_belka_res_base" | sed \
+                's/\.tar\.gz$//; s/\.tar\.xz$//; s/\.tar\.bz2$//; s/\.tar\.zst$//;
+                 s/\.tgz$//; s/\.txz$//; s/\.tbz2$//; s/\.AppImage$//i; s/\.zip$//i')
+            [ -n "$BELKA_R_NAME" ] || BELKA_R_NAME=$_belka_res_base
+            BELKA_R_VERSION=direct
+            BELKA_R_URL=$1
+            BELKA_R_SHA=''
+            BELKA_R_SIG=''
+            BELKA_R_EXEC=''
+            BELKA_R_CAT='Utility'
+            BELKA_R_TERM='N'
+            BELKA_R_TYPE='tar'
+            case "$1" in
+                *.AppImage|*.appimage) BELKA_R_TYPE='appimage' ;;
+            esac
+            case "$BELKA_R_NAME" in
+                */*|*..*|.*) belka_log ERROR "nombre de paquete invalido: $BELKA_R_NAME"; return $BELKA_EX_USAGE ;;
+            esac
+            BELKA_R_LOCAL=''
+            return 0
+            ;;
+    esac
+    belka_index_load || return $?
+    if ! belka_index_lookup "$1" "${BELKA_OPT_TYPE:-}"; then
+        belka_log ERROR "paquete no encontrado en el indice: $1"
+        return $BELKA_EX_USAGE
+    fi
+    BELKA_R_NAME=$1
+    BELKA_R_VERSION=$BELKA_L_VERSION
+    BELKA_R_URL=$BELKA_L_URL
+    BELKA_R_SHA=$BELKA_L_SHA
+    case "$BELKA_R_NAME" in
+        */*|*..*|.*) belka_log ERROR "nombre de paquete invalido: $BELKA_R_NAME"; return $BELKA_EX_USAGE ;;
+    esac
+
+    BELKA_R_SIG=$BELKA_L_SIG
+    BELKA_R_EXEC=$BELKA_L_EXEC
+    BELKA_R_CAT=$BELKA_L_CAT
+    BELKA_R_TERM=$BELKA_L_TERM
+    BELKA_R_TYPE=$BELKA_L_TYPE
+    BELKA_R_LOCAL=''
+    return 0
+}
+
+# Comando principal 'install': procesa las banderas y orquesta instalaciones.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   BELKA_DRY_RUN, BELKA_FORCE, BELKA_SYSTEM, BELKA_LOG_LEVEL, BELKA_OPT_EXEC
+# Retorna:
+#   0 o aborta el script en errores
+belka_cmd_install() {
+    belka_normargs "$@"
+    _belka_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $BELKA_NORMED
+    set +f
+    IFS=$_belka_an_saveifs
+    OPTIND=1
+    BELKA_OPT_EXEC=""
+    BELKA_DRY_RUN=0
+    BELKA_OPT_ZSYNC=''
+    while getopts ':hnfsqjve:tT:z:' _belka_opt; do
+        case $_belka_opt in
+            h) belka_usage; return 0 ;;
+            n) BELKA_DRY_RUN=1 ;;
+            f) BELKA_FORCE=1 ;;
+            s) BELKA_SYSTEM=1 ;;
+            q) BELKA_LOG_LEVEL=1 ;;
+            v) BELKA_LOG_LEVEL=3 ;;
+            j) BELKA_JSON=1 ;;
+            e) BELKA_OPT_EXEC="$OPTARG" ;;
+            T) BELKA_OPT_TYPE="$OPTARG" ;;
+            t) BELKA_OPT_TERM=1 ;;
+            z) BELKA_OPT_ZSYNC="$OPTARG" ;;
+            :) belka_die $BELKA_EX_USAGE "falta argumento para -$OPTARG" ;;
+            *) belka_die $BELKA_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+    [ $# -eq 1 ] || { belka_usage >&2; exit $BELKA_EX_USAGE; }
+    belka_state_init || exit $BELKA_EX_DEP
+
+    belka_resolve_pkg "$1"
+    _belka_i_rc=$?
+    [ "$_belka_i_rc" -ne 0 ] && exit "$_belka_i_rc"
+
+    belka_perform_install "$BELKA_R_NAME" "$BELKA_R_VERSION" "$BELKA_R_URL" \
+        "$BELKA_R_SHA" "$BELKA_R_SIG" "$BELKA_R_LOCAL" "${BELKA_OPT_EXEC:-$BELKA_R_EXEC}" "$BELKA_R_CAT" "$BELKA_R_TERM" "$BELKA_R_TYPE" "$BELKA_OPT_ZSYNC"
+    exit $?
+}
+
+# Comando principal 'remove': resuelve nombres de paquete/binario e invoca borrado.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   BELKA_FORCE, BELKA_STATE_DIR, BELKA_PREFIX
+# Retorna:
+#   0 si el paquete fue borrado o no existia, aborta en error general
+belka_cmd_remove() {
+    belka_normargs "$@"
+    _belka_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $BELKA_NORMED
+    set +f
+    IFS=$_belka_an_saveifs
+    OPTIND=1
+    while getopts ':hfsyqjv' _belka_opt; do
+        case $_belka_opt in
+            h) belka_usage; return 0 ;;
+            f) BELKA_FORCE=1 ;;
+            s) BELKA_SYSTEM=1 ;;
+            y) BELKA_ASSUME_YES=1 ;;
+            q) BELKA_LOG_LEVEL=1 ;;
+            v) BELKA_LOG_LEVEL=3 ;;
+            j) BELKA_JSON=1 ;;
+            :) belka_die $BELKA_EX_USAGE "falta argumento para -$OPTARG" ;;
+            *) belka_die $BELKA_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+    [ $# -eq 1 ] || { belka_usage >&2; exit $BELKA_EX_USAGE; }
+    belka_state_init || exit $BELKA_EX_DEP
+    _belka_rm_name=$1
+
+    if [ ! -f "$BELKA_STATE_DIR/$_belka_rm_name/manifest" ]; then
+        _belka_rm_resolved=""
+        if [ -h "$BELKA_PREFIX/bin/$_belka_rm_name" ]; then
+            _belka_rm_target=$(readlink "$BELKA_PREFIX/bin/$_belka_rm_name")
+            _belka_rm_resolved=$(printf '%s\n' "$_belka_rm_target" | sed -n 's#.*/pkg/[^/]*/\([^/]*\)/.*#\1#p')
+            if [ -z "$_belka_rm_resolved" ]; then
+                _belka_rm_resolved=$(printf '%s\n' "$_belka_rm_target" | sed -n 's#.*/pkg/[^/]*/\([^/]*\)$#\1#p')
+            fi
+            
+            if [ -z "$_belka_rm_resolved" ]; then
+                belka_die $BELKA_EX_USAGE "symlink con formato desconocido: $_belka_rm_target"
+            fi
+
+            if [ -n "$_belka_rm_resolved" ] && [ -f "$BELKA_STATE_DIR/$_belka_rm_resolved/manifest" ]; then
+                belka_log INFO "resolviendo binario '$_belka_rm_name' al paquete '$_belka_rm_resolved'"
+                _belka_rm_name="$_belka_rm_resolved"
+            else
+                _belka_rm_resolved=""
+            fi
+        fi
+        
+        if [ -z "$_belka_rm_resolved" ]; then
+            belka_die $BELKA_EX_USAGE "no esta instalado: $_belka_rm_name"
+        fi
+    fi
+
+    belka_log STEP "Eliminando $_belka_rm_name..."
+    if belka_remove_pkg "$_belka_rm_name"; then
+        belka_log SUCCESS "Paquete '$_belka_rm_name' eliminado completamente."
+        exit $BELKA_EX_OK
+    fi
+    belka_die $BELKA_EX_INSTALL "no se pudo eliminar $_belka_rm_name"
+}
+
+# Compara y ejecuta la actualizacion individual para un solo paquete.
+#
+# Argumentos:
+#   $1 - Nombre del paquete
+# Globales:
+#   BELKA_STATE_DIR, BELKA_U_RESULT
+# Retorna:
+#   0 en exito/sin cambios, 1 en fallo
+belka_read_upd_info() {
+    _belka_ru_ai=$1
+    _belka_ru_info=$(readelf --string-dump=.upd_info "$_belka_ru_ai" 2>/dev/null || strings "$_belka_ru_ai" 2>/dev/null)
+    printf '%s\n' "$_belka_ru_info" | sed -n 's/^ *\[[^]]*\] *//p' | grep -E '^(gh-releases-zsync\||zsync\||https?://.+\.zsync)' | head -n 1
+}
+
+belka_resolve_zsync_url() {
+    _belka_rz_src=$1
+    case $_belka_rz_src in
+        gh-releases-zsync\|*)
+            _belka_rz_own=$(printf '%s\n' "$_belka_rz_src" | cut -d'|' -f2)
+            _belka_rz_rep=$(printf '%s\n' "$_belka_rz_src" | cut -d'|' -f3)
+            _belka_rz_rel=$(printf '%s\n' "$_belka_rz_src" | cut -d'|' -f4)
+            _belka_rz_glb=$(printf '%s\n' "$_belka_rz_src" | cut -d'|' -f5)
+            
+            _belka_rz_api="https://api.github.com/repos/$_belka_rz_own/$_belka_rz_rep/releases/latest"
+            [ "$_belka_rz_rel" != "latest" ] && _belka_rz_api="https://api.github.com/repos/$_belka_rz_own/$_belka_rz_rep/releases/tags/$_belka_rz_rel"
+            
+            _belka_rz_json=$(curl -sSfL "$_belka_rz_api" 2>/dev/null) || return 1
+            _belka_rz_tag=$(printf '%s\n' "$_belka_rz_json" | awk -F'"' '/"tag_name":/ {print $4; exit}')
+            
+            _belka_rz_regex=$(printf '%s\n' "$_belka_rz_glb" | sed 's/\./\\./g; s/\*/.*/g' | awk '{print tolower($0)}')
+            _belka_rz_url=$(printf '%s\n' "$_belka_rz_json" | awk -F'"' -v re="$_belka_rz_regex" '/"browser_download_url":/ { url=$4; if (tolower(url) ~ re "$") { print url; exit } }')
+            [ -z "$_belka_rz_url" ] && return 1
+            
+            printf '%s\t%s\n' "$_belka_rz_url" "$_belka_rz_tag"
+            ;;
+        zsync\|*)
+            _belka_rz_url=$(printf '%s\n' "$_belka_rz_src" | cut -d'|' -f2)
+            printf '%s\t\n' "$_belka_rz_url"
+            ;;
+        http*.zsync)
+            printf '%s\t\n' "$_belka_rz_src"
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+belka_appimage_delta_update() {
+    _belka_ad_name=$1
+    belka_manifest_read "$BELKA_STATE_DIR/$_belka_ad_name/manifest"
+    [ "$BELKA_M_TYPE" != "appimage" ] && return 1
+    [ "$BELKA_NO_ZSYNC" = "1" ] && return 1
+    command -v zsync >/dev/null 2>&1 || return 1
+    
+    _belka_ad_seed="$BELKA_PREFIX/pkg/appimage/$_belka_ad_name/$BELKA_M_TARBALL"
+    [ ! -f "$_belka_ad_seed" ] && _belka_ad_seed=$(find "$BELKA_PREFIX/pkg/appimage/$_belka_ad_name" -name "*.AppImage" 2>/dev/null | head -n 1)
+    [ ! -f "$_belka_ad_seed" ] && return 1
+    
+    _belka_ad_src=${BELKA_OPT_ZSYNC:-}
+    [ -z "$_belka_ad_src" ] && _belka_ad_src=$BELKA_M_ZSYNC
+    if [ -z "$_belka_ad_src" ]; then
+        if belka_index_load >/dev/null 2>&1; then
+            belka_index_lookup "$_belka_ad_name" "$BELKA_M_TYPE" 1 && [ -n "$BELKA_L_ZSYNC" ] && [ "$BELKA_L_ZSYNC" != "-" ] && _belka_ad_src=$BELKA_L_ZSYNC
+        fi
+    fi
+    [ -z "$_belka_ad_src" ] && _belka_ad_src=$(belka_read_upd_info "$_belka_ad_seed")
+    [ -z "$_belka_ad_src" ] && return 1
+    
+    _belka_ad_res=$(belka_resolve_zsync_url "$_belka_ad_src") || return 1
+    _belka_ad_url=$(printf '%s\n' "$_belka_ad_res" | cut -f1)
+    _belka_ad_ver=$(printf '%s\n' "$_belka_ad_res" | cut -f2)
+    
+    [ -z "$_belka_ad_ver" ] && _belka_ad_ver=$BELKA_L_VERSION
+    [ -z "$_belka_ad_ver" ] && _belka_ad_ver=$BELKA_M_VERSION
+    
+    _belka_ad_sha=$BELKA_L_SHA
+    
+    _belka_ad_norm_v1=$(printf '%s' "$_belka_ad_ver" | sed 's/^v//')
+    _belka_ad_norm_v2=$(printf '%s' "$BELKA_M_VERSION" | sed 's/^v//')
+    if [ "$_belka_ad_norm_v1" = "$_belka_ad_norm_v2" ]; then
+        belka_log INFO "$_belka_ad_name ya esta al dia"
+        return 0
+    fi
+    
+    belka_log STEP "Actualizando $_belka_ad_name via delta (zsync)..."
+    _belka_ad_tmp="$BELKA_TMPDIR/$_belka_ad_name.AppImage"
+    if ! ( cd "$BELKA_TMPDIR" && zsync -i "$_belka_ad_seed" -o "$_belka_ad_name.AppImage" "$_belka_ad_url" >/dev/null 2>&1 ); then
+        return 1
+    fi
+    
+    if [ -n "$_belka_ad_sha" ]; then
+        _belka_ad_got=$(belka_sha256 "$_belka_ad_tmp" 2>/dev/null || printf '')
+        if [ "$_belka_ad_got" != "$_belka_ad_sha" ]; then
+            belka_log WARN "zsync checksum invalido, se intentara descarga completa"
+            rm -f "$_belka_ad_tmp"
+            return 1
+        fi
+    else
+        belka_log WARN "sin checksum de referencia; se confia en https"
+    fi
+    
+    _belka_ad_force=$BELKA_FORCE
+    BELKA_FORCE=1
+    belka_perform_install "$_belka_ad_name" "$_belka_ad_ver" "${_belka_ad_url%.zsync}" "$_belka_ad_sha" '' "$_belka_ad_tmp" '' "$BELKA_L_CAT" "$BELKA_L_TERM" "appimage" "$_belka_ad_src"
+    _belka_ad_rc=$?
+    BELKA_FORCE=$_belka_ad_force
+    return "$_belka_ad_rc"
+}
+
+belka_update_one() {
+    BELKA_U_RESULT=uptodate
+    _belka_u_state=$BELKA_STATE_DIR/$1
+    if ! belka_manifest_read "$_belka_u_state/manifest"; then
+        belka_log ERROR "no esta instalado: $1"
+        BELKA_U_RESULT=failed
+        return 1
+    fi
+    if ! belka_index_load; then
+        belka_log ERROR "indice no disponible"
+        BELKA_U_RESULT=failed
+        return 1
+    fi
+    if ! belka_index_lookup "$1" "${BELKA_OPT_TYPE:-$BELKA_M_TYPE}"; then
+        # Se requiere el fallback a BELKA_M_TYPE porque belka_cmd_upgrade no
+        # fuerza un tipo; asi evitamos que actualice al tipo equivocado si
+        # el paquete tiene multi-formato en el indice (ej. appimage y tar).
+        belka_log WARN "$1 no esta en el indice; se omite"
+        BELKA_U_RESULT=skipped
+        return 0
+    fi
+    if [ "$(belka_version_gt "$BELKA_L_VERSION" "$BELKA_M_VERSION")" != 1 ]; then
+        belka_log INFO "$1 ya esta al dia ($BELKA_M_VERSION)"
+        return 0
+    fi
+    if [ "$BELKA_DRY_RUN" -eq 1 ]; then
+        belka_log INFO "[dry-run] $1: $BELKA_M_VERSION -> $BELKA_L_VERSION"
+        BELKA_U_RESULT=updated
+        return 0
+    fi
+    belka_log INFO "actualizando $1: $BELKA_M_VERSION -> $BELKA_L_VERSION"
+
+    cp "$_belka_u_state/manifest" "$_belka_u_state/manifest.bak"
+    [ -f "$_belka_u_state/files" ] && cp "$_belka_u_state/files" "$_belka_u_state/files.bak"
+
+    _belka_u_force=$BELKA_FORCE
+    BELKA_FORCE=1
+    _belka_u_rc=1
+    _belka_u_zsync_done=0
+
+    if [ "$BELKA_L_TYPE" = "appimage" ] && [ "$BELKA_DRY_RUN" -eq 0 ] && [ "$BELKA_NO_ZSYNC" != "1" ] && command -v zsync >/dev/null 2>&1; then
+        _belka_u_seed="$BELKA_PREFIX/pkg/appimage/$1/$BELKA_M_TARBALL"
+        [ ! -f "$_belka_u_seed" ] && _belka_u_seed=$(find "$BELKA_PREFIX/pkg/appimage/$1" -name "*.AppImage" 2>/dev/null | head -n 1)
+        
+        if [ -f "$_belka_u_seed" ]; then
+            _belka_u_zsrc=${BELKA_OPT_ZSYNC:-$BELKA_L_ZSYNC}
+            [ -z "$_belka_u_zsrc" ] && _belka_u_zsrc=$BELKA_M_ZSYNC
+            [ -z "$_belka_u_zsrc" ] && _belka_u_zsrc=$(belka_read_upd_info "$_belka_u_seed")
+            
+            if [ -n "$_belka_u_zsrc" ]; then
+                if _belka_u_zres=$(belka_resolve_zsync_url "$_belka_u_zsrc"); then
+                    _belka_u_zurl=$(printf '%s\n' "$_belka_u_zres" | cut -f1)
+                    
+                    belka_log STEP "Actualizando $1 via delta (zsync)..."
+                    _belka_u_ztmp="$BELKA_TMPDIR/$1.AppImage"
+                    if ( cd "$BELKA_TMPDIR" && zsync -i "$_belka_u_seed" -o "$1.AppImage" "$_belka_u_zurl" >/dev/null 2>&1 ); then
+                        _belka_u_zbad=0
+                        if [ -n "$BELKA_L_SHA" ]; then
+                            _belka_u_zsha=$(belka_sha256 "$_belka_u_ztmp" 2>/dev/null || printf '')
+                            if [ "$_belka_u_zsha" != "$BELKA_L_SHA" ]; then
+                                belka_log WARN "zsync checksum invalido, se intentara descarga completa"
+                                rm -f "$_belka_u_ztmp"
+                                _belka_u_zbad=1
+                            fi
+                        fi
+                        if [ "$_belka_u_zbad" -eq 0 ]; then
+                            belka_perform_install "$1" "$BELKA_L_VERSION" "$BELKA_L_URL" "$BELKA_L_SHA" "$BELKA_L_SIG" "$_belka_u_ztmp" '' "$BELKA_L_CAT" "$BELKA_L_TERM" "$BELKA_L_TYPE" "$BELKA_L_ZSYNC"
+                            _belka_u_rc=$?
+                            _belka_u_zsync_done=1
+                        fi
+                    else
+                        belka_log WARN "zsync fallo, fallback a descarga completa"
+                        rm -f "$_belka_u_ztmp"
+                    fi
+                fi
+            fi
+        fi
+    fi
+
+    if [ "$_belka_u_zsync_done" -eq 0 ]; then
+        belka_perform_install "$1" "$BELKA_L_VERSION" "$BELKA_L_URL" "$BELKA_L_SHA" "$BELKA_L_SIG" '' '' "$BELKA_L_CAT" "$BELKA_L_TERM" "$BELKA_L_TYPE" "$BELKA_L_ZSYNC"
+        _belka_u_rc=$?
+    fi
+    if [ "$_belka_u_rc" -eq 0 ]; then
+        BELKA_FORCE=$_belka_u_force
+        BELKA_U_RESULT=updated
+        return 0
+    fi
+    belka_log ERROR "fallo la actualizacion de $1 (rc=$_belka_u_rc)"
+
+    _belka_u_src=''
+    _belka_u_cache=$BELKA_CACHE_DIR/$BELKA_M_SHA-$BELKA_M_TARBALL
+    [ ! -f "$_belka_u_cache" ] && _belka_u_cache=$BELKA_CACHE_DIR/$BELKA_M_TARBALL
+    if [ -f "$_belka_u_cache" ] && [ -n "$BELKA_M_SHA" ] &&
+       [ "$(belka_sha256 "$_belka_u_cache" 2>/dev/null)" = "$BELKA_M_SHA" ]; then
+        _belka_u_src=$_belka_u_cache
+    else
+        _belka_u_dl=$BELKA_TMPDIR/update-old.$$
+        if belka_download "$BELKA_M_URL" "$_belka_u_dl" 2>/dev/null; then
+            _belka_u_got=$(belka_sha256 "$_belka_u_dl" 2>/dev/null || printf '')
+            if [ -z "$BELKA_M_SHA" ] || [ "$_belka_u_got" = "$BELKA_M_SHA" ]; then
+                _belka_u_src=$_belka_u_dl
+                cp "$_belka_u_dl" "$_belka_u_cache" 2>/dev/null || :
+            fi
+        fi
+    fi
+    if [ -n "$_belka_u_src" ] &&
+       belka_perform_install "$1" "$BELKA_M_VERSION" "$BELKA_M_URL" "$BELKA_M_SHA" '' "$_belka_u_src" '' "$BELKA_M_CAT" "$BELKA_M_TERM" "$BELKA_M_TYPE" "$BELKA_M_ZSYNC"; then
+        belka_log INFO "se revirtio automaticamente a $1 $BELKA_M_VERSION"
+        # BUG CORREGIDO: Se elimina la sobreescritura de manifest.bak con la nueva version fallida; esto era un bug ya que impedia el rollback manual posterior.
+    else
+        mv "$_belka_u_state/manifest.bak" "$_belka_u_state/manifest"
+        [ -f "$_belka_u_state/files.bak" ] && mv "$_belka_u_state/files.bak" "$_belka_u_state/files"
+        belka_log WARN "no fue posible revertir automaticamente; ejecuta 'belka rollback $1'"
+    fi
+    BELKA_FORCE=$_belka_u_force
+    BELKA_U_RESULT=failed
+    return "$_belka_u_rc"
+}
+
+# Comando principal 'update': fuerza la actualizacion manual de uno o mas paquetes.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   BELKA_JSON
+# Retorna:
+#   0
+belka_cmd_update() {
+    belka_normargs "$@"
+    _belka_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $BELKA_NORMED
+    set +f
+    IFS=$_belka_an_saveifs
+    OPTIND=1
+    BELKA_DRY_RUN=0
+    BELKA_OPT_ZSYNC=''
+    while getopts ':hsqvnjz:' _belka_opt; do
+        case $_belka_opt in
+            h) belka_usage; return 0 ;;
+            s) BELKA_SYSTEM=1 ;;
+            q) BELKA_LOG_LEVEL=1 ;;
+            v) BELKA_LOG_LEVEL=3 ;;
+            n) BELKA_DRY_RUN=1 ;;
+            j) BELKA_JSON=1 ;;
+            z) BELKA_OPT_ZSYNC="$OPTARG" ;;
+            :) belka_die $BELKA_EX_USAGE "falta argumento para -$OPTARG" ;;
+            *) belka_die $BELKA_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+
+    belka_state_init || return 1
+    if [ "$#" -eq 2 ] && [ -f "$2" ]; then
+        if [ ! -d "$BELKA_STATE_DIR/$1" ]; then
+            belka_log ERROR "paquete no instalado: $1"
+            return 1
+        fi
+        
+        _belka_desk_dir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+        [ "$BELKA_SYSTEM" -eq 1 ] && _belka_desk_dir="/usr/share/applications"
+        _belka_desk_file="$_belka_desk_dir/belka-$1.desktop"
+        
+        _belka_prev_name=""
+        if [ -f "$_belka_desk_file" ]; then
+            _belka_prev_name=$(sed -n 's/^Name=//p' "$_belka_desk_file" | head -n 1)
+        fi
+        
+        belka_log STEP "Actualizando $1 desde tarball local..."
+        [ -n "$_belka_prev_name" ] && belka_log DEBUG "nombre de escritorio preservado: $_belka_prev_name"
+        export BELKA_R_NAME="$1"
+        export BELKA_P_APP_NAME="${_belka_prev_name:-$1}"
+        export BELKA_IS_LOCAL_UPDATE=1
+        export BELKA_SYSTEM BELKA_LOG_LEVEL BELKA_DRY_RUN BELKA_JSON
+        
+        _belka_upd_args="-f"
+        [ "$BELKA_SYSTEM" -eq 1 ] && _belka_upd_args="$_belka_upd_args -s"
+        [ "$BELKA_DRY_RUN" -eq 1 ] && _belka_upd_args="$_belka_upd_args -n"
+        [ "$BELKA_LOG_LEVEL" -eq 1 ] && _belka_upd_args="$_belka_upd_args -q"
+        [ "$BELKA_LOG_LEVEL" -eq 3 ] && _belka_upd_args="$_belka_upd_args -v"
+        [ "$BELKA_JSON" -eq 1 ] && _belka_upd_args="$_belka_upd_args -j"
+
+        "$_belka_self" install "$_belka_upd_args" "$2"
+        return $?
+    fi
+
+    if [ "$#" -eq 0 ]; then
+        case ${BELKA_INDEX_URL:-} in
+            ''|*'<user>'*)
+                belka_log ERROR "indice no configurado: define BELKA_INDEX_URL en ~/.config/belka/config"
+                return 1
+                ;;
+        esac
+        if ! belka_index_source_is_url; then
+            belka_log INFO "fuente de indice local; nada que sincronizar"
+            return 0
+        fi
+        
+        belka_log INFO "Sincronizando repositorios..."
+        if belka_index_refresh; then
+            belka_log INFO "Repositorio actualizado -> $(belka_index_cache_file)"
+            return 0
+        else
+            belka_log ERROR "Error al sincronizar el repositorio: $BELKA_INDEX_URL"
+            return 1
+        fi
+    fi
+    if [ "$#" -eq 1 ]; then
+        belka_manifest_read "$BELKA_STATE_DIR/$1/manifest" || {
+            belka_log ERROR "el paquete '$1' no esta instalado"
+            return $BELKA_EX_USAGE
+        }
+        belka_update_one "$1"
+        [ "$BELKA_U_RESULT" = "failed" ] && return 1
+        return 0
+    fi
+
+    belka_log ERROR "Uso incorrecto. Argumentos esperados: 0 (sincronizar), 1 (actualizacion remota) o 2 (actualizacion local)."
+    return 1
+}
+
+# Comando principal 'upgrade': itera e intenta actualizar todos los paquetes.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   BELKA_STATE_DIR
+# Retorna:
+#   0 en exito
+belka_cmd_upgrade() {
+    belka_normargs "$@"
+    _belka_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $BELKA_NORMED
+    set +f
+    IFS=$_belka_an_saveifs
+    OPTIND=1
+    while getopts ':hyjnqv' _belka_opt; do
+        case $_belka_opt in
+            h) belka_usage; return 0 ;;
+            y) BELKA_ASSUME_YES=1 ;;
+            j) BELKA_JSON=1 ;;
+            n) BELKA_DRY_RUN=1 ;;
+            q) BELKA_LOG_LEVEL=1 ;;
+            v) BELKA_LOG_LEVEL=3 ;;
+            :) belka_die $BELKA_EX_USAGE "falta argumento para -$OPTARG" ;;
+            *) belka_die $BELKA_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+
+    belka_state_init || return 1
+    belka_index_load || return 1
+
+    _belka_up_pkgs=""
+    _belka_up_tot=0
+    _belka_up_failed=""
+
+    if [ $# -eq 0 ]; then
+        for _belka_s_dir in "$BELKA_STATE_DIR"/*; do
+            [ -d "$_belka_s_dir" ] || continue
+            _belka_p_name=$(basename "$_belka_s_dir")
+            
+            belka_manifest_read "$_belka_s_dir/manifest" 2>/dev/null || continue
+            _belka_p_ver="$BELKA_M_VERSION"
+            
+            if belka_index_lookup "$_belka_p_name" "$BELKA_M_TYPE"; then
+                if [ "$(belka_version_gt "$BELKA_L_VERSION" "$_belka_p_ver")" = "1" ]; then
+                    _belka_up_pkgs="$_belka_up_pkgs $_belka_p_name"
+                    _belka_up_tot=$((_belka_up_tot + 1))
+                fi
+            fi
+        done
+
+        if [ "$_belka_up_tot" -eq 0 ]; then
+            belka_log INFO "Todos los paquetes estan actualizados."
+            return 0
+        fi
+
+        printf 'Se actualizarán los siguientes %d paquetes:
+  %s
+
+' "$_belka_up_tot" "$_belka_up_pkgs"
+
+        if [ "${BELKA_ASSUME_YES:-0}" -ne 1 ]; then
+            printf '¿Desea continuar con la actualización? [S/n] '
+            if ! read -r _belka_ans </dev/tty; then
+                belka_log ERROR "no hay terminal interactiva; usa -y para confirmar automaticamente"
+                return $BELKA_EX_USAGE
+            fi
+            case "$_belka_ans" in
+                [Nn]*)
+                    belka_log INFO "Actualización cancelada por el usuario."
+                    return 0
+                    ;;
+            esac
+        fi
+    else
+        for _belka_p_name in "$@"; do
+            case "$_belka_p_name" in
+                -*) belka_usage >&2; return $BELKA_EX_USAGE ;;
+            esac
+            if [ ! -f "$BELKA_STATE_DIR/$_belka_p_name/manifest" ]; then
+                belka_log ERROR "no esta instalado: $_belka_p_name"
+                _belka_up_failed="$_belka_up_failed $_belka_p_name"
+                continue
+            fi
+            _belka_up_pkgs="$_belka_up_pkgs $_belka_p_name"
+            _belka_up_tot=$((_belka_up_tot + 1))
+        done
+        if [ "$_belka_up_tot" -eq 0 ]; then
+            return $BELKA_EX_INSTALL
+        fi
+    fi
+
+    _belka_up_curr=0
+    _belka_up_ok=0
+    belka_progress "$_belka_up_curr" "$_belka_up_tot" "Calculando..."
+
+    _belka_up_saved_log_level=$BELKA_LOG_LEVEL
+
+    for _pkg in $_belka_up_pkgs; do
+        BELKA_LOG_LEVEL=$_belka_up_saved_log_level
+        belka_progress "$_belka_up_curr" "$_belka_up_tot" "Actualizando $_pkg..."
+
+        [ "$BELKA_LOG_LEVEL" -eq 2 ] && BELKA_LOG_LEVEL=1
+        belka_update_one "$_pkg"
+        BELKA_LOG_LEVEL=$_belka_up_saved_log_level
+        
+        if [ "$BELKA_U_RESULT" = "updated" ]; then
+            _belka_up_ok=$((_belka_up_ok + 1))
+        elif [ "$BELKA_U_RESULT" = "failed" ]; then
+            _belka_up_failed="$_belka_up_failed $_pkg"
+        fi
+
+        _belka_up_curr=$((_belka_up_curr + 1))
+        belka_progress "$_belka_up_curr" "$_belka_up_tot" "$_pkg procesado."
+    done
+
+    if [ "$BELKA_JSON" -eq 1 ]; then
+        _belka_up_fcount=0
+        [ -n "$_belka_up_failed" ] && _belka_up_fcount=$(printf '%s\n' "$_belka_up_failed" | wc -w)
+        printf '{"status":"%s","updated":%d,"failed":%d,"failed_packages":[%s]}\n' \
+            "$([ -z "$_belka_up_failed" ] && echo "success" || echo "error")" \
+            "$_belka_up_ok" "$_belka_up_fcount" \
+            "$(for f in $_belka_up_failed; do printf '"%s",' "$f"; done | sed 's/,$//')"
+        [ -n "$_belka_up_failed" ] && return $BELKA_EX_INSTALL || return 0
+    fi
+
+    if [ -n "$_belka_up_failed" ]; then
+        belka_log ERROR "fallaron:$_belka_up_failed"
+        _belka_up_fcount=$(printf '%s\n' "$_belka_up_failed" | wc -w)
+        belka_log INFO "resumen: actualizados=$_belka_up_ok fallidos=$_belka_up_fcount"
+        return $BELKA_EX_INSTALL
+    fi
+    belka_log SUCCESS "Actualizacion de $_belka_up_ok paquetes completada exitosamente."
+    return 0
+}
+
+# Comando principal 'rollback': restaura la configuracion previa tras fallo o pedido.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   BELKA_STATE_DIR, BELKA_PREFIX
+# Retorna:
+#   0 si logra restaurar, aborta si no
+belka_cmd_rollback() {
+    belka_normargs "$@"
+    _belka_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $BELKA_NORMED
+    set +f
+    IFS=$_belka_an_saveifs
+    OPTIND=1
+    while getopts ':hfsqjv' _belka_opt; do
+        case $_belka_opt in
+            h) belka_usage; return 0 ;;
+            f) BELKA_FORCE=1 ;;
+            s) BELKA_SYSTEM=1 ;;
+            q) BELKA_LOG_LEVEL=1 ;;
+            v) BELKA_LOG_LEVEL=3 ;;
+            j) BELKA_JSON=1 ;;
+            :) belka_die $BELKA_EX_USAGE "falta argumento para -$OPTARG" ;;
+            *) belka_die $BELKA_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+    [ $# -eq 1 ] || { belka_usage >&2; exit $BELKA_EX_USAGE; }
+    belka_state_init || exit $BELKA_EX_DEP
+    _belka_rb_name=$1
+    _belka_rb_state=$BELKA_STATE_DIR/$_belka_rb_name
+    belka_log STEP "Preparando rollback de $_belka_rb_name..."
+
+    [ -f "$_belka_rb_state/manifest.bak" ] ||
+        belka_die $BELKA_EX_USAGE "no hay respaldo para revertir: $_belka_rb_name"
+    belka_manifest_read "$_belka_rb_state/manifest.bak"
+    _belka_rb_version=$BELKA_M_VERSION
+    _belka_rb_url=$BELKA_M_URL
+    _belka_rb_sha=$BELKA_M_SHA
+    _belka_rb_tarball=$BELKA_M_TARBALL
+    _belka_rb_type=$BELKA_M_TYPE
+
+    _belka_rb_cache=$BELKA_CACHE_DIR/$_belka_rb_tarball
+    if [ -f "$_belka_rb_cache" ] && [ -n "$_belka_rb_sha" ] &&
+       [ "$(belka_sha256 "$_belka_rb_cache" 2>/dev/null)" = "$_belka_rb_sha" ]; then
+        _belka_rb_src=$_belka_rb_cache
+    else
+        _belka_rb_src=$BELKA_TMPDIR/rollback.$$
+        if ! belka_download "$_belka_rb_url" "$_belka_rb_src"; then
+            belka_die $BELKA_EX_DOWNLOAD "no se pudo recuperar la version anterior de $_belka_rb_url"
+        fi
+        _belka_rb_got=$(belka_sha256 "$_belka_rb_src" 2>/dev/null || printf '')
+        if [ -n "$_belka_rb_sha" ] && [ "$_belka_rb_got" != "$_belka_rb_sha" ]; then
+            belka_die $BELKA_EX_VERIFY "el origen ya no contiene la version anterior (checksum distinto); rollback imposible"
+        fi
+        cp "$_belka_rb_src" "$_belka_rb_cache" 2>/dev/null || :
+    fi
+
+    mv "$_belka_rb_state/manifest" "$BELKA_TMPDIR/manifest.prev.$$"
+    [ -f "$_belka_rb_state/files" ] && mv "$_belka_rb_state/files" "$BELKA_TMPDIR/files.prev.$$"
+
+    _belka_rb_force=$BELKA_FORCE
+    _belka_rb_dry=$BELKA_DRY_RUN
+    BELKA_FORCE=1
+    BELKA_DRY_RUN=0
+    belka_log STEP "Reinstalando $_belka_rb_version..."
+    belka_perform_install "$_belka_rb_name" "$_belka_rb_version" "$_belka_rb_url" \
+        "$_belka_rb_sha" '' "$_belka_rb_src" '' "$BELKA_M_CAT" "$BELKA_M_TERM" "$BELKA_M_TYPE" "$BELKA_M_ZSYNC"
+    _belka_rb_rc=$?
+    BELKA_FORCE=$_belka_rb_force
+    BELKA_DRY_RUN=$_belka_rb_dry
+
+    if [ "$_belka_rb_rc" -ne 0 ]; then
+        mv "$BELKA_TMPDIR/manifest.prev.$$" "$_belka_rb_state/manifest"
+        [ -f "$BELKA_TMPDIR/files.prev.$$" ] &&
+            mv "$BELKA_TMPDIR/files.prev.$$" "$_belka_rb_state/files"
+        belka_die $_belka_rb_rc "rollback fallido (rc=$_belka_rb_rc); estado restaurado"
+    fi
+    mv "$BELKA_TMPDIR/manifest.prev.$$" "$_belka_rb_state/manifest.bak"
+    [ -f "$BELKA_TMPDIR/files.prev.$$" ] &&
+        mv "$BELKA_TMPDIR/files.prev.$$" "$_belka_rb_state/files.bak"
+    belka_log INFO "rollback completado: $_belka_rb_name -> $_belka_rb_version"
+    exit $BELKA_EX_OK
+}
+
+
+
+# Lista unicamente los ID de los paquetes que se encuentran instalados.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   BELKA_STATE_DIR
+# Retorna:
+#   0 e imprime nombres en stdout
+belka_installed_names() {
+    for _belka_li_d in "$BELKA_STATE_DIR"/*/; do
+        [ -f "$_belka_li_d/manifest" ] || continue
+        belka_manifest_read "$_belka_li_d/manifest"
+        [ -n "$BELKA_M_NAME" ] && printf '%s\n' "$BELKA_M_NAME"
+    done
+}
+
+# Comando principal 'list': imprime la tabla o JSON de todos los instalados.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   BELKA_STATE_DIR, BELKA_JSON, BELKA_PREFIX
+# Retorna:
+#   0 siempre
+belka_cmd_list() {
+    belka_normargs "$@"
+    _belka_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $BELKA_NORMED
+    set +f
+    IFS=$_belka_an_saveifs
+    OPTIND=1
+    while getopts ':hqjv' _belka_opt; do
+        case $_belka_opt in
+            h) belka_usage; return 0 ;;
+            q) BELKA_LOG_LEVEL=1 ;;
+            v) BELKA_LOG_LEVEL=3 ;;
+            j) BELKA_JSON=1 ;;
+            *) belka_die $BELKA_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    belka_state_init || exit $BELKA_EX_DEP
+
+    _belka_ls_idx=0
+    if belka_index_load >/dev/null 2>&1; then
+        _belka_ls_idx=1
+    fi
+
+    if [ "$BELKA_JSON" -eq 1 ]; then
+        printf '{"installed":['
+        _belka_ls_first=1
+        for _belka_ls_d in "$BELKA_STATE_DIR"/*/; do
+            [ -d "$_belka_ls_d" ] || continue
+            [ -f "$_belka_ls_d/manifest" ] || continue
+            belka_manifest_read "$_belka_ls_d/manifest"
+            [ "$_belka_ls_first" -eq 0 ] && printf ','
+            _belka_ls_first=0
+            _belka_ls_avail=''
+            if [ "$_belka_ls_idx" -eq 1 ] && belka_index_lookup "$BELKA_M_NAME" "" 1 2>/dev/null; then
+                _belka_ls_avail=$(printf ',"available_version":"%s"' "$(belka_jesc "$BELKA_L_VERSION")")
+            fi
+            printf '{"name":"%s","version":"%s","installed_at":"%s","prefix":"%s","type":"%s"%s}' \
+                "$(belka_jesc "$BELKA_M_NAME")" "$(belka_jesc "$BELKA_M_VERSION")" \
+                "$(belka_jesc "$BELKA_M_DATE")" "$(belka_jesc "$BELKA_M_PREFIX")" "$(belka_jesc "${BELKA_M_TYPE:-tar}")" "$_belka_ls_avail"
+        done
+        printf ']}\n'
+        exit $BELKA_EX_OK
+    fi
+
+    printf "%-20s %-25s %-15s %-10s %s\n" "ID PAQUETE" "BINARIO" "VERSION" "TIPO" "ACTUALIZADO"
+
+    _belka_desk_base="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+    [ "$BELKA_SYSTEM" -eq 1 ] && _belka_desk_base="/usr/share/applications"
+
+    _belka_ls_any=0
+    for _belka_ls_d in "$BELKA_STATE_DIR"/*/; do
+        [ -d "$_belka_ls_d" ] || continue
+        [ -f "$_belka_ls_d/manifest" ] || continue
+        _belka_ls_any=1
+        
+        _belka_ls_id=$(basename "$_belka_ls_d")
+        
+        _belka_ls_ver=$(awk -F= '$1=="version"{print $2; exit}' "$_belka_ls_d/manifest")
+        [ -z "$_belka_ls_ver" ] && _belka_ls_ver="desconocida"
+
+        _belka_ls_type=$(awk -F= '$1=="type"{print $2; exit}' "$_belka_ls_d/manifest")
+        [ -z "$_belka_ls_type" ] && _belka_ls_type="tar"
+
+        _belka_ls_name=""
+        
+        if [ -d "$BELKA_PREFIX/bin" ]; then
+            for _belka_ls_bin in "$BELKA_PREFIX/bin"/*; do
+                [ -h "$_belka_ls_bin" ] || continue
+                if readlink "$_belka_ls_bin" | grep -Fq "/$_belka_ls_id/"; then
+                    _belka_ls_name=$(basename "$_belka_ls_bin")
+                    break
+                fi
+            done
+        fi
+        
+        if [ -z "$_belka_ls_name" ]; then
+            _belka_desk_file="$_belka_desk_base/belka-$_belka_ls_id.desktop"
+            if [ -f "$_belka_desk_file" ]; then
+                _belka_ls_name=$(awk -F= '$1=="Name"{print $2; exit}' "$_belka_desk_file")
+            fi
+        fi
+        
+        [ -z "$_belka_ls_name" ] && _belka_ls_name="$_belka_ls_id"
+
+        _belka_ls_date=$(date -r "$_belka_ls_d" -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null)
+        if [ -z "$_belka_ls_date" ]; then
+            _belka_ls_date=$(stat -c "%y" "$_belka_ls_d" 2>/dev/null | awk '{print $1"T"$2"Z"}' | awk -F. '{print $1"Z"}')
+            [ -z "$_belka_ls_date" ] && _belka_ls_date="desconocida"
+        fi
+
+        printf "%-20.20s %-25.25s %-15.15s %-10.10s %s\n" "$_belka_ls_id" "$_belka_ls_name" "$_belka_ls_ver" "$_belka_ls_type" "$_belka_ls_date"
+    done
+    
+    [ "$_belka_ls_any" -eq 1 ] || belka_log INFO "Ningun paquete instalado."
+    exit $BELKA_EX_OK
+}
+
+# Comando principal 'search': busca y filtra paquetes remotos disponibles.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   BELKA_JSON
+# Retorna:
+#   0 siempre
+belka_cmd_search() {
+    belka_normargs "$@"
+    _belka_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $BELKA_NORMED
+    set +f
+    IFS=$_belka_an_saveifs
+    OPTIND=1
+    while getopts ':hqjv' _belka_opt; do
+        case $_belka_opt in
+            h) belka_usage; return 0 ;;
+            q) BELKA_LOG_LEVEL=1 ;;
+            v) BELKA_LOG_LEVEL=3 ;;
+            j) BELKA_JSON=1 ;;
+            *) belka_die $BELKA_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+    [ $# -eq 1 ] || { belka_usage >&2; exit $BELKA_EX_USAGE; }
+    belka_state_init || exit $BELKA_EX_DEP
+    belka_index_load || exit $?
+    _belka_s_pat=$1
+
+    if [ "$BELKA_JSON" -eq 1 ]; then
+        printf '{"results":['
+        _belka_s_first=1
+        awk -F "$BELKA_TAB" -v p="$_belka_s_pat" '
+            BEGIN { pl = tolower(p) }
+            $1 ~ /^#/ || NF < 4 { next }
+            {
+                line = tolower($0)
+                if (index(line, pl) > 0) {
+                    d = $5; gsub(/"/, "\\\"", d)
+                    t = ($9 == "" ? "tar" : $9)
+                    printf "%s{\"name\":\"%s\",\"version\":\"%s\",\"type\":\"%s\",\"description\":\"%s\"}",
+                        (f++ ? "," : ""), $1, $2, t, d
+                }
+            }' "$_belka_index_file"
+        printf ']}\n'
+        exit $BELKA_EX_OK
+    fi
+
+    if ! awk -F "$BELKA_TAB" -v p="$_belka_s_pat" '
+        BEGIN { pl = tolower(p); found = 0 }
+        $1 ~ /^#/ || NF < 4 { next }
+        {
+            line = tolower($0)
+            if (index(line, pl) > 0) {
+                t = ($9 == "" ? "tar" : $9)
+                printf "%-22s %-12s %-10s %s\n", $1, $2, t, $5
+                found = 1
+            }
+        }
+        END { if (!found) exit 1 }
+    ' "$_belka_index_file"; then
+        belka_log WARN "No se encontraron paquetes que coincidan con '$_belka_s_pat'"
+    fi
+    exit $BELKA_EX_OK
+}
+
+# Comando principal 'info': reporta la situacion remota y el estado local.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   BELKA_STATE_DIR, BELKA_JSON
+# Retorna:
+#   0 siempre
+belka_cmd_info() {
+    belka_normargs "$@"
+    _belka_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $BELKA_NORMED
+    set +f
+    IFS=$_belka_an_saveifs
+    OPTIND=1
+    while getopts ':hqjv' _belka_opt; do
+        case $_belka_opt in
+            h) belka_usage; return 0 ;;
+            q) BELKA_LOG_LEVEL=1 ;;
+            v) BELKA_LOG_LEVEL=3 ;;
+            j) BELKA_JSON=1 ;;
+            *) belka_die $BELKA_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+    [ $# -eq 1 ] || { belka_usage >&2; exit $BELKA_EX_USAGE; }
+    belka_state_init || exit $BELKA_EX_DEP
+    _belka_in_name=$1
+
+    _belka_in_inst=0
+    if belka_manifest_read "$BELKA_STATE_DIR/$_belka_in_name/manifest"; then
+        _belka_in_inst=1
+    fi
+    _belka_in_idx=0
+    if belka_index_load && belka_index_lookup "$_belka_in_name" "" 1; then
+        _belka_in_idx=1
+    fi
+    if [ "$_belka_in_inst" -eq 0 ] && [ "$_belka_in_idx" -eq 0 ]; then
+        belka_die $BELKA_EX_USAGE "paquete desconocido: $_belka_in_name"
+    fi
+
+    if [ "$BELKA_JSON" -eq 1 ]; then
+        printf '{"name":"%s","installed":%s' "$(belka_jesc "$_belka_in_name")" \
+            "$([ "$_belka_in_inst" -eq 1 ] && printf true || printf false)"
+        if [ "$_belka_in_inst" -eq 1 ]; then
+            printf ',"installed_version":"%s","installed_at":"%s","prefix":"%s"' \
+                "$(belka_jesc "$BELKA_M_VERSION")" "$(belka_jesc "$BELKA_M_DATE")" \
+                "$(belka_jesc "$BELKA_M_PREFIX")"
+        fi
+        if [ "$_belka_in_idx" -eq 1 ]; then
+            printf ',"available_version":"%s","url":"%s","sha256":"%s","description":"%s"' \
+                "$(belka_jesc "$BELKA_L_VERSION")" "$(belka_jesc "$BELKA_L_URL")" \
+                "$(belka_jesc "$BELKA_L_SHA")" "$(belka_jesc "$BELKA_L_DESC")"
+        fi
+        printf '}\n'
+        exit $BELKA_EX_OK
+    fi
+
+    if [ "$_belka_in_idx" -eq 1 ]; then
+        printf 'nombre:       %s\n' "$_belka_in_name"
+        printf 'version:      %s\n' "$BELKA_L_VERSION"
+        printf 'url:          %s\n' "$BELKA_L_URL"
+        printf 'sha256:       %s\n' "$BELKA_L_SHA"
+        printf 'descripcion:  %s\n' "$BELKA_L_DESC"
+    fi
+    if [ "$_belka_in_inst" -eq 1 ]; then
+        printf 'instalado:    %s (%s)\n' "$BELKA_M_VERSION" "$BELKA_M_DATE"
+        printf 'prefijo:      %s\n' "$BELKA_M_PREFIX"
+        printf 'checksum:     %s\n' "$BELKA_M_SHA"
+    else
+        printf 'instalado:    no\n'
+    fi
+    exit $BELKA_EX_OK
+}
+
+# Comando principal 'verify': verifica checksums de tarballs locales en cache.
+#
+# Argumentos:
+#   $@ - Argumentos del usuario CLI
+# Globales:
+#   BELKA_STATE_DIR, BELKA_CACHE_DIR
+# Retorna:
+#   0 siempre
+belka_cmd_verify() {
+    belka_normargs "$@"
+    _belka_an_saveifs=$IFS
+    IFS='
+'
+    set -f
+    set -- $BELKA_NORMED
+    set +f
+    IFS=$_belka_an_saveifs
+    OPTIND=1
+    while getopts ':hqjv' _belka_opt; do
+        case $_belka_opt in
+            h) belka_usage; return 0 ;;
+            q) BELKA_LOG_LEVEL=1 ;;
+            v) BELKA_LOG_LEVEL=3 ;;
+            j) BELKA_JSON=1 ;;
+            *) belka_die $BELKA_EX_USAGE "opcion invalida: -$OPTARG" ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+    [ $# -eq 1 ] || { belka_usage >&2; exit $BELKA_EX_USAGE; }
+    belka_state_init || exit $BELKA_EX_DEP
+    _belka_v_name=$1
+    _belka_v_state=$BELKA_STATE_DIR/$_belka_v_name
+
+    belka_manifest_read "$_belka_v_state/manifest" ||
+        belka_die $BELKA_EX_USAGE "no esta instalado: $_belka_v_name"
+
+    _belka_v_cache=$BELKA_CACHE_DIR/$BELKA_M_TARBALL
+    if [ -f "$_belka_v_cache" ]; then
+        _belka_v_src=$_belka_v_cache
+    else
+        _belka_v_src=$BELKA_TMPDIR/verify.$$
+        belka_download "$BELKA_M_URL" "$_belka_v_src" ||
+            belka_die $BELKA_EX_DOWNLOAD "no se pudo obtener el tarball de $BELKA_M_URL"
+    fi
+
+    if [ -n "$BELKA_M_SHA" ]; then
+        _belka_v_got=$(belka_sha256 "$_belka_v_src" 2>/dev/null || printf '')
+        [ "$_belka_v_got" = "$BELKA_M_SHA" ] ||
+            belka_die $BELKA_EX_VERIFY "checksum del tarball no coincide"
+    fi
+
+    if [ -f "$_belka_v_state/files" ]; then
+        while IFS= read -r _belka_v_f; do
+            case "$_belka_v_f" in
+                /*) _belka_check_p="$_belka_v_f" ;;
+                *)  _belka_check_p="$BELKA_M_PREFIX/$_belka_v_f" ;;
+            esac
+            [ -e "$_belka_check_p" ] ||
+                belka_die $BELKA_EX_VERIFY "falta archivo instalado: $_belka_check_p"
+        done < "$_belka_v_state/files"
+    fi
+
+    if [ "$BELKA_JSON" -eq 1 ]; then
+        printf '{"name":"%s","version":"%s","checksum":"%s","ok":true}\n' \
+            "$(belka_jesc "$BELKA_M_NAME")" "$(belka_jesc "$BELKA_M_VERSION")" "$(belka_jesc "$_belka_v_got")"
+    else
+        belka_log INFO "verificacion correcta: $_belka_v_name $BELKA_M_VERSION ($_belka_v_got)"
+    fi
+    exit $BELKA_EX_OK
+}
+
+BELKA_NORMED=''
+
+# Normaliza los argumentos dividiendo combinaciones cortas en opciones discretas.
+#
+# Argumentos:
+#   $@ - Array crudo
+# Globales:
+#   BELKA_NORMED
+# Retorna:
+#   0 siempre
+belka_normargs() {
+    BELKA_NORMED=''
+    for _belka_na_arg do
+        case $_belka_na_arg in
+            --dry-run)  _belka_na_arg=-n ;;
+            --force)    _belka_na_arg=-f ;;
+            --all)      _belka_na_arg=-a ;;
+            --quiet)    _belka_na_arg=-q ;;
+            --verbose)  _belka_na_arg=-v ;;
+            --json)     _belka_na_arg=-j ;;
+            --system)   _belka_na_arg=-s ;;
+            --yes)      _belka_na_arg=-y ;;
+            --exec)     _belka_na_arg=-e ;;
+            --type)     _belka_na_arg=-T ;;
+            --type=*)   _belka_na_arg="-T${_belka_na_arg#*=}" ;;
+            --terminal) _belka_na_arg=-t ;;
+            --zsync)    _belka_na_arg=-z ;;
+            --zsync=*)  _belka_na_arg="-z${_belka_na_arg#*=}" ;;
+            --help)     _belka_na_arg=-h ;;
+        esac
+        if [ -z "$BELKA_NORMED" ]; then
+            BELKA_NORMED=$_belka_na_arg
+        else
+            BELKA_NORMED="$BELKA_NORMED
+$_belka_na_arg"
+        fi
+    done
+}
+
+# Imprime de forma tabular y limpia la informacion y menu de ayuda de uso global.
+#
+# Argumentos:
+#   Ninguno
+# Globales:
+#   PROG_NAME, BELKA_VERSION
+# Retorna:
+#   0, via stdout
+belka_usage() {
+    cat <<EOF
+$PROG_NAME $BELKA_VERSION — Gestor de tarballs
+
+USO:
+  $PROG_NAME [opciones] <comando> [argumentos]
+
+COMANDOS PRINCIPALES:
+  install <nombre|URL|tar> Instala desde índice remoto, URL o archivo local
+  remove <nombre|bin>      Desinstala un paquete del sistema
+  update                   Sincroniza repositorios y detecta actualizaciones
+  upgrade [paquete...]       Instala las actualizaciones de paquetes disponibles
+  update <nombre> <tar>    Actualiza un paquete usando un tarball local
+CONSULTA Y MANTENIMIENTO:
+  list                     Lista los paquetes instalados y sus versiones
+  search <patron>          Busca paquetes en el índice remoto por nombre/desc
+  info <nombre>            Muestra información de índice + estado local
+  verify <nombre>          Verifica el checksum (sha256) de los archivos locales
+  rollback <nombre>        Revierte un paquete a su versión instalada anterior
+
+
+OPCIONES GLOBALES:
+  -s, --system             Instala a nivel sistema (/usr/local, /var/lib/belka)
+  -e, --exec <bin>         Fuerza el nombre del ejecutable a enlazar (solo install)
+  -z, --zsync <url>        Fuerza una fuente zsync especifica para AppImages
+      --no-zsync           Deshabilita zsync (usado via variable BELKA_NO_ZSYNC=1)
+  -T, --type <tar|appimage> Fuerza la selección de formato sin preguntar (solo install)
+  -t, --terminal           Marca el archivo .desktop para abrirse en terminal (solo install)
+  -n, --dry-run            Simula la instalación sin modificar el sistema
+      --offline            Usa el caché del índice aunque esté vencido
+  -q, --quiet              Silencia la salida, mostrando solo errores (global)
+  -v, --verbose            Aumenta el nivel de detalle en los logs (global)
+  -f, --force              Sobrescribe conflictos o reinstala si ya existe
+  -j, --json               Formatea la salida en JSON (list, search, info, update, upgrade)
+      --index <URL>        Usa un índice personalizado (file:// o https://)
+  -h, --help               Muestra este menú de ayuda
+  -V, --version            Imprime la versión actual
+
+ENTORNO Y RUTAS:
+  BELKA_INDEX_URL           Fuente del índice remoto (~/.config/belka/config)
+  BELKA_CACHE_DIR           Ruta del caché (por defecto: ~/.cache/belka/)
+EOF
+}
+
+# Bucle principal del CLI: inicializa el entorno, parsea opciones y delega al subcomando.
+#
+# Argumentos:
+#   $@ - Todo argumento pasado a bin/belka
+# Globales:
+#   Multiples variables globales configuradas a partir del entorno
+# Retorna:
+#   Despacha exit code del subcomando llamado
+belka_main() {
+    _belka_env_prefix=$BELKA_PREFIX
+    _belka_env_state=$BELKA_STATE_DIR
+    _belka_env_cache=$BELKA_CACHE_DIR
+    _belka_env_index=$BELKA_INDEX_URL
+    _belka_env_ttl=$BELKA_INDEX_TTL
+    belka_load_config
+    [ -n "$_belka_env_prefix" ] && BELKA_PREFIX=$_belka_env_prefix
+    [ -n "$_belka_env_state" ] && BELKA_STATE_DIR=$_belka_env_state
+    [ -n "$_belka_env_cache" ] && BELKA_CACHE_DIR=$_belka_env_cache
+    [ -n "$_belka_env_index" ] && BELKA_INDEX_URL=$_belka_env_index
+    [ -n "$_belka_env_ttl" ] && BELKA_INDEX_TTL=$_belka_env_ttl
+
+    while [ $# -gt 0 ]; do
+        case $1 in
+            -h|--help)    belka_usage; exit 0 ;;
+            -V|--version) printf '%s %s\n' "$PROG_NAME" "$BELKA_VERSION"; exit 0 ;;
+            -q|--quiet)   BELKA_LOG_LEVEL=1; shift ;;
+            -v|--verbose) BELKA_LOG_LEVEL=3; shift ;;
+            -j|--json)    BELKA_JSON=1; shift ;;
+            -s|--system)  BELKA_SYSTEM=1; shift ;;
+            -n|--dry-run) BELKA_DRY_RUN=1; shift ;;
+            -f|--force)   BELKA_FORCE=1; shift ;;
+            --offline)    BELKA_OFFLINE=1; shift ;;
+            --index)
+                [ $# -ge 2 ] || belka_die $BELKA_EX_USAGE "--index requiere un valor"
+                BELKA_INDEX_URL=$2
+                shift 2
+                ;;
+            --index=*) BELKA_INDEX_URL=${1#--index=}; shift ;;
+            --) shift; break ;;
+            -*) belka_log ERROR "opcion desconocida: $1"; belka_usage >&2
+                exit $BELKA_EX_USAGE ;;
+            *)  break ;;
+        esac
+    done
+
+    _belka_sub=${1:-help}
+    [ $# -gt 0 ] && shift
+
+    BELKA_TMPDIR=$(belka_mktempdir) || belka_die $BELKA_EX_DEP "no se pudo crear un directorio temporal"
+    trap belka_cleanup 0
+    trap 'exit 129' 1
+    trap 'exit 130' 2
+    trap 'exit 143' 15
+
+    case $_belka_sub in
+        install|add)         belka_cmd_install "$@" ;;
+        remove|rm|uninstall) belka_cmd_remove "$@" ;;
+        update)              belka_cmd_update "$@" ;;
+        upgrade)             belka_cmd_upgrade "$@" ;;
+        list|ls)             belka_cmd_list "$@" ;;
+        search|find)         belka_cmd_search "$@" ;;
+        info|show)           belka_cmd_info "$@" ;;
+        verify|check)        belka_cmd_verify "$@" ;;
+        rollback)            belka_cmd_rollback "$@" ;;
+
+        help)                belka_usage; exit 0 ;;
+        *)
+            belka_log ERROR "subcomando desconocido: $_belka_sub"
+            belka_usage >&2
+            exit $BELKA_EX_USAGE
+            ;;
+    esac
+}
+
+belka_main "$@"
+exit $?

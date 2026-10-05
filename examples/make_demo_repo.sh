@@ -29,8 +29,8 @@ rm -rf "$DIR/build"
 cat <<EOF
 Listo. Prueba:
 
-  moss --index $DIR/index-v1.tsv install foo
-  moss --index $DIR/index-v2.tsv update foo   # 1.0.0 -> 2.0.0
-  moss rollback foo                          # vuelve a 1.0.0
-  moss --index $DIR/index-v2.tsv tui         # TUI (fzf si existe)
+  belka --index $DIR/index-v1.tsv install foo
+  belka --index $DIR/index-v2.tsv update foo   # 1.0.0 -> 2.0.0
+  belka rollback foo                          # vuelve a 1.0.0
+  belka --index $DIR/index-v2.tsv tui         # TUI (fzf si existe)
 EOF
