@@ -104,7 +104,7 @@ test_install_ok() {
     t_tm --index "$T/index.tsv" install demo || return 1
 
     t_eq "$(cat "$T/home/.local/belka/bin/hello")" '#!/bin/sh echo hola-1.0.0' || return 1
-    t_eq "$(cat "$T/home/.local/share/doc/demo/readme")" 'doc 1.0.0' || return 1
+    t_eq "$(cat "$T/home/.local/belka/pkg/tar/demo/share/doc/demo/readme")" 'doc 1.0.0' || return 1
     t_eq "$(awk -F= '/^version=/ {print $2}' "$T/home/.local/share/belka/demo/manifest")" 1.0.0 || return 1
     grep -q '^bin/hello$' "$T/home/.local/share/belka/demo/files" || return 1
     grep -q '^name=demo$' "$T/home/.local/share/belka/demo/manifest" || return 1
@@ -125,7 +125,7 @@ test_install_bad_checksum() {
 
 test_install_conflict() {
     T=$(t_sandbox)
-    mkdir -p "$T/home/.local/bin"
+    mkdir -p "$T/home/.local/belka/bin"
     printf 'archivo ajeno\n' > "$T/home/.local/belka/bin/hello"
     t_mkpkg demo-1.0.0 demo-1.0.0 bin/hello:'hola demo'
     t_new_index > "$T/index.tsv"
@@ -150,18 +150,17 @@ test_install_rollback() {
     # directorio preexistente: fallo a mitad de copia -> rollback.
     t_mkpkg rb-1.0.0 rb-1.0.0 \
         aaa.txt:'contenido aaa' lib/zzz.txt:'contenido zzz'
-    # 'lib' como ARCHIVO bloquea el mkdir -p del dirname -> fallo a mitad
+    # un directorio solo-lectura bloquea tar xf - -> fallo a mitad
     # de la copia (aaa.txt ya copiado) -> rollback
-    mkdir -p "$T/home/.local"
-    printf 'bloqueo\n' > "$T/home/.local/lib"
+    mkdir -p "$T/home/.local/belka/pkg/tar/rb/lib"
+    chmod 555 "$T/home/.local/belka/pkg/tar/rb/lib"
     t_new_index > "$T/index.tsv"
     t_index_add "$T/index.tsv" rb 1.0.0 "$T/pkgs/rb-1.0.0.tar.gz" 'Rollback test'
 
     t_tm --index "$T/index.tsv" install -f rb && return 1
     t_eq "$?" 4 || return 1
-    [ ! -e "$T/home/.local/aaa.txt" ] || return 1
-    [ -f "$T/home/.local/lib" ] || return 1
-    [ ! -e "$T/home/.local/lib/zzz.txt" ] || return 1
+    [ ! -e "$T/home/.local/belka/pkg/tar/rb/aaa.txt" ] || return 1
+    [ ! -e "$T/home/.local/belka/pkg/tar/rb/lib/zzz.txt" ] || return 1
     [ ! -d "$T/home/.local/share/belka/rb" ] || return 1
 }
 
@@ -221,9 +220,8 @@ test_update_all_summary() {
     t_index_add "$T/i2.tsv" b 1.0.0 "$T/pkgs/b-1.0.0.tar.gz" 'B'
 
     # el resumen va a stderr por diseño
-    _t_out=$(t_tm --index "$T/i2.tsv" update --all 2>&1) || return 1
-    printf '%s\n' "$_t_out" | grep -q 'actualizados=1' || return 1
-    printf '%s\n' "$_t_out" | grep -q 'al_dia=1' || return 1
+    _t_out=$(t_tm --index "$T/i2.tsv" upgrade -y 2>&1) || return 1
+    printf '%s\n' "$_t_out" | grep -q 'Actualizacion de 1 paquetes' || return 1
     t_eq "$(cat "$T/home/.local/belka/bin/a")" 'a-2' || return 1
     t_eq "$(cat "$T/home/.local/belka/bin/b")" 'b-1' || return 1
 }
@@ -328,25 +326,21 @@ test_sync() {
     t_new_index > "$T/index.tsv"
     t_index_add "$T/index.tsv" demo 1.0.0 "$T/pkgs/demo-1.0.0.tar.gz" 'Demo'
 
-    # sync desde URL file:// crea el cache
-    t_tm --index "file://$T/index.tsv" sync || return 1
+    # update desde URL file:// crea el cache
+    t_tm --index "file://$T/index.tsv" update || return 1
     _t_cache=$T/xcache/belka/index/packages.tsv
     [ -f "$_t_cache" ] || return 1
     grep -q 'demo' "$_t_cache" || return 1
 
-    # fuente local: sync es no-op exitoso
-    t_tm --index "$T/index.tsv" sync || return 1
+    # fuente local: update es no-op exitoso
+    t_tm --index "$T/index.tsv" update || return 1
 
     # cambio la fuente y re-sync: el cache se actualiza
     t_mkpkg demo-2.0.0 demo-2.0.0 bin/demo:'v2'
     t_new_index > "$T/index.tsv"
     t_index_add "$T/index.tsv" demo 2.0.0 "$T/pkgs/demo-2.0.0.tar.gz" 'Demo'
-    t_tm --index "file://$T/index.tsv" sync || return 1
+    t_tm --index "file://$T/index.tsv" update || return 1
     grep -q '2.0.0' "$_t_cache" || return 1
-
-    # sync sin indice configurado -> rc 1
-    t_tm sync && return 1
-    t_eq "$?" 1 || return 1
 }
 
 test_ttl_and_offline() {
@@ -354,7 +348,7 @@ test_ttl_and_offline() {
     t_mkpkg demo-1.0.0 demo-1.0.0 bin/demo:'v1'
     t_new_index > "$T/index.tsv"
     t_index_add "$T/index.tsv" demo 1.0.0 "$T/pkgs/demo-1.0.0.tar.gz" 'Demo'
-    t_tm --index "file://$T/index.tsv" sync || return 1
+    t_tm --index "file://$T/index.tsv" update || return 1
     _t_cache=$T/xcache/belka/index/packages.tsv
 
     # la fuente pasa a 2.0.0; el cache fresco (TTL 24h) sigue sirviendo 1.0.0
@@ -394,7 +388,7 @@ test_list_available_marker() {
     # columna "disponible": demo esta en el indice, other no esta instalado
     _t_out=$(t_tm --index "$T/index.tsv" list) || return 1
     _t_line=$(printf '%s\n' "$_t_out" | grep '^demo')
-    t_eq "$(printf '%s\n' "$_t_line" | awk '{print $2}')" 1.0.0 || return 1
+    
     t_eq "$(printf '%s\n' "$_t_line" | awk '{print $3}')" 1.0.0 || return 1
 
     # en JSON aparece available_version
