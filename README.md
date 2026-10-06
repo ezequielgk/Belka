@@ -23,6 +23,14 @@ curl -sL https://raw.githubusercontent.com/ezequielgk/Belka/main/install.sh | ba
 **Configuración del PATH:**
 El instalador añadirá automáticamente la ruta segura `~/.local/belka/bin` a tu configuración de terminal (ej. `~/.bashrc`, `~/.zshrc`, o `~/.config/fish/config.fish`). Una vez instalado, asegúrate de recargar tu shell o abrir una nueva sesión para que el comando `belka` quede disponible.
 
+### Migrando desde Moss (Versiones Antiguas)
+
+Si utilizaste la versión antigua de este gestor (Moss), es muy recomendable limpiar tu sistema de los rastros anteriores para evitar aplicaciones duplicadas o conflictos en tu entorno antes de usar Belka. Ejecuta este comando en tu terminal para purgarlo por completo:
+
+```bash
+rm -rf ~/.local/moss ~/.cache/moss ~/.config/moss ~/.local/share/moss ~/.local/bin/moss ~/.local/share/applications/moss-*.desktop && sed -i '/\.local\/moss\/bin/d' ~/.bashrc ~/.zshrc ~/.config/fish/config.fish 2>/dev/null
+```
+
 ### Actualización de Belka
 Debido a que `belka` se administra a sí mismo como si fuera cualquier otro paquete, actualizar el gestor a la ultimísima versión es tan simple como hacer:
 ```bash
