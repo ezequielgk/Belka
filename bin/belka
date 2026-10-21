@@ -1,6 +1,6 @@
 #!/bin/sh
 
-BELKA_VERSION=2.0.0
+BELKA_VERSION=2.0.1
 PROG_NAME=belka
 
 BELKA_PREFIX=${BELKA_PREFIX:-}
@@ -576,6 +576,7 @@ belka_write_manifest() {
 #   $2 - Ruta al archivo descargado
 #   $3 - Directorio temporal de destino (staging)
 #   $4 - Nombre del paquete original
+#   $5 - Nombre de ejecutable forzado (opcional)
 # Retorna:
 #   0 en exito, 1 si falla o falta comando
 belka_extract() {
@@ -585,43 +586,97 @@ belka_extract() {
         chmod +x "$_belka_ai_tgt"
         return 0
     }
-    tar -tf "$2" 2>/dev/null | grep -E '(^|/)\.\.(/|$)|^/' >/dev/null && {
-        belka_log ERROR "tar contiene rutas inseguras: $2"
-        return 1
-    }
-    LC_ALL=C tar -tvf "$2" 2>/dev/null | awk '
-        /^l/ && / -> / {
-            n = split($0, parts, " -> ")
-            tgt = parts[n]
-            gsub(/^[ \t]+|[ \t]+$/, "", tgt)
-            if (tgt ~ /^\//) bad = 1
+    _belka_tar_toc=$(tar -tf "$2" 2>/dev/null || true)
+    if [ -n "$_belka_tar_toc" ]; then
+        if printf '%s\n' "$_belka_tar_toc" | grep -E '(^|/)\.\.(/|$)|^/' >/dev/null; then
+            belka_log ERROR "tar contiene rutas inseguras: $2"
+            return 1
+        fi
+        LC_ALL=C tar -tvf "$2" 2>/dev/null | awk '
+            /^l/ && / -> / {
+                n = split($0, parts, " -> ")
+                tgt = parts[n]
+                gsub(/^[ \t]+|[ \t]+$/, "", tgt)
+                if (tgt ~ /^\//) bad = 1
+            }
+            /^h/ && / link to / {
+                n = split($0, parts, " link to ")
+                tgt = parts[n]
+                gsub(/^[ \t]+|[ \t]+$/, "", tgt)
+                if (tgt ~ /^\//) bad = 1
+            }
+            END { exit(bad ? 1 : 0) }
+        ' || {
+            belka_log ERROR "tar contiene enlaces inseguros: $2"
+            return 1
         }
-        /^h/ && / link to / {
-            n = split($0, parts, " link to ")
-            tgt = parts[n]
-            gsub(/^[ \t]+|[ \t]+$/, "", tgt)
-            if (tgt ~ /^\//) bad = 1
-        }
-        END { exit(bad ? 1 : 0) }
-    ' || {
-        belka_log ERROR "tar contiene enlaces inseguros: $2"
-        return 1
-    }
-    tar -xf "$2" -C "$3" 2>/dev/null && return 0
+    fi
+
+    _belka_clean_bn=$(basename "$2" | sed -E 's/^[0-9a-f]{64}-//')
+    _belka_clean_name=$(printf '%s' "$_belka_clean_bn" | sed -E 's/\.(tar\.(gz|xz|bz2|zst)|tgz|txz|tbz2|tzst|zip|gz|bz2|xz|zst)$//')
+    _belka_target_name="${5:-$4}"
+    [ -z "$_belka_target_name" ] && _belka_target_name="$4"
+    [ -z "$_belka_target_name" ] && _belka_target_name="$_belka_clean_name"
+
     case $2 in
         *.tar.gz|*.tgz)   tar -xzf "$2" -C "$3" ;;
         *.tar.xz|*.txz)   tar -xJf "$2" -C "$3" ;;
         *.tar.bz2|*.tbz2) tar -xjf "$2" -C "$3" ;;
+        *.tar.zst|*.tzst)
+            tar --zstd -xf "$2" -C "$3" 2>/dev/null || (zstd -dc "$2" | tar -xf - -C "$3") || return 1
+            ;;
         *.zip)            unzip -q "$2" -d "$3" || return 1 ;;
-        *.bz2)            
-            bunzip2 -c "$2" > "$3/$(basename "$2" .bz2)"
-            chmod +x "$3/$(basename "$2" .bz2)"
+        *.gz)
+            gzip -dc "$2" > "$3/$_belka_target_name" || return 1
+            chmod +x "$3/$_belka_target_name"
+            [ -n "$_belka_clean_name" ] && [ "$_belka_clean_name" != "$_belka_target_name" ] && ln -sf "$_belka_target_name" "$3/$_belka_clean_name"
+            [ -n "$4" ] && [ "$4" != "$_belka_target_name" ] && ln -sf "$_belka_target_name" "$3/$4"
+            ;;
+        *.bz2)
+            (bzip2 -dc "$2" > "$3/$_belka_target_name" 2>/dev/null || bunzip2 -c "$2" > "$3/$_belka_target_name") || return 1
+            chmod +x "$3/$_belka_target_name"
+            [ -n "$_belka_clean_name" ] && [ "$_belka_clean_name" != "$_belka_target_name" ] && ln -sf "$_belka_target_name" "$3/$_belka_clean_name"
+            [ -n "$4" ] && [ "$4" != "$_belka_target_name" ] && ln -sf "$_belka_target_name" "$3/$4"
+            ;;
+        *.xz)
+            (xz -dc "$2" > "$3/$_belka_target_name" 2>/dev/null || unxz -c "$2" > "$3/$_belka_target_name") || return 1
+            chmod +x "$3/$_belka_target_name"
+            [ -n "$_belka_clean_name" ] && [ "$_belka_clean_name" != "$_belka_target_name" ] && ln -sf "$_belka_target_name" "$3/$_belka_clean_name"
+            [ -n "$4" ] && [ "$4" != "$_belka_target_name" ] && ln -sf "$_belka_target_name" "$3/$4"
+            ;;
+        *.zst)
+            zstd -dc "$2" > "$3/$_belka_target_name" || return 1
+            chmod +x "$3/$_belka_target_name"
+            [ -n "$_belka_clean_name" ] && [ "$_belka_clean_name" != "$_belka_target_name" ] && ln -sf "$_belka_target_name" "$3/$_belka_clean_name"
+            [ -n "$4" ] && [ "$4" != "$_belka_target_name" ] && ln -sf "$_belka_target_name" "$3/$4"
             ;;
         *)
-            belka_log ERROR "formato de archivo no soportado o archivo corrupto: $2"
-            return 1
+            _is_bin=0
+            if command -v file >/dev/null 2>&1; then
+                file -b "$2" 2>/dev/null | grep -qiE 'elf|executable|script' && _is_bin=1
+            else
+                case $(head -c 4 "$2" 2>/dev/null) in
+                    ?ELF*) _is_bin=1 ;;
+                    '#!'*) _is_bin=1 ;;
+                esac
+            fi
+            if [ "$_is_bin" -eq 1 ]; then
+                cp "$2" "$3/$_belka_target_name"
+                chmod +x "$3/$_belka_target_name"
+                [ -n "$_belka_clean_name" ] && [ "$_belka_clean_name" != "$_belka_target_name" ] && ln -sf "$_belka_target_name" "$3/$_belka_clean_name"
+                [ -n "$4" ] && [ "$4" != "$_belka_target_name" ] && ln -sf "$_belka_target_name" "$3/$4"
+            else
+                belka_log ERROR "formato de archivo no soportado o archivo corrupto: $2"
+                return 1
+            fi
             ;;
     esac
+
+    if [ -z "$(ls -A "$3" 2>/dev/null)" ]; then
+        belka_log ERROR "no se extrajeron archivos de: $2"
+        return 1
+    fi
+    return 0
 }
 
 # Normaliza el directorio de staging eliminando envolturas innecesarias.
@@ -1043,7 +1098,7 @@ belka_perform_install() {
     rm -rf "$_belka_p_staging"
     mkdir -p "$_belka_p_staging" || return $BELKA_EX_INSTALL
 
-    if ! belka_extract "$_belka_p_type" "$_belka_p_src" "$_belka_p_staging" "$_belka_p_name"; then
+    if ! belka_extract "$_belka_p_type" "$_belka_p_src" "$_belka_p_staging" "$_belka_p_name" "$_belka_p_exec_override"; then
         belka_log ERROR "no se pudo extraer $_belka_p_src"
         return $BELKA_EX_INSTALL
     fi
@@ -1328,6 +1383,15 @@ EOF2
         ln -sf "$_belka_rel_target" "$_belka_symlink"
         printf 'bin/%s\n' "$_belka_sym_name" >> "$_belka_p_state/files"
         belka_log INFO "enlace symlink creado: bin/$_belka_sym_name -> $_belka_rel_target"
+
+        if [ "$_belka_sym_name" != "$_belka_p_name" ]; then
+            _belka_alias_symlink="$BELKA_PREFIX/bin/$_belka_p_name"
+            if [ ! -e "$_belka_alias_symlink" ] && [ ! -L "$_belka_alias_symlink" ]; then
+                ln -sf "$_belka_rel_target" "$_belka_alias_symlink"
+                printf 'bin/%s\n' "$_belka_p_name" >> "$_belka_p_state/files"
+                belka_log INFO "enlace symlink alias creado: bin/$_belka_p_name -> $_belka_rel_target"
+            fi
+        fi
     fi
 
     belka_log SUCCESS "Paquete '$_belka_p_name' instalado y listo para usar."
@@ -1347,7 +1411,8 @@ belka_resolve_pkg() {
         _belka_res_base=$(basename "$1")
         BELKA_R_NAME=$(printf '%s' "$_belka_res_base" | sed \
             's/\.tar\.gz$//; s/\.tar\.xz$//; s/\.tar\.bz2$//; s/\.tar\.zst$//;
-             s/\.tgz$//; s/\.txz$//; s/\.tbz2$//; s/\.AppImage$//i; s/\.zip$//i')
+             s/\.tgz$//; s/\.txz$//; s/\.tbz2$//; s/\.tzst$//; s/\.AppImage$//i; s/\.zip$//i;
+             s/\.gz$//; s/\.bz2$//; s/\.xz$//; s/\.zst$//')
         [ -n "$BELKA_R_NAME" ] || BELKA_R_NAME=$_belka_res_base
         BELKA_R_VERSION=local
         BELKA_R_URL=$1
@@ -1371,7 +1436,8 @@ belka_resolve_pkg() {
             _belka_res_base=$(basename "$1")
             BELKA_R_NAME=$(printf '%s' "$_belka_res_base" | sed \
                 's/\.tar\.gz$//; s/\.tar\.xz$//; s/\.tar\.bz2$//; s/\.tar\.zst$//;
-                 s/\.tgz$//; s/\.txz$//; s/\.tbz2$//; s/\.AppImage$//i; s/\.zip$//i')
+                 s/\.tgz$//; s/\.txz$//; s/\.tbz2$//; s/\.tzst$//; s/\.AppImage$//i; s/\.zip$//i;
+                 s/\.gz$//; s/\.bz2$//; s/\.xz$//; s/\.zst$//')
             [ -n "$BELKA_R_NAME" ] || BELKA_R_NAME=$_belka_res_base
             BELKA_R_VERSION=direct
             BELKA_R_URL=$1

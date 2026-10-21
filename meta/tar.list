@@ -194,7 +194,7 @@ task	go-task/task	task_freebsd_amd64\.tar\.gz	A fast, cross-platform build tool 
 tealdeer	dbrgn/tealdeer	tealdeer-linux-x86_64-musl	A very fast implementation of tldr in Rust.	tealdeer	Utility	N
 television	alexpasmantier/television	tv-.*_64-unknown-linux-gnu\.tar\.gz	A very fast, portable and hackable fuzzy finder.	television	Utility	N
 terragrunt	gruntwork-io/terragrunt	terragrunt_linux_amd64\.tar\.gz	Terragrunt is a flexible orchestration tool that allows Infrastructure as Code written in OpenTofu/Terraform to scale.	terragrunt	Development	N
-tfm-tui	https://github.com/clarkarch/tfm-tui	tfm-ffmpeg-x86_64-linux\.gz	🖱️ Modern mouse-first terminal file manager	tfm-tui	Utility	Y
+tfm-tui	https://github.com/clarkarch/tfm-tui	tfm-x86_64-linux\.gz$	🖱️ Modern mouse-first terminal file manager	tfm	Utility	Y
 tilt	tilt-dev/tilt	tilt..*.linux-alpine.x86_64\.tar\.gz	Define your dev environment as code. For microservice apps on Kubernetes.	tilt	Development	N
 tlrc	tldr-pages/tlrc	tlrc-v.*_64-unknown-linux-gnu\.tar\.gz	Official tldr client written in Rust.	tlrc	Utility	Y
 toofan	https://github.com/vyrx-dev/toofan	toofan_.*_linux_amd64\.tar\.gz	A minimal, lightning-fast typing TUI for your terminal	toofan	Utility	Y

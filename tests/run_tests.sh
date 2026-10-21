@@ -396,6 +396,24 @@ test_list_available_marker() {
     printf '%s\n' "$_t_out" | grep -q '"available_version":"1.0.0"' || return 1
 }
 
+test_install_single_gz() {
+    T=$(t_sandbox)
+    printf '#!/bin/sh\necho "hello-gz"\n' > "$T/hello-bin"
+    chmod +x "$T/hello-bin"
+    gzip -c "$T/hello-bin" > "$T/pkgs/hello-x86_64-linux.gz"
+    
+    t_new_index > "$T/index.tsv"
+    _t_sha=$(t_sha "$T/pkgs/hello-x86_64-linux.gz")
+    _t_url="file://$T/pkgs/hello-x86_64-linux.gz"
+    printf 'hello-tui\t1.0.0\t%s\t%s\tDesc\thello\tUtility\tY\ttar\n' \
+        "$_t_url" "$_t_sha" >> "$T/index.tsv"
+        
+    t_tm --index "$T/index.tsv" install hello-tui || return 1
+    t_eq "$("$T/home/.local/belka/bin/hello")" "hello-gz" || return 1
+    t_eq "$("$T/home/.local/belka/bin/hello-tui")" "hello-gz" || return 1
+    t_eq "$(awk -F= '/^version=/ {print $2}' "$T/home/.local/share/belka/hello-tui/manifest")" 1.0.0 || return 1
+}
+
 # --------------------------------------------------------------------------
 # Main
 # --------------------------------------------------------------------------
@@ -417,7 +435,8 @@ for _t in \
     test_source_resolution_url \
     test_sync \
     test_ttl_and_offline \
-    test_list_available_marker
+    test_list_available_marker \
+    test_install_single_gz
 do
     t_run "$_t"
 done

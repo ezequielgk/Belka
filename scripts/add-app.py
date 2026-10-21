@@ -62,19 +62,18 @@ def get_latest_release(forge: str, path: str):
 
 def generate_regex(filename: str, app_name: str):
     name, ext = os.path.splitext(filename)
-    if filename.lower().endswith('.tar.gz'):
-        name = filename[:-7]
-        ext = '.tar.gz'
-    elif filename.lower().endswith('.tar.xz'):
-        name = filename[:-7]
-        ext = '.tar.xz'
+    for double_ext in ('.tar.gz', '.tar.xz', '.tar.bz2', '.tar.zst'):
+        if filename.lower().endswith(double_ext):
+            name = filename[:-len(double_ext)]
+            ext = double_ext
+            break
     
     parts = re.split(r'([0-9]+\.[0-9]+(?:\.[0-9]+)?(?:-[a-zA-Z0-9]+)*)', name)
     if len(parts) > 1:
-        regex = parts[0] + ".*" + "".join(parts[2:]) + ext.replace('.', r'\.')
+        regex = parts[0] + ".*" + "".join(parts[2:]) + ext.replace('.', r'\.') + "$"
         return regex
     
-    return filename.replace('.', r'\.')
+    return filename.replace('.', r'\.') + "$"
 
 def get_category(desc: str, app_name: str):
     desc_lower = desc.lower()
@@ -258,7 +257,14 @@ def main():
         hint = template if template and not template.startswith('TEMPLATE|') else None
 
         def get_best_target(exts):
-            filtered = [a for a in assets if any(a.lower().endswith(e) for e in exts) and not a.lower().endswith('.sig')]
+            bad_suffix = ('.sig', '.sha256', '.sha512', '.sha1', '.md5', '.asc')
+            filtered = [a for a in assets if any(a.lower().endswith(e) for e in exts) and not any(a.lower().endswith(s) for s in bad_suffix)]
+            
+            # Prioritize assets not containing auxiliary keywords like ffmpeg/debug/test
+            filtered.sort(key=lambda x: (
+                any(k in x.lower() for k in ['ffmpeg', 'debug', 'symbols', 'test']) and app_name not in ['ffmpeg'],
+                not x.lower().startswith(app_name.lower())
+            ))
             
             if hint:
                 hint_filtered = [a for a in filtered if re.search(hint, a, re.IGNORECASE)]
@@ -287,9 +293,9 @@ def main():
             return None
 
         def get_standalone_binary():
-            bad_exts = ('.deb', '.rpm', '.apk', '.msi', '.exe', '.dmg', '.pkg', '.sig', '.sha256', '.txt', '.md', '.pem', '.sum', '.pub', '.json', '.yaml', '.yml', '.sbom')
+            bad_exts = ('.deb', '.rpm', '.apk', '.msi', '.exe', '.dmg', '.pkg', '.sig', '.sha256', '.sha512', '.sha1', '.md5', '.asc', '.txt', '.md', '.pem', '.sum', '.pub', '.json', '.yaml', '.yml', '.sbom')
             filtered = [a for a in assets if not any(a.lower().endswith(e) for e in bad_exts)]
-            arch_exts = ('.tar.gz', '.tar.xz', '.txz', '.zip', '.tar', '.appimage')
+            arch_exts = ('.tar.gz', '.tar.xz', '.tar.bz2', '.tar.zst', '.tgz', '.txz', '.tbz2', '.tzst', '.zip', '.tar', '.appimage', '.gz', '.bz2', '.xz', '.zst')
             filtered = [a for a in filtered if not any(a.lower().endswith(e) for e in arch_exts)]
             
             if hint:
@@ -322,7 +328,7 @@ def main():
                 target_tar = template
                 target_appimage = None
         else:
-            target_tar = get_best_target(('.tar.gz', '.tar.xz', '.txz', '.zip', '.tar'))
+            target_tar = get_best_target(('.tar.gz', '.tar.xz', '.tar.bz2', '.tar.zst', '.tgz', '.txz', '.tbz2', '.tzst', '.zip', '.tar', '.gz', '.bz2', '.xz', '.zst'))
             if not target_tar:
                 target_tar = get_standalone_binary()
             target_appimage = get_best_target(('.appimage',))
