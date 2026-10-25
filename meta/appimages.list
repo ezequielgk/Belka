@@ -108,6 +108,7 @@ ecwolf	pkgforge-dev/ECWolf-AppImage	ECWolf-.*_64\.AppImage	Unofficial AppImage o
 eduke32	pkgforge-dev/EDuke32-AppImage	EDuke32-20260807-10669-ec5824db8-anylinux-x86_64\.AppImage	Unofficial AppImage of EDuke32 [Maintainer=@Link4Electronics]	eduke32	Utility	N
 elastic	pkgforge-dev/Elastic-AppImage	Elastic-.*_64\.AppImage	Unofficial AppImage of the Elastic physics-based animation design application.　　　　　　　　　[Maintainer=@fiftydinar]	elastic	Utility	N
 element-desktop	pkgforge-dev/Element-Desktop-AppImage	Element-.*_64\.AppImage	Unofficial AppImage of Element Desktop [Maintainer=@Samueru-sama]	element-desktop	Utility	N
+emulator	https://github.com/citron-neo/emulator	citron_nightly-0237a9b88-linux-x86_64\.AppImage$	The switch fell off https://citron-neo.org/	emulator	Utility	N
 epsxe	pkgforge-dev/ePSXe-AppImage	ePSXe-.*_64\.AppImage	Unofficial AppImage of ePSXe. [Maintainer=@Samueru-sama]	epsxe	Utility	N
 etlegacy	pkgforge-dev/ETLegacy-AppImage	ET_Legacy-.*.15.g063ef3cc2-1-anylinux-x86_64\.AppImage	Unofficial AppImage of ET: Legacy [Maintainer=@Link4Electronics]	etlegacy	Utility	N
 extension-manager	pkgforge-dev/Extension-Manager-AppImage	Extension_Manager-.*_64\.AppImage	Extension-Manager-AppImage [Maintainer=@Shikakiben]	extension-manager	Utility	N
@@ -300,6 +301,7 @@ pokemmo	pkgforge-dev/PokeMMO-AppImage	PokeMMO-.*_64\.AppImage	Unofficial AppImag
 polybar	pkgforge-dev/polybar-AppImage	polybar-.*.r29.gf99e0b1c-1-anylinux-x86_64\.AppImage	Unofficial AppImage of Polybar [Maintainer=@Samueru-sama]	polybar	Utility	N
 postal	pkgforge-dev/POSTAL-AppImage	POSTAL-adb5a30c1-anylinux-x86_64\.AppImage	Unofficial AppImage of POSTAL [Maintainer=@Link4Electronics]	postal	Utility	N
 powermanga	pkgforge-dev/Powermanga-AppImage	Powermanga-da3de3382-anylinux-x86_64\.AppImage	Unofficial AppImage of Powermanga [Maintainer=@Link4Electronics]	powermanga	Utility	N
+ppsspp	https://github.com/hrydgard/ppsspp	PPSSPP-v.*_64\.AppImage$	A PSP emulator for Android, Windows, Mac, Linux and iOS, written in C++. Want to contribute? Join us on Discord at https://discord.gg/5NJB6dD or just send pull requests / issues.	ppsspp	Game	N
 prey2006	pkgforge-dev/Prey2006-AppImage	Prey_2006-983b171cf-anylinux-x86_64\.AppImage	Unofficial AppImage of Prey 2006 [Maintainer=@Link4Electronics]	prey2006	Utility	N
 primehack	pkgforge-dev/PrimeHack-AppImage	PrimeHack-.*_64\.AppImage	Unofficial AppImage of the PrimeHack emulator [Maintainer=@SNBeast]	primehack	Game	N
 prism-launcher	PrismLauncher/PrismLauncher	PrismLauncher-Linux-x86_64\.AppImage	A custom launcher for Minecraft that allows you to easily manage multiple installations of Minecraft at once (Fork of MultiMC)	prism-launcher	Utility	N
@@ -380,6 +382,7 @@ st	pkgforge-dev/st-AppImage	st-.*_64\.AppImage	Unofficial AppImage of the suckle
 starfox64recomp	pkgforge-dev/Starfox64Recomp-AppImage	Starfox_64_Recompiled-.*_64\.AppImage	Unofficial AppImage of Starfox 64 Recompiled [Maintainer=@Link4Electronics]	starfox64recomp	Utility	N
 steam	https://github.com/ivan-hc/Steam-appimage	Steam-.*.87-3-anylinux-x86_64\.AppImage	Unofficial Steam AppImage built using Runimage.	steam	Utility	N
 stella	pkgforge-dev/Stella-AppImage	Stella-.*_64\.AppImage	Unofficial AppImage of Stella [Maintainer=@Link4Electronics]	stella	Utility	N
+steplauncher	https://github.com/NovaStepStudio/StepLauncher	steplauncher-v.*\.AppImage$	¡El launcher definitivo de Minecraft creado con Wails v3, Rapido, Eficiente, y Multiplataforma!	steplauncher	Utility	N
 stirling-pdf	pkgforge-dev/Stirling-PDF-AppImage	Stirling-PDF-v.*_64\.AppImage	Unofficial AppImage of Stirling-PDF. [Maintainer=@Samueru-sama]	stirling-pdf	Utility	N
 stoat	pkgforge-dev/Stoat-AppImage	Stoat-v.*_64\.AppImage	Unofficial AppImage of Stoat Desktop client [Maintainer=@Samueru-sama]	stoat	Utility	Y
 strawberry	pkgforge-dev/strawberry-AppImage	strawberry-.*_64\.AppImage	Unofficial AppImage of the strawberry music player [Maintainer=@Samueru-sama]	strawberry	Audio	N

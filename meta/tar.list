@@ -13,6 +13,7 @@ amdgpu_top	Umio-Yasuno/amdgpu_top	amdgpu_top-.*_64-unknown-linux-gnu\.tar\.gz	To
 amp	jmacdonald/amp	amp-x86_64-unknown-linux-musl	A complete text editor for your terminal.	amp	Development	Y
 animfetch	https://github.com/Andrew-Velox/animfetch	animfetch-v.*_64-unknown-linux-musl\.tar\.gz	Animated system fetch that stays pinned above your shell while you work. Linux, no dependencies. 🦀	animfetch	Utility	N
 appimagetool	pkgforge-dev/appimagetool	appimagetool-corresponding-source-dwarfs-.*\.tar\.xz	A Rust implementation of appimagetool for the Anylinux-AppImages project.	appimagetool	Utility	N
+arcava	https://github.com/Ars-byte/Arcava	Arcava-v.*\.tar\.gz$	Console audio visualizer in C++17	arcava	Audio	N
 arduino-cli	arduino/arduino-cli	arduino-cli_.*_Linux_64bit\.tar\.gz	Arduino command line tool	arduino-cli	Utility	N
 atuin	atuinsh/atuin	atuin-server-x86_64-unknown-linux-gnu\.tar\.gz	✨ Making your shell magical	atuin	Utility	N
 audiosource	https://github.com/ezequielgk/audiosource	audiosource-linux\.tar\.gz	:microphone: Use an Android device as a USB microphone	audiosource	Utility	N
@@ -55,6 +56,7 @@ dufs	sigoden/dufs	dufs-v.*_64-unknown-linux-musl\.tar\.gz	A file server that sup
 dummyhttp	svenstaro/dummyhttp	dummyhttp-.*\.3-x86_64-unknown-linux-gnu	Super simple HTTP server that replies a fixed body with a fixed response code	dummyhttp	Development	N
 dust	bootandy/dust	dust-v.*_64-unknown-linux-gnu\.tar\.gz	A more intuitive version of du in rust	dust	Utility	N
 dyff	homeport/dyff	dyff_.*_linux_amd64\.tar\.gz	/ˈdʏf/ - diff tool for YAML files, and sometimes JSON	dyff	Utility	N
+emulator	https://github.com/citron-neo/emulator	citron_nightly-0237a9b88-linux-x86_64\.AppImage\.zsync$	The switch fell off https://citron-neo.org/	emulator	Utility	N
 epubworm	https://github.com/xinghao-wu/epubworm	epubworm-linux-x86_64\.tar\.gz	Image-capable TUI EPUB reader	epubworm	Utility	N
 eza	eza-community/eza	eza_x86_64-unknown-linux-gnu\.tar\.gz	A modern alternative to ls	eza	Utility	N
 f2	ayoisaiah/f2	f2_.*_linux_amd64\.tar\.gz	F2 is a cross-platform command-line tool for batch renaming files and directories quickly and safely. Written in Go!	f2	Utility	N
@@ -85,6 +87,7 @@ golangci-lint	golangci/golangci-lint	golangci-lint-.*\.tar\.gz	Fast linters runn
 goofcord	Milkshiift/GoofCord	GoofCord-.*\.tar\.xz	:shield: Take control of your Discord experience with GoofCord – a highly configurable and privacy minded discord client.	goofcord	Utility	Y
 gopass	gopasspw/gopass	gopass-.*\.tar\.gz	The slightly more awesome standard unix password manager for teams	gopass	Utility	N
 goreleaser	goreleaser/goreleaser	goreleaser_Linux_x86_64\.tar\.gz	Release engineering, simplified	goreleaser	Utility	N
+gotop	https://github.com/cjbassi/gotop	gotop_.*_linux_amd64\.tgz$	A terminal based graphical activity monitor inspired by gtop and vtop	gotop	Utility	Y
 gping	orf/gping	gping-Linux-gnu-x86_64\.tar\.gz	Ping, but with a graph	gping	Utility	N
 grex	pemistahl/grex	grex-v.*_64-unknown-linux-musl\.tar\.gz	A command-line tool and Rust library with Python bindings for generating regular expressions from user-provided test cases	grex	Development	N
 grpcui	fullstorydev/grpcui	grpcui_.*_linux_x86_64\.tar\.gz	An interactive web UI for gRPC, along the lines of postman	grpcui	Network	N
@@ -156,6 +159,7 @@ opentofu	opentofu/opentofu	tofu_.*_freebsd_amd64\.tar\.gz	OpenTofu lets you decl
 oras	oras-project/oras	oras_.*_freebsd_amd64\.tar\.gz	OCI registry client - managing content like artifacts, images, packages	oras	Utility	Y
 pfetch	dylanaraps/pfetch	INREPO	🐧 A pretty system information tool written in POSIX sh.	pfetch	Utility	N
 pinecone-launcher	ElyPrismLauncher/Launcher	PineconeMC-Linux-Qt6-Portable-.*\.tar\.gz	This fork of Prism Launcher adds integrated support for Ely.by accounts.	pinecone-launcher	Utility	N
+ppsspp	https://github.com/hrydgard/ppsspp	ppsspp-.*\.tar\.xz$	A PSP emulator for Android, Windows, Mac, Linux and iOS, written in C++. Want to contribute? Join us on Discord at https://discord.gg/5NJB6dD or just send pull requests / issues.	ppsspp	Game	N
 presenterm	mfontanini/presenterm	presenterm-.*_64-unknown-linux-gnu\.tar\.gz	A markdown terminal slideshow tool	presenterm	Development	Y
 prism-launcher	PrismLauncher/PrismLauncher	PrismLauncher-Linux-Qt6-Portable-.*\.tar\.gz	A custom launcher for Minecraft that allows you to easily manage multiple installations of Minecraft at once (Fork of MultiMC)	prism-launcher	Utility	N
 procs	dalance/procs	procs-v.*_64-linux\.zip	A modern replacement for ps written in Rust	procs	Utility	N
@@ -166,6 +170,7 @@ ranger	https://github.com/ranger/ranger	INREPO	A VIM-inspired filemanager for th
 rclone	rclone/rclone	rclone-v.*\.zip	rsync for cloud storage - Google Drive, S3, Dropbox, Backblaze B2, One Drive, Swift, Hubic, Wasabi, Google Cloud Storage, Azure Blob, Azure Files, Yandex Files	rclone	Utility	N
 restic	restic/restic	restic_.*_dragonfly_amd64\.bz2	Fast, secure, efficient backup program	restic	Utility	N
 ripgrep	BurntSushi/ripgrep	ripgrep-.*_64-unknown-linux-musl\.tar\.gz	ripgrep recursively searches directories for a regex pattern while respecting your gitignore	ripgrep	Utility	N
+rmpc	https://github.com/mierak/rmpc	rmpc-v.*_64-unknown-linux-gnu\.tar\.gz$	A modern, configurable, terminal based MPD Client with album art support via various terminal image protocols	rmpc	Utility	Y
 ruff	astral-sh/ruff	ruff-x86_64-unknown-linux-gnu\.tar\.gz	An extremely fast Python linter and code formatter, written in Rust.	ruff	Development	N
 s5cmd	peak/s5cmd	s5cmd_.*_Linux-64bit\.tar\.gz	Parallel S3 and local filesystem execution tool.	s5cmd	Utility	N
 sad	ms-jpq/sad	x86_64-unknown-linux-gnu\.zip	CLI search and replace | Space Age seD	sad	Utility	Y
@@ -183,6 +188,7 @@ splitux	splitux-gg/splitux	splitux-v.*_64\.tar\.gz	Local co-op split-screen laun
 spotifast	https://github.com/crmne/spotifast	spotifast-v.*_64-unknown-linux-gnu\.tar\.gz	Spotify, native and fast. One lightweight Rust app for your whole library, local playback, and Spotify Connect on Linux, macOS, and Windows.	spotifast	Utility	N
 spotify-appimage	https://github.com/ivan-hc/Spotify-AppImage	Spotify-candidate-.*.518.g366879e1-x86_64.AppImage\.zsync	Unofficial AppImage for Spotify built on top of the Snap package.	spotify-appimage	Utility	N
 starship	starship/starship	starship-x86_64-unknown-linux-gnu\.tar\.gz	☄🌌️  The minimal, blazing-fast, and infinitely customizable prompt for any shell!	starship	Utility	N
+steplauncher	https://github.com/NovaStepStudio/StepLauncher	steplauncher-v.*.pkg\.tar\.zst$	¡El launcher definitivo de Minecraft creado con Wails v3, Rapido, Eficiente, y Multiplataforma!	steplauncher	Utility	N
 stern	stern/stern	stern_.*_linux_amd64\.tar\.gz	⎈ Multi pod and container log tailing for Kubernetes -- Friendly fork of https://github.com/wercker/stern	stern	Utility	N
 sttr	abhimanyu003/sttr	sttr_Freebsd_x86_64\.tar\.gz	cross-platform, cli app to perform various operations on string	sttr	Utility	Y
 superfile	yorukot/superfile	superfile-linux-v.*\.tar\.gz	Pretty fancy and modern terminal file manager	superfile	Utility	Y
@@ -201,6 +207,7 @@ toofan	https://github.com/vyrx-dev/toofan	toofan_.*_linux_amd64\.tar\.gz	A minim
 tor-browser	external/tor-browser	TEMPLATE|https://dist.torproject.org/torbrowser/@VERSION@/tor-browser-linux-x86_64-@VERSION@.tar.xz|15.0.24	Aplicacion Externa	tor-browser	Utility	N
 trippy	fujiapple852/trippy	trippy-.*_64-unknown-linux-gnu\.tar\.gz	A network diagnostic tool	trippy	Utility	N
 trivy	aquasecurity/trivy	trivy_.*_Linux-64bit\.tar\.gz	Find vulnerabilities, misconfigurations, secrets, SBOM in containers, Kubernetes, code repositories, clouds and more	trivy	Development	N
+tui-timer	https://github.com/Ars-byte/Tui-timer	tui-timer\.tar\.gz$	Simple TUI timer	tui-timer	Utility	N
 ubi	houseabsolute/ubi	ubi-FreeBSD-x86_64\.tar\.gz	The Universal Binary Installer	ubi	Utility	N
 umbrella-fetch	ezequielgk/Umbrella-Fetch	umbrella-fetch-v.*_64-unknown-linux-gnu\.tar\.gz	Umbrella - Fast and efficient data fetching tool built with Rust	umbrella-fetch	Utility	N
 upx	upx/upx	upx-.*_linux\.tar\.xz	UPX - the Ultimate Packer for eXecutables	upx	Utility	N
