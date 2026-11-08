@@ -41,6 +41,7 @@ concord	chojs23/concord	concord-x86_64-unknown-linux-gnu\.tar\.xz	A feature-rich
 cosign	sigstore/cosign	cosign-linux-amd64	Code signing and transparency for containers and binaries	cosign	Development	N
 cpufetch	Dr-Noob/cpufetch	cpufetch_x86-64_linux	Simple yet fancy CPU architecture fetching tool	cpufetch	Utility	N
 craft-launcher	https://github.com/storytold/craft-launcher	artcraft-launcher-.*_64\.tar\.gz	The Craft App Launcher	craft-launcher	Utility	N
+crayoz	https://github.com/Ars-byte/Crayoz	Crayoz-linux-amd64\.tar\.gz$	Simple file reader, written in Go.	crayoz	Utility	N
 croc	schollz/croc	croc-web_v.*_Linux-amd64\.tar\.gz	Easily and securely send things from one computer to another :crocodile: :package:	croc	Utility	N
 csvtk	shenwei356/csvtk	csvtk_freebsd_amd64\.tar\.gz	A cross-platform, efficient and practical CSV/TSV toolkit in Golang	csvtk	Utility	N
 curlie	rs/curlie	curlie_.*_freebsd_amd64\.tar\.gz	The power of curl, the ease of use of httpie.	curlie	Utility	N
