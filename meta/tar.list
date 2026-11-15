@@ -15,6 +15,7 @@ animfetch	https://github.com/Andrew-Velox/animfetch	animfetch-v.*_64-unknown-lin
 appimagetool	pkgforge-dev/appimagetool	appimagetool-corresponding-source-dwarfs-.*\.tar\.xz	A Rust implementation of appimagetool for the Anylinux-AppImages project.	appimagetool	Utility	N
 arcava	https://github.com/Ars-byte/Arcava	Arcava-v.*\.tar\.gz$	Console audio visualizer in C++17	arcava	Audio	N
 arduino-cli	arduino/arduino-cli	arduino-cli_.*_Linux_64bit\.tar\.gz	Arduino command line tool	arduino-cli	Utility	N
+arfetch	https://github.com/Ars-byte/Arfetch	Arfetch-linux-x86_64$	fetch with cpp for linux	arfetch	Utility	N
 atuin	atuinsh/atuin	atuin-server-x86_64-unknown-linux-gnu\.tar\.gz	✨ Making your shell magical	atuin	Utility	N
 audiosource	https://github.com/ezequielgk/audiosource	audiosource-linux\.tar\.gz	:microphone: Use an Android device as a USB microphone	audiosource	Utility	N
 aws-nuke	ekristen/aws-nuke	aws-nuke-v.*\.tar\.gz	Remove all the resources from an AWS account	aws-nuke	Utility	N
