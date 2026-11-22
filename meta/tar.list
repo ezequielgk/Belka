@@ -23,6 +23,7 @@ b3sum	BLAKE3-team/BLAKE3	b3sum_linux_x64_bin	the official Rust and C implementat
 bandwhich	imsnif/bandwhich	bandwhich-v.*_64-unknown-linux-gnu\.tar\.gz	Terminal bandwidth utilization tool	bandwhich	Utility	Y
 bat	sharkdp/bat	bat-v.*_64-unknown-linux-gnu\.tar\.gz	A cat(1) clone with wings.	bat	Utility	N
 belka	ezequielgk/Belka	belka-linux-amd64\.tar\.gz	Belka — a POSIX-compliant tarball manager. Installs and updates tarball packages atomically, with checksum verification and rollback.	belka	Utility	Y
+bigcrock	https://github.com/Ars-byte/Bigcrock	bigcrock-linux-amd64\.tar\.gz$	Disk usage tree analyzer and directory ranker, written in Go.	bigcrock	Utility	N
 binfmt	tonistiigi/binfmt	binfmt_linux-amd64\.tar\.gz	Cross-platform emulator collection distributed with Docker images.	binfmt	Game	N
 binsider	orhun/binsider	binsider-.*_64-unknown-linux-gnu\.tar\.gz	Analyze ELF binaries like a boss 😼🕵️‍♂️	binsider	Utility	N
 bluetuith	bluetuith-org/bluetuith	bluetuith_.*_Linux_x86_64\.tar\.gz	A cross-platform TUI bluetooth manager.	bluetuith	Utility	N
